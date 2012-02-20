@@ -1,0 +1,54 @@
+gcc -E -Iinclude/ -I../intrinsics include/Slang_Api.h -o /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.tmp
+echo "#ifndef _AXTOR_GLSL_INTRINSICS_HPP" > /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.h
+echo "#define _AXTOR_GLSL_INTRINSICS_HPP" >> /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.h
+cat /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.tmp >> /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.h
+echo "#endif" >> /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.h
+rm /disk/scratch/simon/root/axtor_debug//include/axtor/GLSL/GLSL_Intrinsics.tmp
+gcc -E -Iinclude/ -I../intrinsics include/Compute_Api.h -o /disk/scratch/simon/root/axtor_debug//include/axtor/OCL/OpenCL_Intrinsics.tmp
+In file included from include/Compute_Api.h:93:
+../intrinsics/OCL_Intrinsics.def:331:1: error: pasting ""convert_"" and "float2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:331:1: error: pasting ""(to_"" and "uint2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:331:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:331:1: error: pasting ""(convert_"" and "float2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:331:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:332:1: error: pasting ""convert_"" and "float3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:332:1: error: pasting ""(to_"" and "uint3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:332:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:332:1: error: pasting ""(convert_"" and "float3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:332:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:333:1: error: pasting ""convert_"" and "float4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:333:1: error: pasting ""(to_"" and "uint4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:333:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:333:1: error: pasting ""(convert_"" and "float4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:333:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:339:1: error: pasting ""convert_"" and "float2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:339:1: error: pasting ""(to_"" and "ushort2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:339:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:339:1: error: pasting ""(convert_"" and "float2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:339:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:340:1: error: pasting ""convert_"" and "float3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:340:1: error: pasting ""(to_"" and "ushort3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:340:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:340:1: error: pasting ""(convert_"" and "float3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:340:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:341:1: error: pasting ""convert_"" and "float4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:341:1: error: pasting ""(to_"" and "ushort4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:341:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:341:1: error: pasting ""(convert_"" and "float4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:341:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:343:1: error: pasting ""convert_"" and "float2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:343:1: error: pasting ""(to_"" and "uchar2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:343:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:343:1: error: pasting ""(convert_"" and "float2" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:343:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:344:1: error: pasting ""convert_"" and "float3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:344:1: error: pasting ""(to_"" and "uchar3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:344:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:344:1: error: pasting ""(convert_"" and "float3" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:344:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+../intrinsics/OCL_Intrinsics.def:345:1: error: pasting ""convert_"" and "float4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:345:1: error: pasting ""(to_"" and "uchar4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:345:1: error: pasting ""to_"" and "USR" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:345:1: error: pasting ""(convert_"" and "float4" does not give a valid preprocessing token
+../intrinsics/OCL_Intrinsics.def:345:1: error: macro "FUNC" requires 5 arguments, but only 4 given
+make: *** [ocl_header] Error 1

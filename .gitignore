@@ -1,0 +1,10 @@
+opencl
+glsl
+opencl_debug
+glsl_debug
+*.o
+*.d
+*/.dir
+*.log
+*.status
+Makefile.common
