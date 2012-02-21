@@ -45,9 +45,12 @@ void axtor::dumpBlockVector(const BlockVector & blocks)
 void axtor::verifyModule(llvm::Module & mod)
 {
 	std::string errorMessage;
-	if (llvm::verifyModule(mod, llvm::AbortProcessAction, &errorMessage)) {
-	    llvm::errs() << errorMessage;
-	}
+	if (llvm::verifyModule(mod, llvm::ReturnStatusAction, &errorMessage)) {
+
+		llvm::errs() << "\n\n\n##### BROKEN MODULE #####\n" << errorMessage << "\n\n### DUMP ###\n";
+	    mod.dump();
+	    llvm::errs() << "##### END OF DUMP ##### \n\n\n";
+	}	abort();
 }
 
 void axtor::dumpUses(llvm::Value * val)
