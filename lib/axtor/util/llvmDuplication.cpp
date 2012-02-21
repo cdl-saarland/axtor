@@ -249,7 +249,9 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 				//### fix branches ###
 				llvm::BranchInst * branchInst = llvm::cast<llvm::BranchInst>(inst);
 
+#ifdef DEBUG
 				branchInst->getParent()->dump();
+#endif
 
 				//could be a branch from the branch block
 				if (contains<llvm::BasicBlock*>(clonedBlocks, branchInst->getParent()) || set_contains(branchBlocks, branchInst->getParent()))
