@@ -298,6 +298,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 						llvm::PHINode * resolvePHI = llvm::PHINode::Create(srcVal->getType(), 2, "intro", itAfterPHI);
 						resolvePHI->addIncoming(srcVal, srcBlock);
 						resolvePHI->addIncoming(cloneVal, clonedBlock);
+						cloneMap[srcVal] = resolvePHI;
 					}
 				}
 			}
