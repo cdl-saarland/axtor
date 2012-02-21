@@ -48,26 +48,35 @@ BlockVector splitNodeExt(llvm::BasicBlock * srcBlock, BlockSetVector predecessor
 {
 	assert(srcBlock && "was NULL");
 
-	BlockVector clones;
+	BlockVector clones(predecessorSet.size(), 0);
 
 	if (predecessorSet.size() <= 1)
 		return clones;
 
+	// forward to first non-empty branch set
+	BlockSetVector::iterator itFirstNonEmpty = predecessorSet.begin();
+	BlockVector::iterator itFirstClone = clones.begin();
+	for (;  itFirstNonEmpty->empty();
+			++itFirstNonEmpty, ++itFirstClone)
+	{
+		if (itFirstNonEmpty == predecessorSet.end()) {
+			return clones;
+		}
+	}
+
+    // fix dominator information for the first entry (that does not get cloned)
 	if (domTree) {
-		BlockSet firstSet = *predecessorSet.begin();
+		BlockSet firstSet = *itFirstNonEmpty;
 		if (firstSet.size() == 1)
 			domTree->changeImmediateDominator(srcBlock, *firstSet.begin());
 	}
 
-	for(BlockSetVector::iterator itSet = (predecessorSet.begin() + 1); itSet != predecessorSet.end(); ++itSet)
-	{
+	// iterate over all remaining branch sets
+	BlockVector::iterator itClone = itFirstClone + 1;
+	for(BlockSetVector::iterator itSet = itFirstNonEmpty + 1; itSet != predecessorSet.end(); ++itSet, ++itClone)
 		if (! (*itSet).empty()) {
-			llvm::BasicBlock * clonedBlock = cloneBlockForBranchSet(srcBlock, *itSet, domTree);
-			clones.push_back(clonedBlock);
-		} else {
-			clones.push_back(0);
+			*itClone = cloneBlockForBranchSet(srcBlock, *itSet, domTree);
 		}
-	}
 
 	return clones;
 }
