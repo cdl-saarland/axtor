@@ -414,6 +414,7 @@ bool set_contains(const std::set<T> & set, T element)
 
 template bool contains<llvm::BasicBlock*>(const BlockVector & vector, llvm::BasicBlock * element);
 template bool set_contains<llvm::BasicBlock*>(const BlockSet & vector, llvm::BasicBlock * element);
+template bool set_contains<llvm::Value*>(const ValueSet & vector, llvm::Value * element);
 
 /*
  * "should" terminate . . . (no cycles in constant expressions)

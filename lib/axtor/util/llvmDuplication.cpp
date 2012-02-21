@@ -11,6 +11,10 @@
 #include <axtor/util/llvmDebug.h>
 
 #include <axtor/util/llvmDomination.h>
+#include <llvm/ADT/ValueMap.h>
+#include <llvm/Module.h>
+#include <llvm/Instructions.h>
+#include <llvm/BasicBlock.h>
 
 namespace axtor {
 
@@ -262,7 +266,9 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 		for (llvm::succ_iterator itSucc = llvm::succ_begin(clonedBlock); itSucc != llvm::succ_end(clonedBlock); ++itSucc)
 		{
 			llvm::BasicBlock * succBlock = *itSucc;
-			for (llvm::BasicBlock::iterator itPHI = succBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI)
+			ValueSet handledSrcValues;
+			llvm::BasicBlock::iterator itPHI;
+			for (itPHI = succBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI)
 			{
 #ifdef DEBUG
 				std::cerr << "## patching PHI:"; itPHI->dump();
@@ -270,6 +276,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 				llvm::PHINode * phi = llvm::cast<llvm::PHINode>(itPHI);
 				assert (phi->getBasicBlockIndex(clonedBlock) == -1 && "value already mapped!");
 				llvm::Value * inVal = phi->getIncomingValueForBlock(srcBlock);
+				handledSrcValues.insert(inVal);
 
 #ifdef DEBUG
 				std::cerr << "### fixed PHI for new incoming edge" << std::endl;
@@ -277,6 +284,27 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 #endif
 				phi->addIncoming(cloneMap[inVal], clonedBlock);
 			}
+
+			// create new PHI-nodes for not handled values
+			llvm::BasicBlock::iterator itAfterPHI = itPHI; itAfterPHI++;
+			for (ValueMap::const_iterator itClonePair = cloneMap.begin(); itClonePair != cloneMap.end(); ++itClonePair)
+			{
+				llvm::Value * srcVal = const_cast<llvm::Value*>(itClonePair->first);
+				llvm::Value * cloneVal = itClonePair->second;
+
+				if (llvm::isa<llvm::Instruction>(srcVal) && ! set_contains(handledSrcValues, srcVal)) {
+					llvm::Instruction * srcInst = llvm::cast<llvm::Instruction>(srcVal);
+					if (srcInst->isUsedInBasicBlock(succBlock)) {
+						llvm::PHINode * resolvePHI = llvm::PHINode::Create(srcVal->getType(), 2, "intro", itAfterPHI);
+						resolvePHI->addIncoming(srcVal, srcBlock);
+						resolvePHI->addIncoming(cloneVal, clonedBlock);
+					}
+				}
+			}
+
+			// remap the rest of the block
+			for (;itAfterPHI != succBlock->end(); ++itAfterPHI)
+				LazyRemapInstruction(itAfterPHI, cloneMap);
 		}
 	}
 }
