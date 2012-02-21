@@ -113,7 +113,7 @@ namespace axtor {
 #ifdef DEBUG
 			std::cerr << "is leaving the loop! ignore..\n parent context:";
 			context.dump();
-			std::cerr << "this loop: " << !loop? "NULL": ""; if (loop) loop->dump();
+			std::cerr << "this loop: " << (loop? "" : "none"); if (loop) loop->dump();
 #endif
 			return NULL;
 		}

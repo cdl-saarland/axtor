@@ -24,6 +24,11 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
+// trigger the axtor debug mode with the LLVM debug build flag
+#ifdef _DEBUG
+#define DEBUG
+#endif
+
 /*
  * Enables CNS for node splitting
  */
@@ -66,7 +71,7 @@
 //#define DEBUG_INTRINSICS
 
 //Debug flags
-#ifdef DEBUG
+#ifdef AXTOR_DEBUG
 /*
  * makes each axtor pass place a notification when its invoked
  */

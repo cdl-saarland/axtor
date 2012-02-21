@@ -1720,8 +1720,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-LLVM_SRC_ROOT="/afs/inf.ed.ac.uk/user/v/v1smoll/workspace/llvm-3.0.src/"
-LLVM_OBJ_ROOT="/disk/scratch/simon/build"
+LLVM_SRC_ROOT="../.."
+LLVM_OBJ_ROOT="../.."
 
 LLVM_ABS_SRC_ROOT="`cd $srcdir ; cd $LLVM_SRC_ROOT ; pwd`"
 LLVM_ABS_OBJ_ROOT="`cd $LLVM_OBJ_ROOT ; pwd`"
