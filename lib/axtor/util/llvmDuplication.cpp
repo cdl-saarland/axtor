@@ -173,6 +173,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 
 		//tracker.identifyBlocks(srcBlock, clonedBlock);
 
+		// Fix all PHI-nodes of the cloned block
 		for(llvm::BasicBlock::iterator it = srcBlock->begin();
 				it != srcBlock->end() && llvm::isa<llvm::PHINode>(it);
 				)
@@ -226,54 +227,33 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 			}
 		}
 
-		//### fix up successors and effects on own instructions ###
-		/*
-		 * 1.) redirect branches from @clonedBlock and @branchBlock to @clonedBlock
-		 * 2.) add incoming value from @clonedBlock to PHINodes in srcBlocks successors
-		 */
-		for(llvm::Value::use_iterator itUse = srcBlock->use_begin(); itUse != srcBlock->use_end();)
+		// Fix all branches coming from branchBlocks
+		for (BlockSet::iterator itBranchBlock = branchBlocks.begin(); itBranchBlock != branchBlocks.end(); ++itBranchBlock)
 		{
-			llvm::User * user = *itUse++;
-#ifdef DEBUG
-			std::cerr << "found block user:";
-			user->dump();
-#endif
+			LazyRemapInstruction((*itBranchBlock)->getTerminator(), cloneMap);
+		}
 
-			llvm::Instruction * inst = llvm::cast<llvm::Instruction>(user);
-			if (contains<llvm::BasicBlock*>(originalBlocks, inst->getParent())) {
-				continue;
-				//branchInst = llvm::cast<llvm::BranchInst>( cloneMap[branchInst] );
-			}
+		// Fix all instructions in the block itself
+		for (llvm::BasicBlock::iterator itInst = clonedBlock->begin(); itInst != clonedBlock->end(); ++itInst)
+		{
+			LazyRemapInstruction(itInst, cloneMap);
+		}
 
-			if (llvm::isa<llvm::BranchInst>(inst))	{
-				//### fix branches ###
-				llvm::BranchInst * branchInst = llvm::cast<llvm::BranchInst>(inst);
-
-#ifdef DEBUG
-				branchInst->getParent()->dump();
-#endif
-
-				//could be a branch from the branch block
-				if (contains<llvm::BasicBlock*>(clonedBlocks, branchInst->getParent()) || set_contains(branchBlocks, branchInst->getParent()))
-				{
-					//RemapInstruction(branchInst, branchFixMap);
-					LazyRemapInstruction(branchInst, cloneMap);
-				}
-
-			} else if (llvm::isa<llvm::PHINode>(inst)) {
-				//### fix receiving PHIs ###
-				llvm::PHINode * phi = llvm::cast<llvm::PHINode>(user);
-
+		// Repair receiving PHI-nodes
+		for (llvm::succ_iterator itSucc = llvm::succ_begin(clonedBlock); itSucc != llvm::succ_end(clonedBlock); ++itSucc)
+		{
+			llvm::BasicBlock * succBlock = *itSucc;
+			for (llvm::BasicBlock::iterator itPHI = succBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI)
+			{
+				llvm::PHINode * phi = llvm::cast<llvm::PHINode>(itPHI);
+				assert (phi->getBasicBlockIndex(clonedBlock) == -1 && "value already mapped!");
 				llvm::Value * inVal = phi->getIncomingValueForBlock(srcBlock);
 
-				if (phi->getBasicBlockIndex(clonedBlock) == -1)
-				{
 #ifdef DEBUG
 				std::cerr << "### fixed PHI for new incoming edge" << std::endl;
 				inVal->dump();
 #endif
-					phi->addIncoming(cloneMap[inVal], clonedBlock);
-				}
+				phi->addIncoming(cloneMap[inVal], clonedBlock);
 			}
 		}
 	}
