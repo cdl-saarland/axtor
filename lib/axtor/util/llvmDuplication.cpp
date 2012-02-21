@@ -286,7 +286,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 			}
 
 			// create new PHI-nodes for not handled values
-			llvm::BasicBlock::iterator itAfterPHI = itPHI; itAfterPHI++;
+			llvm::BasicBlock::iterator itAfterPHI = itPHI;
 			for (ValueMap::const_iterator itClonePair = cloneMap.begin(); itClonePair != cloneMap.end(); ++itClonePair)
 			{
 				llvm::Value * srcVal = const_cast<llvm::Value*>(itClonePair->first);
