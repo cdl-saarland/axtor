@@ -369,3 +369,4 @@ FUNC(_Z11atomic_xchgPVU10AS16776961f,float,atomic_xchg,(float GLOBAL *),1)
 #undef CONVERT_SIZED_2
 #undef CONVERT_SIZED_3
 #undef CONVERT_SIZED_4
+
