@@ -243,10 +243,19 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 #endif
 		}
 
+#ifdef DEBUG
+		std::cerr << "## Patching cloned block\n";
+#endif
 		// Fix all instructions in the block itself
 		for (llvm::BasicBlock::iterator itInst = clonedBlock->begin(); itInst != clonedBlock->end(); ++itInst)
 		{
+#ifdef DEBUG
+			std::cerr << "unpatched:"; itInst->dump();
+#endif
 			LazyRemapInstruction(itInst, cloneMap);
+#ifdef DEBUG
+			std::cerr << "patched:"; itInst->dump();
+#endif
 		}
 
 		// Repair receiving PHI-nodes
