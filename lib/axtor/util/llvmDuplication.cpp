@@ -228,9 +228,19 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 		}
 
 		// Fix all branches coming from branchBlocks
+#ifdef DEBUG
+		std::cerr << "## Patching branchBlocks\n";
+#endif
 		for (BlockSet::iterator itBranchBlock = branchBlocks.begin(); itBranchBlock != branchBlocks.end(); ++itBranchBlock)
 		{
-			LazyRemapInstruction((*itBranchBlock)->getTerminator(), cloneMap);
+			llvm::TerminatorInst * termInst = (*itBranchBlock)->getTerminator();
+#ifdef DEBUG
+			std::cerr << "unpatched:"; termInst->dump();
+#endif
+			LazyRemapInstruction(termInst, cloneMap);
+#ifdef DEBUG
+			std::cerr << "patched:"; termInst->dump();
+#endif
 		}
 
 		// Fix all instructions in the block itself
@@ -245,6 +255,9 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 			llvm::BasicBlock * succBlock = *itSucc;
 			for (llvm::BasicBlock::iterator itPHI = succBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI)
 			{
+#ifdef DEBUG
+				std::cerr << "## patching PHI:"; itPHI->dump();
+#endif
 				llvm::PHINode * phi = llvm::cast<llvm::PHINode>(itPHI);
 				assert (phi->getBasicBlockIndex(clonedBlock) == -1 && "value already mapped!");
 				llvm::Value * inVal = phi->getIncomingValueForBlock(srcBlock);
