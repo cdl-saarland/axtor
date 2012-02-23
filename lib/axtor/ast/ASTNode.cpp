@@ -85,7 +85,7 @@ namespace ast {
 	{
 #define PREFIXED std::cerr << prefix
 
-		std::string name = block ? block->getNameStr() : "none";
+		std::string name = block ? block->getName() : "none";
 
 		std::cerr << getTypeStr() << " (" << name << ")\n";
 

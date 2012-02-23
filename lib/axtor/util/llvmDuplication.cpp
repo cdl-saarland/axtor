@@ -133,7 +133,7 @@ llvm::BasicBlock * cloneBlockAndMapInstructions(llvm::BasicBlock * block, ValueM
 
 	for(llvm::BasicBlock::iterator inst = clonedBlock->begin(); inst != clonedBlock->end(); ++inst)
 	{
-	//	std::cerr << "remapping inst=" << inst->getName().str() << std::endl;
+	//	llvm::errs() << "remapping inst=" << inst->getName().str() << "\n";
 		LazyRemapInstruction(inst, cloneMap);
 	}
 
@@ -193,13 +193,13 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 
 				if (blockIdx > -1) {
 	#ifdef DEBUG
-					std::cerr << "spezialising PHI for branch value.phi=" << clonedPHI->getName().str() << std::endl;
+					llvm::errs() << "spezialising PHI for branch value.phi=" << clonedPHI->getName() << "\n";
 	#endif
 					llvm::Value * branchValue = clonedPHI->getIncomingValue(blockIdx);
 					//specialize PHI (in cloned block)
 					clonedPHI->replaceAllUsesWith(branchValue);
 	#ifdef DEBUG
-					std::cerr << "replacing phi" << clonedPHI->getName().str() << " with " << branchValue->getName().str() << std::endl;
+					llvm::errs() << "replacing phi" << clonedPHI->getName().str() << " with " << branchValue->getName().str() << "\n";
 	#endif
 					cloneMap[srcPHI] = branchValue;
 					clonedPHI->eraseFromParent();
@@ -209,23 +209,23 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 				}
 			} else {
 #ifdef DEBUG
-				std::cerr << "## PHI before\n";
+				llvm::errs() << "## PHI before\n";
 				clonedPHI->dump();
 #endif
 				for(uint i = 0; i < clonedPHI->getNumIncomingValues(); ++i) {
 					llvm::BasicBlock * incBlock = clonedPHI->getIncomingBlock(i);
 #ifdef DEBUG
-					std::cerr << "incoming : " << incBlock->getNameStr() << "\n";
+					llvm::errs() << "incoming : " << incBlock->getName() << "\n";
 #endif
 					if (!contains(clonedBlocks, incBlock) && !set_contains(branchBlocks, incBlock) ) {
 #ifdef DEBUG
-						std::cerr << "not from current set! remove";
+						llvm::errs() << "not from current set! remove";
 #endif
 						clonedPHI->removeIncomingValue(incBlock, false);
 					}
 				}
 #ifdef DEBUG
-				std::cerr << "## PHI after\n";
+				llvm::errs() << "## PHI after\n";
 #endif
 				clonedPHI->dump();
 			}
@@ -233,32 +233,32 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 
 		// Fix all branches coming from branchBlocks
 #ifdef DEBUG
-		std::cerr << "## Patching branchBlocks\n";
+		llvm::errs() << "## Patching branchBlocks\n";
 #endif
 		for (BlockSet::iterator itBranchBlock = branchBlocks.begin(); itBranchBlock != branchBlocks.end(); ++itBranchBlock)
 		{
 			llvm::TerminatorInst * termInst = (*itBranchBlock)->getTerminator();
 #ifdef DEBUG
-			std::cerr << "unpatched:"; termInst->dump();
+			llvm::errs() << "unpatched:"; termInst->dump();
 #endif
 			LazyRemapInstruction(termInst, cloneMap);
 #ifdef DEBUG
-			std::cerr << "patched:"; termInst->dump();
+			llvm::errs() << "patched:"; termInst->dump();
 #endif
 		}
 
 #ifdef DEBUG
-		std::cerr << "## Patching cloned block\n";
+		llvm::errs() << "## Patching cloned block\n";
 #endif
 		// Fix all instructions in the block itself
 		for (llvm::BasicBlock::iterator itInst = clonedBlock->begin(); itInst != clonedBlock->end(); ++itInst)
 		{
 #ifdef DEBUG
-			std::cerr << "unpatched:"; itInst->dump();
+			llvm::errs() << "unpatched:"; itInst->dump();
 #endif
 			LazyRemapInstruction(itInst, cloneMap);
 #ifdef DEBUG
-			std::cerr << "patched:"; itInst->dump();
+			llvm::errs() << "patched:"; itInst->dump();
 #endif
 		}
 
@@ -271,7 +271,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 			for (itPHI = succBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI)
 			{
 #ifdef DEBUG
-				std::cerr << "## patching PHI:"; itPHI->dump();
+				llvm::errs() << "## patching PHI:"; itPHI->dump();
 #endif
 				llvm::PHINode * phi = llvm::cast<llvm::PHINode>(itPHI);
 				assert (phi->getBasicBlockIndex(clonedBlock) == -1 && "value already mapped!");
@@ -279,7 +279,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 				handledSrcValues.insert(inVal);
 
 #ifdef DEBUG
-				std::cerr << "### fixed PHI for new incoming edge" << std::endl;
+				llvm::errs() << "### fixed PHI for new incoming edge\n";
 				inVal->dump();
 #endif
 				phi->addIncoming(cloneMap[inVal], clonedBlock);
@@ -327,7 +327,7 @@ llvm::BasicBlock * cloneBlockForBranch(llvm::BasicBlock * srcBlock, llvm::BasicB
 llvm::BasicBlock * cloneBlockForBranchSet(llvm::BasicBlock * srcBlock, BlockSet branchSet, llvm::DominatorTree * domTree)
 {
 #ifdef DEBUG
-	std::cerr << " cloning block : " << srcBlock->getName().str() << " for blockset : " << toString(branchSet) << "\n";
+	llvm::errs() << " cloning block : " << srcBlock->getName().str() << " for blockset : " << toString(branchSet) << "\n";
 #endif
 
 	//sanity check

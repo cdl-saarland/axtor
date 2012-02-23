@@ -39,15 +39,15 @@ namespace axtor {
 		Session session(M);
 
 #ifdef DEBUG
-		std::cerr << " ### module before Pass : \"" << getPassName() << "\"\n";
+		llvm::errs() << " ### module before Pass : \"" << getPassName() << "\"\n";
 		M.dump();
-		std::cerr << "[EOF]\n";
+		llvm::errs() << "[EOF]\n";
 #endif
 		bool retVal = session.run();
 #ifdef DEBUG
-		std::cerr << " ### module after Pass : \"" << getPassName() << "\"\n";
+		llvm::errs() << " ### module after Pass : \"" << getPassName() << "\"\n";
 		M.dump();
-		std::cerr << "[EOF]\n";
+		llvm::errs() << "[EOF]\n";
 #endif
 		return retVal;
 	}
@@ -75,14 +75,14 @@ namespace axtor {
 
 		if (llvmFunc) {
 #ifdef DEBUG
-			std::cerr << "uses function " << funcName << "\n";
+			llvm::errs() << "uses function " << funcName << "\n";
 #endif
 			for (llvm::Function::use_iterator itCall = llvmFunc->use_begin(); itCall != llvmFunc->use_end(); itCall = llvmFunc->use_begin())
 			{
 				llvm::User* user = *itCall;
 				llvm::Instruction * call = llvm::cast<llvm::Instruction>(user);
 #ifdef DEBUG
-				std::cerr << "removing user " << call->getName().str() << "\n";
+				llvm::errs() << "removing user " << call->getName().str() << "\n";
 #endif
 				call->eraseFromParent();
 			}
@@ -90,7 +90,7 @@ namespace axtor {
 			//llvmFunc->eraseFromParent();
 		} else {
 #ifdef DEBUG
-			std::cerr << "does not exist: " << funcName << "\n";
+			llvm::errs() << "does not exist: " << funcName << "\n";
 #endif
 		}
 		return llvmFunc;
@@ -102,7 +102,7 @@ namespace axtor {
 		for (FunctionVector::const_iterator itMemCpy = memCpyVec.begin(); itMemCpy != memCpyVec.end(); ++itMemCpy)
 		{
 			llvm::Function * memCpyFunc = *itMemCpy;
-			std::string memCpyName = memCpyFunc->getNameStr();
+			std::string memCpyName = memCpyFunc->getName();
 			llvm::Function::arg_iterator itArg = memCpyFunc->arg_begin();
 			llvm::Function::arg_iterator destPtrArg = itArg++;
 			llvm::Function::arg_iterator srcPtrArg = itArg;
@@ -117,7 +117,7 @@ namespace axtor {
 			llvm::PointerType *  srcPtrType = llvm::cast<llvm::PointerType>( srcPtrArg->getType());
 
 #ifdef DEBUG
-			std::cerr << "supplementing memcpy: " << memCpyFunc->getNameStr() << "\n";
+			llvm::errs() << "supplementing memcpy: " << memCpyFunc->getName() << "\n";
 #endif
 			llvm::Function * definedMemCpy =
 					create_memcpy(M, memCpyName, destPtrType->getAddressSpace(), srcPtrType->getAddressSpace());
@@ -132,7 +132,7 @@ namespace axtor {
 		for (FunctionVector::const_iterator itMemSet = memSetVec.begin(); itMemSet != memSetVec.end(); ++itMemSet)
 		{
 			llvm::Function * memSetFunc = *itMemSet;
-			std::string memSetName = memSetFunc->getNameStr();
+			std::string memSetName = memSetFunc->getName();
 			llvm::Function::arg_iterator ptrArg = *(memSetFunc->arg_begin());
 
 			if (!llvm::isa<llvm::PointerType>(ptrArg->getType()))
@@ -143,7 +143,7 @@ namespace axtor {
 			llvm::PointerType * ptrType = llvm::cast<llvm::PointerType>(ptrArg->getType());
 
 #ifdef DEBUG
-			std::cerr << "supplementing memset: " << memSetFunc->getNameStr() << "\n";
+			llvm::errs() << "supplementing memset: " << memSetFunc->getName() << "\n";
 #endif
 			llvm::Function * definedMemSet =
 					create_memset(M, memSetName, ptrType->getAddressSpace());

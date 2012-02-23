@@ -1325,10 +1325,10 @@ std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, Iden
 
 
 		// OpenCL special treatment of barrier/memfence instructions
-		if (callee->getNameStr() == "barrier" ||
-			callee->getNameStr() == "mem_fence")
+		if (callee->getName() == "barrier" ||
+			callee->getName() == "mem_fence")
 		{
-			std::string calleeName = callee->getNameStr();
+			std::string calleeName = callee->getName();
 
 			llvm::Value * arg = call->getArgOperand(0);
 			std::string enumStr;

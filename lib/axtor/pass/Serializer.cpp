@@ -111,7 +111,7 @@ namespace axtor
 
 		llvm::BasicBlock * block = node->getBlock();
 #ifdef DEBUG
-		std::cerr << "processing " << (block ? block->getNameStr() : "none") << " exit : " << (exitBlock ? exitBlock->getNameStr() : "null") << "\n";
+		llvm::errs() << "processing " << (block ? block->getName() : "none") << " exit : " << (exitBlock ? exitBlock->getName() : "null") << "\n";
 #endif
 
 

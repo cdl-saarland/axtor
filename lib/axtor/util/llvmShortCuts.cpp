@@ -21,7 +21,7 @@ FunctionVector findFunctionsPrefixed(llvm::Module & M, std::string prefix)
 
 	for (llvm::Module::iterator itFunc = M.begin(); itFunc != M.end(); ++itFunc)
 	{
-		if (itFunc->getNameStr().substr(0, prefix.length()) == prefix)
+		if (itFunc->getName().substr(0, prefix.length()) == prefix)
 			funcs.push_back(itFunc);
 	}
 

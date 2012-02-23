@@ -49,9 +49,9 @@ namespace axtor {
 	{
 		llvm::SmallVector<llvm::AttributeWithIndex, 4> Attrs;
 		llvm::AttributeWithIndex PAWI;
-		PAWI.Index = 1U; PAWI.Attrs = 0  | llvm::Attribute::NoCapture;
+		PAWI.Index = 1U; PAWI.Attrs = llvm::Attribute::NoCapture;
 		Attrs.push_back(PAWI);
-		PAWI.Index = 4294967295U; PAWI.Attrs = 0  | llvm::Attribute::NoUnwind;
+		PAWI.Index = 4294967295U; PAWI.Attrs = llvm::Attribute::NoUnwind;
 		Attrs.push_back(PAWI);
 		func_PAL = llvm::AttrListPtr::get(Attrs.begin(), Attrs.end());
 
@@ -140,11 +140,11 @@ namespace axtor {
 		{
 			llvm::SmallVector<llvm::AttributeWithIndex, 4> Attrs;
 			llvm::AttributeWithIndex PAWI;
-			PAWI.Index = 1U; PAWI.Attrs = 0  | llvm::Attribute::NoCapture;
+			PAWI.Index = 1U; PAWI.Attrs = llvm::Attribute::NoCapture;
 			Attrs.push_back(PAWI);
-			PAWI.Index = 2U; PAWI.Attrs = 0  | llvm::Attribute::NoCapture;
+			PAWI.Index = 2U; PAWI.Attrs =llvm::Attribute::NoCapture;
 			Attrs.push_back(PAWI);
-			PAWI.Index = 4294967295U; PAWI.Attrs = 0  | llvm::Attribute::NoUnwind;
+			PAWI.Index = 4294967295U; PAWI.Attrs = llvm::Attribute::NoUnwind;
 			Attrs.push_back(PAWI);
 			func_PAL = llvm::AttrListPtr::get(Attrs.begin(), Attrs.end());
 
