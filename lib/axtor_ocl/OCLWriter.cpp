@@ -742,15 +742,26 @@ std::string OCLWriter::dereferenceContainer(std::string root, const llvm::Type *
 	Log::fail(type, "can not dereference this type");
 }
 
+std::string OCLWriter::getVolatilePointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
+{
+	std::string ptrStr = getPointerTo(val, locals, rootName);
+	const llvm::Type * type = val->getType();
+	std::string castStr = "volatile " + getType(type);
+	return "*(" + castStr + ")(" + ptrStr + ")";
+}
+
 std::string OCLWriter::getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
 {
 	bool isDereffed;
 	std::string core = unwindPointer(val, locals, isDereffed, rootName);
+	std::string ptrStr;
 	if (isDereffed) {
-		return "&(" + core + ")";
+		ptrStr =  "&(" + core + ")";
 	} else {
-		return core;
+		ptrStr = core;
 	}
+
+	return ptrStr;
 }
 
 std::string OCLWriter::getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
@@ -1294,7 +1305,12 @@ std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, Iden
 		llvm::LoadInst * load = llvm::cast<llvm::LoadInst>(inst);
 		llvm::Value * pointer = load->getOperand(0);
 
-		return getReferenceTo(pointer, locals);
+		if (load->isVolatile()) {
+			return "*(" + getVolatilePointerTo(pointer, locals) + ")";
+		} else {
+			return getReferenceTo(pointer, locals);
+		}
+
 
 	//interpret this PHINode as a variable assignment
 	} else if (llvm::isa<llvm::PHINode>(inst)) {
@@ -1512,8 +1528,14 @@ if (llvm::isa<llvm::Instruction>(root) &&
 		}
 
 		//decode the GEP and store the value
-		std::string name = getReferenceTo(pointer, locals);
-		writeAssignRaw(name, srcString);
+		if (store->isVolatile()) {
+			std::string ptr = getVolatilePointerTo(pointer, locals);
+			std::string name = "*(" + ptr + ")";
+			writeAssignRaw(name, srcString);
+		} else {
+			std::string name = getReferenceTo(pointer, locals);
+			writeAssignRaw(name, srcString);
+		}
 
 	//### InsertElement Instruction
 	} else if (llvm::isa<llvm::InsertElementInst>(inst)) {

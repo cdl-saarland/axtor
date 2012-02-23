@@ -168,6 +168,7 @@ public:
 
 	// auxiliary functions for obtaining dereferencing or pointer to strings
 	std::string getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
+	std::string getVolatilePointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
 	std::string getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
 	/*
 	 * return a name representing a dereferenced pointer

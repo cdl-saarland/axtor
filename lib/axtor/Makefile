@@ -18,8 +18,6 @@ PARALLEL_DIRS=ast cns console intrinsics metainfo parsers pass solvers util writ
 
 # LINK_LIBS_IN_SHARED=1
 
-LINK_COMPONENTS = all
-
 #
 # Include Makefile.common so we know what to do.
 #
