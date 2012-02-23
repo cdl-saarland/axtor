@@ -747,7 +747,7 @@ std::string OCLWriter::getVolatilePointerTo(llvm::Value * val, IdentifierScope &
 	std::string ptrStr = getPointerTo(val, locals, rootName);
 	const llvm::Type * type = val->getType();
 	std::string castStr = "volatile " + getType(type);
-	return "*(" + castStr + ")(" + ptrStr + ")";
+	return "(" + castStr + ")(" + ptrStr + ")";
 }
 
 std::string OCLWriter::getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
