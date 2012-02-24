@@ -52,7 +52,17 @@ public:
 		}
 	}
 
-	T * get()
+	inline T * get()
+	{
+		return obj;
+	}
+
+	inline T & operator*()
+	{
+		return *obj;
+	}
+
+	inline T * operator ->()
 	{
 		return obj;
 	}

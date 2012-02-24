@@ -9,6 +9,7 @@
 #include <axtor/util/WrappedOperation.h>
 
 #include <llvm/Instructions.h>
+#include <axtor/util/ResourceGuard.h>
 
 
 namespace axtor {
@@ -84,4 +85,5 @@ namespace axtor {
 		return expr->getNumOperands();
 	}
 
+	template class ResourceGuard<WrappedOperation>;
 }

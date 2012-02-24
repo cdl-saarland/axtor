@@ -8,6 +8,7 @@
 #include <axtor_ocl/OCLWriter.h>
 
 #include <axtor_ocl/OCLEnum.h>
+#include <axtor/util/WrappedLiteral.h>
 #include <vector>
 
 namespace axtor {
@@ -967,10 +968,13 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
          return val->getName();
 
       //## Constant Array
-      } else if (llvm::isa<llvm::ConstantArray>(val)) {
+      } else if (llvm::isa<llvm::ConstantArray>(val) ||
+    		  llvm::isa<llvm::ConstantDataArray>(val)) {
+
+    	 ResourceGuard<WrappedLiteral> arr(CreateLiteralWrapper(val));
+
          std::string buffer = "{";
-         llvm::ConstantArray * arr = llvm::cast<llvm::ConstantArray>(val);
-         const llvm::ArrayType * arrType = arr->getType();
+         const llvm::ArrayType * arrType = llvm::cast<llvm::ArrayType>(val->getType());
          for(uint i = 0; i < arrType->getNumElements(); ++i) {
             llvm::Constant * elem = arr->getOperand(i);
             if (i > 0)
@@ -981,9 +985,12 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
          buffer += "}";
          return buffer;
 
-      } else if (llvm::isa<llvm::ConstantVector>(val)) {
-    	  llvm::ConstantVector * vector = llvm::cast<llvm::ConstantVector>(val);
-    	  const llvm::VectorType * vectorType = vector->getType();
+      } else if (llvm::isa<llvm::ConstantVector>(val) ||
+    		  llvm::isa<llvm::ConstantDataVector>(val)) {
+
+    	  ResourceGuard<WrappedLiteral> vector(CreateLiteralWrapper(val));
+
+    	  const llvm::VectorType * vectorType = llvm::cast<llvm::VectorType>(val->getType());
 
     	  std::string buffer = "";
     	  for(uint i = 0; i < vectorType->getNumElements(); ++i)
