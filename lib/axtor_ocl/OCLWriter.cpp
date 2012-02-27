@@ -1631,7 +1631,7 @@ void OCLWriter::writeAssignRaw(const std::string & destStr, llvm::Value * val, I
 		Log::fail(val, "source values of this kind are not covered in writeAssignRaw (TODO)");
 	}
 
-	return putLine(destStr + " = " + srcText + ";");
+	putLine(destStr + " = " + srcText + ";");
 }
 
 void OCLWriter::writeAssignRaw(const std::string & dest, const std::string & src)

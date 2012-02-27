@@ -110,6 +110,9 @@ bool isGEP(llvm::Value * val);
 /// getExitEdges - Return all pairs of (_inside_block_,_outside_block_).
   void getExitEdges(llvm::Loop & loop, BlockPairVector & ExitEdges);
 
+  void LazyRemapBlock(llvm::BasicBlock *BB,
+                                          ValueMap &ValueMap);
+
   //remaps instructions' operands if they are stored in the map
   void LazyRemapInstruction(llvm::Instruction *I,
                                       ValueMap &ValueMap);

@@ -40,6 +40,7 @@ namespace axtor
 	class RestructuringProcedure
 	{
 	public:
+		virtual ~RestructuringProcedure() {};
 		/*
 		 * converts the @regions into valid regions with respect to the single exit node criterion of acyclic abstract high-level nodes
 		 * returns

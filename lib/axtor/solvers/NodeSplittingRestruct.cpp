@@ -125,6 +125,8 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 
 	NodeSplittingRestruct::NodeSplittingRestruct() {}
 
+	NodeSplittingRestruct::~NodeSplittingRestruct() {}
+
 	int NodeSplittingRestruct::findUniqueRegion(llvm::DominatorTree & domTree, RegionVector & regions, llvm::BasicBlock * block)
 	{
 		int domIdx = -1;

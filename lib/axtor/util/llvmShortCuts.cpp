@@ -364,6 +364,13 @@ uint getOpcode(const llvm::Value * value)
   }
 
 
+
+  void LazyRemapBlock(llvm::BasicBlock *BB,
+                                        ValueMap &ValueMap) {
+	  for (llvm::BasicBlock::iterator itInst = BB->begin(); itInst != BB->end(); ++itInst)
+		  LazyRemapInstruction(itInst, ValueMap);
+
+  }
   void LazyRemapInstruction(llvm::Instruction *I,
                                       ValueMap &ValueMap) {
     for (unsigned op = 0, E = I->getNumOperands(); op != E; ++op) {
