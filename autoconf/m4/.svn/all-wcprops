@@ -1,0 +1,143 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/llvm-project/!svn/ver/142995/llvm/trunk/projects/sample/autoconf/m4
+END
+rand48.m4
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/rand48.m4
+END
+single_cxx_check.m4
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/single_cxx_check.m4
+END
+linux_mixed_64_32.m4
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/linux_mixed_64_32.m4
+END
+config_makefile.m4
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/config_makefile.m4
+END
+libtool.m4
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/llvm-project/!svn/ver/142995/llvm/trunk/projects/sample/autoconf/m4/libtool.m4
+END
+func_mmap_file.m4
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/func_mmap_file.m4
+END
+c_printf_a.m4
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/c_printf_a.m4
+END
+sanity_check.m4
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/sanity_check.m4
+END
+link_options.m4
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/link_options.m4
+END
+header_mmap_anonymous.m4
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/header_mmap_anonymous.m4
+END
+path_perl.m4
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/path_perl.m4
+END
+find_std_program.m4
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/find_std_program.m4
+END
+build_exeext.m4
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/build_exeext.m4
+END
+func_isnan.m4
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/func_isnan.m4
+END
+func_isinf.m4
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/func_isinf.m4
+END
+check_gnu_make.m4
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/check_gnu_make.m4
+END
+visibility_inlines_hidden.m4
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/visibility_inlines_hidden.m4
+END
+cxx_flag_check.m4
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/cxx_flag_check.m4
+END
+need_dev_zero_for_mmap.m4
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/need_dev_zero_for_mmap.m4
+END
+path_tclsh.m4
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/path_tclsh.m4
+END
+huge_val.m4
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/huge_val.m4
+END
+config_project.m4
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/config_project.m4
+END
+ltdl.m4
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/llvm-project/!svn/ver/142456/llvm/trunk/projects/sample/autoconf/m4/ltdl.m4
+END
