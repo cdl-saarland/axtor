@@ -33,7 +33,7 @@ void CNSPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 cns::SplitTree * CNSPass::generateSplitSequence(cns::SplitTree * root, BlockGraph::SubgraphMask & mask, BlockGraph & graph)
 {
 #ifdef DEBUG
-	std::cerr << "### regularize : "; dumpVector(mask);
+	llvm::errs() << "### regularize : "; dumpVector(mask);
 #endif
 
 	/*
@@ -44,7 +44,8 @@ cns::SplitTree * CNSPass::generateSplitSequence(cns::SplitTree * root, BlockGrap
 	cns::SplitTree * tree = root;
 
 #ifdef DEBUG
-	std::cerr << "graph Size after initial contraction=" << graph.getSize(mask) << "\n";
+	llvm::errs() << "mask after contraction = "; dumpVector(mask);
+	llvm::errs() << "graph Size after initial contraction=" << graph.getSize(mask) << "\n";
 #endif
 
 	while(graph.getSize(mask) > 1)
@@ -54,12 +55,12 @@ cns::SplitTree * CNSPass::generateSplitSequence(cns::SplitTree * root, BlockGrap
 		 * identify RC-nodes
 		 */
 #ifdef DEBUG
-		std::cerr << "identifying candidate nodes (SED, non-RC). . \n";
+		llvm::errs() << "identifying candidate nodes (SED, non-RC). . \n";
 #endif
 		BlockGraph::SubgraphMask candidates = cns::detectCandidateNodes(mask, graph);
 
 #ifdef DEBUG
-			std::cerr << "candidate nodes: "; dumpVector(candidates);
+			llvm::errs() << "candidate nodes: "; dumpVector(candidates);
 #endif
 
 		/*
@@ -68,7 +69,7 @@ cns::SplitTree * CNSPass::generateSplitSequence(cns::SplitTree * root, BlockGrap
 		uint splitNode = cns::getLowestScoringNode(candidates, graph, &cns::scoreBranches);
 
 #ifdef DEBUG
-			std::cerr << "heuristic picked node: " << splitNode << "\n";
+			llvm::errs() << "heuristic picked node: " << splitNode << "\n";
 #endif
 		/*
 		 * split (complete graph mask gets modified to match)
@@ -78,9 +79,9 @@ cns::SplitTree * CNSPass::generateSplitSequence(cns::SplitTree * root, BlockGrap
 		tree = tree->pushSplit(mask, splitGraph, splitNode);
 
 #ifdef DEBUG
-		std::cerr << "graph after split";
+		llvm::errs() << "graph after split";
 		splitGraph.dump(mask);
-		std::cerr << "tree:\n";
+		llvm::errs() << "tree:\n";
 		tree->dump();
 #endif
 
@@ -102,7 +103,8 @@ bool CNSPass::runOnModule(llvm::Module & M)
 	BlockCopyTracker & tracker = target.getTracker();
 
 #ifdef DEBUG_PASSRUN
-		std::cerr << "\n\n##### PASS: CNS #####\n\n";
+	verifyModule(M);
+	llvm::errs() << "\n\n##### PASS: CNS #####\n\n";
 #endif
 
 	bool changed = false;
@@ -121,9 +123,8 @@ bool CNSPass::runOnModule(llvm::Module & M)
 
 bool CNSPass::runOnFunction(BlockCopyTracker & tracker, llvm::Function & func)
 {
-
-	BlockGraph graph(func);
-	BlockGraph::SubgraphMask mask = graph.createMask();
+	BlockGraph::SubgraphMask mask;
+	BlockGraph graph = BlockGraph::CreateFromFunction(func, mask);
 /*
 	{
 		std::ofstream of( (func.getNameStr() + "_graph.gv").c_str(), std::ios::out);
@@ -152,7 +153,7 @@ bool CNSPass::runOnFunction(BlockCopyTracker & tracker, llvm::Function & func)
 	applySplitSequence(tracker, graph, nodes);
 
 #ifdef DEBUG
-	std::cerr << "regularized function : \n";
+	llvm::errs() << "regularized function : \n";
 	func.dump();
 #endif
 

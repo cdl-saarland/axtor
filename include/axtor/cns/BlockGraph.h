@@ -24,6 +24,8 @@
 #ifndef BLOCKGRAPH_HPP_
 #define BLOCKGRAPH_HPP_
 
+#include <axtor/config.h>
+
 #include <vector>
 #include <map>
 #include <iostream>
@@ -53,12 +55,27 @@ private:
 
 	void resetGraph(uint size);
 
+	BlockGraph(uint size){
+		resetGraph(size);
+	}
+
 	DirectedGraph createExtendedGraph(SubgraphMask & mask, uint size) const;
 	static void copyLeavingEdges(DirectedGraph & destGraph, uint destNode, DirectedGraph sourceGraph, uint sourceNode);
 	static void copyIncomingEdges(DirectedGraph & destGraph, uint destNode, DirectedGraph sourceGraph, uint sourceNode);
 
 public:
-	llvm::BasicBlock * getLabel(uint index) const;
+
+	inline void setLabel(uint index, llvm::BasicBlock * _label)
+	{
+		assert(index < labels.size());
+		labels[index] = _label;
+	}
+
+	inline llvm::BasicBlock * getLabel(uint index) const
+	{
+		assert(index < labels.size());
+		return labels[index];
+	}
 
 	inline BlockGraph::SubgraphMask mergedPredecessors(SubgraphMask mask) const
 	{
@@ -127,7 +144,10 @@ public:
 	std::string getNodeName(uint index) const;
 	SubgraphMask createMask() const;
 
-	BlockGraph(llvm::Function & func);
+	// BlockGraph(llvm::Function & func);
+
+	static BlockGraph CreateFromFunction(llvm::Function & func, SubgraphMask & oMask);
+
 	~BlockGraph();
 
 	/*
@@ -164,8 +184,8 @@ public:
 	 */
 	void enforceSubgraph(SubgraphMask & mask);
 
-	void dumpGraphviz(SubgraphMask & mask, std::ostream & out) const;
-	void dump(SubgraphMask & mask) const;
+	void dumpGraphviz(const SubgraphMask & mask, std::ostream & out) const;
+	void dump(const SubgraphMask & mask) const;
 	static void dumpInternal(const DirectedGraph & graph);
 
 	SubgraphMask getExitingNodes(const SubgraphMask & scope, const SubgraphMask & mask) const;

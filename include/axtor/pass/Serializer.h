@@ -32,11 +32,7 @@
 #include <axtor/backend/AxtorBackend.h>
 #include <axtor/CommonTypes.h>
 
-#ifdef USE_RESTRUCT_PASS
 #include <axtor/pass/RestructuringPass.h>
-#else
-#include <axtor/pass/ASTExtractor.h>
-#endif
 
 /*
  * This pass gets an AST from the ASTExtractor pass and serializes it using the backend specified by the TargetProvider pass

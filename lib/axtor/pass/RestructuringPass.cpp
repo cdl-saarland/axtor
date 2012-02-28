@@ -197,7 +197,7 @@ namespace axtor {
 				region.dump("\t");
 #endif
 
-				if (! region.verify(analysis.getDomTree())) {
+				EXPENSIVE_TEST if (! region.verify(analysis.getDomTree())) {
 					analysis.getDomTree().dump();
 					bb->getParent()->viewCFGOnly();
 					Log::fail(bb->getParent(), "region invalid after solving");

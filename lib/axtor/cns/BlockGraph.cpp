@@ -8,6 +8,8 @@
 
 #include <axtor/cns/BlockGraph.h>
 #include <assert.h>
+#include <llvm/Support/raw_ostream.h>
+
 
 
 namespace axtor {
@@ -30,28 +32,39 @@ BlockGraph::~BlockGraph()
 {}
 
 
-BlockGraph::BlockGraph(llvm::Function & func)
+BlockGraph BlockGraph::CreateFromFunction(llvm::Function & func, BlockGraph::SubgraphMask & oMask)
 {
 	typedef llvm::GraphTraits<llvm::BasicBlock*> CFG;
 	typedef std::map<llvm::BasicBlock*,int> IndexMap;
 
 	uint size = func.getBasicBlockList().size();
+	BlockGraph graph(size);
 
-	resetGraph(size);
+	graph.resetGraph(size);
+	oMask = SubgraphMask(size, false);
 
 	IndexMap indexMap;
 
 	//build index map
+#ifdef DEBUG
+	llvm::errs() << "BlockGraph::BlockGraph(LLVMFunction) {\n";
+#endif
 	{
 		int index = 0;
 		for(llvm::Function::iterator bb = func.begin(); bb != func.end(); ++bb, ++index)
 		{
 			llvm::BasicBlock * block = llvm::cast<llvm::BasicBlock>(bb);
 
-			labels[index] = block;
+			graph.labels[index] = block;
 			indexMap[block] = index;
+#ifdef DEBUG
+			llvm::errs() << block->getName() << " @ " << index << "\n";
+#endif
 		}
 	}
+#ifdef DEBUG
+	llvm::errs() << "} // BlockGraph::BlockGraph(LLVMFunction)\n";
+#endif
 
 	//add adjacency information
 	{
@@ -60,16 +73,26 @@ BlockGraph::BlockGraph(llvm::Function & func)
 		{
 			llvm::BasicBlock * block = llvm::cast<llvm::BasicBlock>(bb);
 
-			for(CFG::ChildIteratorType succ = CFG::child_begin(block); succ != CFG::child_end(block); ++succ)
-			{
+			CFG::ChildIteratorType childBegin = CFG::child_begin(block);
+			CFG::ChildIteratorType childEnd = CFG::child_end(block);
+			bb->getTerminator()->dump();
+
+			for(CFG::ChildIteratorType succ = childBegin; succ != childEnd; ++succ)	{
 				llvm::BasicBlock * dest = *succ;
 
 				int destIndex = indexMap[dest];
 
-				setEdge(startIndex, destIndex, true);
+				oMask[startIndex] = true;
+				oMask[destIndex] = true;
+				graph.setEdge(startIndex, destIndex, true);
 			}
 		}
 	}
+#ifdef DEBUG
+	graph.dumpGraphviz(oMask, std::cerr);
+#endif
+
+	return graph;
 }
 
 void BlockGraph::resetGraph(uint size)
@@ -242,11 +265,6 @@ void BlockGraph::copyIncomingEdges(DirectedGraph & destGraph, uint destNode, Dir
 	destGraph[destNode] = sourceGraph[sourceNode];
 }
 
-llvm::BasicBlock * BlockGraph::getLabel(uint index) const
-{
-	return labels[index];
-}
-
 /*
  * return a correctly labeled graph after splitting the node at @index
  */
@@ -348,7 +366,7 @@ std::string BlockGraph::getNodeName(uint index) const
 	return labels[index]->getName().str();
 }
 
-void BlockGraph::dumpGraphviz(SubgraphMask & mask, std::ostream & out) const
+void BlockGraph::dumpGraphviz(const SubgraphMask & mask, std::ostream & out) const
 {
 	out << "digraph BlockGraph {\n";
 	for(uint from = 0; from < getSize(); ++from)
@@ -362,7 +380,7 @@ void BlockGraph::dumpGraphviz(SubgraphMask & mask, std::ostream & out) const
 	out << "}\n";
 }
 
-void BlockGraph::dump(SubgraphMask & mask) const
+void BlockGraph::dump(const SubgraphMask & mask) const
 {
 	std::cerr << "BlockGraph {\n";
 	for(uint from = 0; from < getSize(); ++from)

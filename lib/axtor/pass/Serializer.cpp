@@ -319,9 +319,9 @@ namespace axtor
 				bodyWriter->writeFunctionPrologue(func, locals);
 
 				//### translate instructions ###
-				#ifdef DEBUG
+#ifdef DEBUG
 				std::cerr <<  "##### translating instructions of func " << func->getName().str() << "\n";
-				#endif
+#endif
 
 				ast::ControlNode * body = funcNode->getEntry();
 				writeNode(backend, bodyWriter,0, 0, body, locals, 0, 0);
@@ -353,11 +353,7 @@ namespace axtor
 
 		SyntaxWriter * modWriter = backend.createModuleWriter(modInfo, globalScope);
 
-#ifdef USE_RESTRUCT_PASS
 		const ast::ASTMap & ASTs = getAnalysis<RestructuringPass>().getASTs();
-#else
-		const ast::ASTMap & ASTs = getAnalysis<ASTExtractor>().getASTs();
-#endif
 
 		for(llvm::Module::iterator func = M.begin(); func != M.end(); ++func)
 		{
@@ -379,11 +375,7 @@ namespace axtor
 	void Serializer::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
 		//usage.addRequired<OpaqueTypeRenamer>();
-#ifdef USE_RESTRUCT_PASS
 		usage.addRequired<RestructuringPass>();
-#else
-		usage.addRequired<ASTExtractor>();
-#endif
 		usage.addRequired<TargetProvider>();
 
 		usage.setPreservesAll();

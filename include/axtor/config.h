@@ -40,14 +40,9 @@
 // #define ENABLE_SHORT_CIRCUIT_EXPRESSIONS
 
 /*
- * enables restructuring AST extraction
- */
-#define USE_RESTRUCT_PASS
-
-/*
  * show CFGs after CFG operations
  */
-//#define DEBUG_VIEW_CFGS
+#define DEBUG_VIEW_CFGS
 
 /*
  * enables evaluation output
@@ -58,6 +53,11 @@
  * enables the native algorithm in the NodeSplitting restructuring procedure
  */
 //#define NS_NAIVE
+
+/*
+ * enables the debug mode for the restructuring procedure
+ */
+//#define DEBUG_RESTRUCT
 
 
 /*
@@ -70,8 +70,13 @@
  */
 //#define DEBUG_INTRINSICS
 
+/*
+ * enables expensive integrity checks and debug output
+ */
+#define AXTOR_EXPENSIVE_CHECKS
+
 //Debug flags
-#ifdef AXTOR_DEBUG
+#ifdef DEBUG
 /*
  * makes each axtor pass place a notification when its invoked
  */
@@ -79,6 +84,26 @@
 
 //#define DEBUG_DOMFRONT
 
+#endif
+
+
+/*
+ * Convenience macros
+ */
+
+#ifdef AXTOR_EXPENSIVE_CHECKS
+	#define EXPENSIVE_TEST if (true)
+#else
+	#define EXPENSIVE_TEST if (false)
+#endif
+
+#ifdef DEBUG
+	#define DEBUG_STREAM llvm::errs()
+	#define DEBUG_IF(X) if (X)
+
+#else
+	#define DEBUG_STREAM std::stringstream __dummy; __dummy
+	#define DEBUG_IF(X) if (false)
 #endif
 
 #endif /* CONFIG_HPP_ */
