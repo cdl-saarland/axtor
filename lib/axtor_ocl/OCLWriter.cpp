@@ -5,6 +5,7 @@
  *      Author: gnarf
  */
 
+#include <axtor/config.h>
 #include <axtor_ocl/OCLWriter.h>
 
 #include <axtor_ocl/OCLEnum.h>
@@ -989,6 +990,11 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
     		  llvm::isa<llvm::ConstantDataVector>(val)) {
 
     	  ResourceGuard<WrappedLiteral> vector(CreateLiteralWrapper(val));
+
+    	  EXPENSIVE_TEST if (! vector.get())
+    	  {
+    		  Log::fail(val, "unrecognized constant type");
+    	  }
 
     	  const llvm::VectorType * vectorType = llvm::cast<llvm::VectorType>(val->getType());
 

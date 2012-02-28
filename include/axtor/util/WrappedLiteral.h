@@ -49,9 +49,9 @@ public:
  */
 class WrappedOperandLiteral : public WrappedLiteral
 {
-	llvm::ConstantExpr * constObj;
+	llvm::Constant * constObj;
 public:
-	WrappedOperandLiteral(llvm::ConstantExpr * _constObj) :
+	WrappedOperandLiteral(llvm::Constant * _constObj) :
 		constObj(_constObj)
 	{}
 
@@ -64,7 +64,7 @@ public:
 
 	inline llvm::Constant * getOperand(uint idx) const
 	{
-		return constObj->getOperand(idx);
+		return llvm::cast<llvm::Constant>(constObj->getOperand(idx));
 	}
 };
 
@@ -72,10 +72,8 @@ WrappedLiteral * CreateLiteralWrapper(llvm::Constant * constant)
 {
 	if (llvm::isa<llvm::ConstantDataSequential>(constant)) {
 		return new WrappedDataSequential(llvm::cast<llvm::ConstantDataSequential>(constant));
-	} else if (llvm::isa<llvm::ConstantExpr>(constant)) {
-		return new WrappedOperandLiteral(llvm::cast<llvm::ConstantExpr>(constant));
 	} else {
-		return 0;
+		return new WrappedOperandLiteral(constant);
 	}
 }
 
