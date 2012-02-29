@@ -214,8 +214,13 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 		uint idx = 0;
 		for (GlobalIter itGlobal = S; itGlobal != E; ++itGlobal) {
 			uint globalSpace = itGlobal->getType()->getAddressSpace();
-			if (globalSpace != SPACE_GLOBAL && globalSpace != SPACE_CONSTANT)
-				itGlobal->setName("internal" + str<uint>(idx++));
+			// check if this variable is addressable from the outside
+			if (globalSpace == SPACE_GLOBAL)
+				continue;
+			if (globalSpace == SPACE_CONSTANT && !itGlobal->hasInitializer()) //FIXME see, if this is correct
+				continue;
+
+			itGlobal->setName("internal" + str<uint>(idx++));
 		}
 	}
 
