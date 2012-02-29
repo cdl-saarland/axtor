@@ -40,11 +40,6 @@
 // #define ENABLE_SHORT_CIRCUIT_EXPRESSIONS
 
 /*
- * show CFGs after CFG operations
- */
-#define DEBUG_VIEW_CFGS
-
-/*
  * enables evaluation output
  */
 //#define EVAL_DECOMPILE_TIME
@@ -81,6 +76,11 @@
  * makes each axtor pass place a notification when its invoked
  */
 #define DEBUG_PASSRUN
+
+/*
+ * show CFGs after CFG operations
+ */
+#define DEBUG_VIEW_CFGS
 
 //#define DEBUG_DOMFRONT
 
