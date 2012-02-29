@@ -134,6 +134,9 @@ bool usedInFunction(llvm::Function * func, llvm::Value * val);
 template<class T>
 void mergeInto(std::set<T> & A, std::set<T> & B);
 
+template<class T>
+std::set<T> getWithout(const std::set<T> & A, T object);
+
 }
 
 

@@ -4,6 +4,7 @@
 #include <axtor/util/llvmShortCuts.h>
 
 #include <axtor/solvers/NodeSplittingRestruct.h>
+#include <axtor/solvers/PredicateRestruct.h>
 
 namespace axtor {
 	IfParser IfParser::instance;
@@ -75,14 +76,20 @@ namespace axtor {
 		llvm::BasicBlock * onTrueBlock = termInst->getSuccessor(0);
 		llvm::BasicBlock * onFalseBlock = termInst->getSuccessor(1);
 
+#ifdef DEBUG
+		llvm::errs() << "IfElseBuilderSession::build(..) { \n"
+				<< "entry       : " << entry->getName() << "\n"
+				<< "onTrueBlock : " << onTrueBlock->getName() << "\n"
+				<< "onFalseBlock : " << onFalseBlock->getName() << "\n";
+#endif
+
 
 #ifdef DEBUG
 		if (exitBlock == onTrueBlock || exitBlock == onFalseBlock) {
 			 assert(false && "IF..ELSE never exits on immediate successor");
 		}
-
 #else
-		//assert((exitBlock != onTrueBlock && exitBlock != onFalseBlock) && "IF..ELSE never exits on immediate successor");
+		assert((exitBlock != onTrueBlock && exitBlock != onFalseBlock) && "IF..ELSE never exits on immediate successor");
 #endif
 		assert(children.size() == 2 && "IF..ELSE #children == 2");
 
@@ -95,7 +102,9 @@ namespace axtor {
 
 	RestructuringProcedure * IfParser::IfElseBuilderSession::getSolver() const
 	{
-		return NodeSplittingRestruct::getInstance();
+		// TODO: find a heuristic to decide between the two
+		//return NodeSplittingRestruct::getInstance();
+		return PredicateRestruct::getInstance();
 	}
 
 	void IfParser::IfElseBuilderSession::dump()

@@ -22,13 +22,14 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 
 		if (loop && loop != parentLoop && block == loop->getHeader()) {
 
-			llvm::SmallVector<llvm::BasicBlock*, 4> exits;
+			typedef llvm::SmallVector<llvm::BasicBlock*, 4> SmallBlockVector;
+			SmallBlockVector exits;
 			loop->getUniqueExitBlocks(exits);
+			result.reserve(exits.size());
       
-      //FIXME use iterator.
-			for(uint i = 0;i < exits.size(); ++i)
+			for(SmallBlockVector::iterator it = exits.begin(); it != exits.end(); ++it)
 			{
-				result.push_back(exits[i]);
+				result.push_back(*it);
 			}
 
 		} else {
@@ -307,7 +308,7 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 	 * ignore
 	 * 		@requiredExit
 	 */
-	llvm::BasicBlock * NodeSplittingRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis)
+	bool NodeSplittingRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis, llvm::BasicBlock* & oExitBlock)
 	{
 #ifdef DEBUG
 		std::cerr << "NodeSplittingRestruct::Resolve(..):context ;\n";
@@ -319,7 +320,7 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 		BlockSet exitSet = exitInfo.first;
 		BlockSet usedAnticipated = exitInfo.second;
 
-		if (!set_contains(regularExits, context.exitBlock)
+		if (context.exitBlock && !set_contains(regularExits, context.exitBlock)
 			&& set_contains(usedAnticipated, context.exitBlock)) { //split up until the exit block, if it is not also covered by BREAK/CONTINUE
 			exitSet.insert(context.exitBlock);
 		}
@@ -358,7 +359,7 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 		}
 
 #else
-		llvm::BasicBlock * exitBlock;
+		bool modifiedCFG = false;
 		if (exitSet.size() > 1) {
 
 			if (requiredExit) { // enforce the required exit block
@@ -374,7 +375,8 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 					splitAndRinseOnStack_perRegion(regions, stack, context, analysis, requiredExit);
 				}
 
-				exitBlock = requiredExit;
+				modifiedCFG = true;
+				oExitBlock = requiredExit;
 
 			} else { //find an arbitrary exit block
 				BlockVector stack = toVector<llvm::BasicBlock*>(exitSet);
@@ -383,29 +385,33 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 				while (stack.size() > 1) {
 					splitAndRinseOnStack_perRegion(regions, stack, context, analysis, NULL);
 				}
-				exitBlock = *stack.begin();
+				modifiedCFG = true;
+				oExitBlock = *stack.begin();
 			}
 
-		} else if (exitSet.size() == 1){
-			exitBlock = *exitSet.begin();
 		} else {
-			exitBlock = context.exitBlock;
+			modifiedCFG = false;
+			if (exitSet.size() == 1){
+				oExitBlock = *exitSet.begin();
+			} else {
+				oExitBlock = context.exitBlock;
+			}
 		}
 #endif
 
 
 #ifdef DEBUG
-			std::cerr << "# NodeSplittingRestruct detectedExit = " << (exitBlock ? exitBlock->getName().str() :"null") << "\n";
+			std::cerr << "# NodeSplittingRestruct detectedExit = " << (oExitBlock ? oExitBlock->getName().str() :"null") << "\n";
 #endif
 
 		//make external exit the anticipated exit for all child regions
 		for (RegionVector::iterator itRegion = regions.begin(); itRegion != regions.end(); ++itRegion)
 		{
 			ExtractorRegion & region = *itRegion;
-			region.context.exitBlock = exitBlock;
+			region.context.exitBlock = oExitBlock;
 		}
 
-		return exitBlock;
+		return modifiedCFG;
 	}
 
 	NodeSplittingRestruct * NodeSplittingRestruct::getInstance()

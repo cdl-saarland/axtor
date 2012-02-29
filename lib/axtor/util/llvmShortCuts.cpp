@@ -459,7 +459,19 @@ void mergeInto(std::set<T> & A, std::set<T> & B)
 	}
 }
 
+template<class T>
+std::set<T> getWithout(const std::set<T> & A, T object)
+{
+	typedef std::set<T> TSet;
+	TSet result;
+	result.insert(A.begin(), A.end());
+	result.erase(object);
+	return result;
+}
+
+
 //template<llvm::BasicBlock*>
 template void mergeInto(std::set<llvm::BasicBlock*> & A, std::set<llvm::BasicBlock*> &B);
+template BlockSet getWithout(const BlockSet & A, llvm::BasicBlock * object);
 
 }

@@ -32,8 +32,8 @@ namespace axtor {
 		const ExtractorContext & context = region.context;
 
 	#ifdef DEBUG
-		std::cerr << "processRegion : " << region.getHeader()->getName().str() << " until " << (context.exitBlock ? context.exitBlock->getName().str()  : "NULL") << "\n";
-		std::cerr << "{\n";
+		llvm::errs() << "processRegion : " << region.getHeader()->getName().str() << " until " << (context.exitBlock ? context.exitBlock->getName().str()  : "NULL") << "\n";
+		llvm::errs() << "{\n";
 	#endif
 		//llvm::BasicBlock * exitBlock = region.context.exitBlock;
 
@@ -49,14 +49,14 @@ namespace axtor {
 			nodes.push_back(childNode);
 			block = next;
 /*#ifdef DEBUG
-			std::cerr << "returned " << (block ? block->getName().str() : "NULL") << "\n";
+			llvm::errs() << "returned " << (block ? block->getName().str() : "NULL") << "\n";
 #endif*/
 			if (block == exitBlock)
 				break;
 		}
 
 	#ifdef DEBUG
-		std::cerr << "}\n";
+		llvm::errs() << "}\n";
 	#endif
 
 		if (nodes.size() == 1) {
@@ -78,8 +78,9 @@ namespace axtor {
 	llvm::BasicBlock * RestructuringPass::processBasicBlock(bool enteredLoop, llvm::BasicBlock * bb, const ExtractorContext & context, AnalysisStruct & analysis, BlockSet & visited, ast::ControlNode *& oNode)
 	{
 
+		assert(bb);
 #ifdef DEBUG
-		std::cerr << "\tprocessBlock : " << bb->getName().str() << std::endl;
+		llvm::errs() << "\tprocessBlock : " << bb->getName() << "\n";
 #endif
 
 		/*
@@ -89,13 +90,13 @@ namespace axtor {
 		if (!enteredLoop) {
 			if (bb == context.continueBlock) {
 	#ifdef DEBUG
-				std::cerr << "\t\t(continue)" << std::endl;
+				llvm::errs() << "\t\t(continue)" << "\n";
 	#endif
 				oNode = new ast::ContinueNode(NULL); //preserve AST semantics
 				return NULL;
 			} else if (bb == context.breakBlock) {
 	#ifdef DEBUG
-				std::cerr << "\t\t(break)" << std::endl;
+				llvm::errs() << "\t\t(break)" << "\n";
 	#endif
 				oNode = new ast::BreakNode(NULL); //preserve AST-semantics
 				return NULL;
@@ -110,14 +111,14 @@ namespace axtor {
 		if (termInst->getNumSuccessors() == 0) {
 			if (llvm::isa<llvm::ReturnInst>(termInst)) {
 #ifdef DEBUG
-				std::cerr << "\t\t(return)" << std::endl;
+				llvm::errs() << "\t\t(return)" << "\n";
 #endif
 				oNode = new ast::ReturnNode(bb);
 				return NULL;
 
 			} else if (llvm::isa<llvm::UnreachableInst>(termInst)) {
 #ifdef DEBUG
-				std::cerr << "\t\t(unreachable)" << std::endl;
+				llvm::errs() << "\t\t(unreachable)" << "\n";
 #endif
 				oNode = new ast::UnreachableNode(bb);
 				return NULL;
@@ -133,14 +134,14 @@ namespace axtor {
 		if (loopBuilder)
 		{
 #ifdef DEBUG
-			std::cerr << "\t\t(loop)" << std::endl;
+			llvm::errs() << "\t\t(loop)" << "\n";
 #endif
 			ast::NodeMap children;
 			const ExtractorRegion & region = loopBuilder->getRegion(0);
 			assert(region.verify(analysis.getDomTree()) && "loop body uses non-anticipated exits");
 
 #ifdef DEBUG
-			std::cerr << "\tloop body";
+			llvm::errs() << "\tloop body";
 			region.dump("\t\t");
 #endif
 
@@ -163,7 +164,7 @@ namespace axtor {
 			llvm::BasicBlock * next = termInst->getSuccessor(0);
 
 #ifdef DEBUG
-			std::cerr << "\t\t(sequence)" << std::endl;
+			llvm::errs() << "\t\t(sequence)" << "\n";
 #endif
 			oNode = new ast::BlockNode(bb);
 			return next;
@@ -178,14 +179,17 @@ namespace axtor {
 		if (ifBuilder)
 		{
 	#ifdef DEBUG
-		std::cerr << "\t\tis acyclic primitive (builder = " << ifBuilder->getName() << ")\n";
+		llvm::errs() << "\t\tis acyclic primitive (builder = " << ifBuilder->getName() << ")\n";
 	#endif
 			ast::NodeMap children;
 			RestructuringProcedure * solver = ifBuilder->getSolver();
 			assert(solver && "solvers mandatory for acyclic primitives");
 
 			// resolve control-flow issues (single node exit property)
-			llvm::BasicBlock * exitBlock = solver->resolve(ifBuilder->getRegions(), ifBuilder->getRequiredExit(), context, analysis);
+			llvm::BasicBlock * exitBlock = 0;
+			while (solver->resolve(ifBuilder->getRegions(), ifBuilder->getRequiredExit(), context, analysis, exitBlock)) {
+				ifBuilder = parsers.ifParser->tryParse(bb, context, analysis);
+			}
 
 			RegionVector & regions = ifBuilder->getRegions();
 
@@ -198,8 +202,12 @@ namespace axtor {
 #endif
 
 				EXPENSIVE_TEST if (! region.verify(analysis.getDomTree())) {
+					analysis.getLoopInfo().dump();
 					analysis.getDomTree().dump();
+#ifdef DEBUG_VIEW_CFGS
+					llvm::errs() << "VIEWCFG: with invalid regions at header " << (region.getHeader() ? region.getHeader()->getName() : "0") << "\n";
 					bb->getParent()->viewCFGOnly();
+#endif
 					Log::fail(bb->getParent(), "region invalid after solving");
 					assert(false && "region invalid after solving");
 				}
@@ -210,7 +218,7 @@ namespace axtor {
 			}
 
 #ifdef DEBUG
-			std::cerr << "checking on the session . . \n";
+			llvm::errs() << "checking on the session . . \n";
 			ifBuilder->dump();
 #endif
 
@@ -235,15 +243,20 @@ namespace axtor {
 
 		BlockSet visited;
 
+#ifdef DEBUG_VIEW_CFGS
+		llvm::errs() << "VIEW_CFG: original CFG\n";
+		func.viewCFGOnly();
+#endif
+
 #ifdef DEBUG
-		std::cerr << "Restruct: begin dump \n";
+		llvm::errs() << "Restruct: begin dump \n";
 		func.dump();
-		std::cerr << "Restruct: end dump\n";
-		std::cerr << "### LoopInfo ###\n";
+		llvm::errs() << "Restruct: end dump\n";
+		llvm::errs() << "### LoopInfo ###\n";
 		funcLoopInfo.dump();
-		std::cerr << "### DomTree ###\n";
+		llvm::errs() << "### DomTree ###\n";
 		funcDomTree.dump();
-		std::cerr << "### PostDomTree ###\n";
+		llvm::errs() << "### PostDomTree ###\n";
 		funcPostDomTree.dump();
 		// func.viewCFGOnly();
 #endif
@@ -267,7 +280,7 @@ namespace axtor {
 	bool RestructuringPass::runOnModule(llvm::Module & M)
 	{
 #ifdef DEBUG_PASSRUN
-		std::cerr << "\n\n##### PASS: Restructuring Pass #####\n\n";
+		llvm::errs() << "\n\n##### PASS: Restructuring Pass #####\n\n";
 		verifyModule(M);
 #endif
 		for (llvm::Module::iterator func = M.begin(); func != M.end(); ++func)

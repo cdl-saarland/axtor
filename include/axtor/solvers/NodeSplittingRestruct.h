@@ -71,7 +71,7 @@ namespace axtor {
 		NodeSplittingRestruct();
 		~NodeSplittingRestruct();
 
-		virtual llvm::BasicBlock * resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis);
+		virtual bool resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis, llvm::BasicBlock* & oExitBlock);
 
 		static NodeSplittingRestruct * getInstance();
 	};

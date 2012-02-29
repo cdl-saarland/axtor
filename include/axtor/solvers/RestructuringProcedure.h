@@ -43,10 +43,12 @@ namespace axtor
 		virtual ~RestructuringProcedure() {};
 		/*
 		 * converts the @regions into valid regions with respect to the single exit node criterion of acyclic abstract high-level nodes
-		 * returns
+		 * 	oExitBlock
 		 * 		requiredExit (if defined) or a newly generated exit block otw. (if any)
+		 * returns
+		 * 		if the CFG was modified and needs to be reparsed
 		 */
-		virtual llvm::BasicBlock * resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis) = 0;
+		virtual bool resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis, llvm::BasicBlock *& oExitBlock) = 0;
 	};
 }
 

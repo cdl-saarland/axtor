@@ -24,6 +24,8 @@ namespace axtor
 
 	class PredicateRestruct : public RestructuringProcedure
 	{
+		static PredicateRestruct instance;
+
 	public:
 
 		PredicateRestruct();
@@ -33,7 +35,9 @@ namespace axtor
 		 * returns
 		 * 		requiredExit (if defined) or a newly generated exit block otw. (if any)
 		 */
-		llvm::BasicBlock * resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis);
+		bool resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis, llvm::BasicBlock *& oExitBlock);
+
+		static PredicateRestruct * getInstance();
 	};
 }
 
