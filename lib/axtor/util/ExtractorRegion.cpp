@@ -48,4 +48,5 @@ namespace axtor{
 	{
 		return domTree.dominates(getHeader(), block);
 	}
+
 }

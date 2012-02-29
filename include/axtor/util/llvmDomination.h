@@ -68,6 +68,8 @@ bool dominatesAll(llvm::DominatorTree & domTree, llvm::DomTreeNode * node, const
 
 llvm::DomTreeNode * findImmediateDominator(llvm::DominatorTree & domTree, const BlockSet & blocks);
 
+BlockSet computeDominatedRegion(llvm::DominatorTree & domTree, llvm::BasicBlock * header, BlockSet exits);
+
 }
 
 #endif /* LLVMDOMINATION_HPP_ */

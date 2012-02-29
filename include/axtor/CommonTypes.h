@@ -27,6 +27,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <stack>
 #include <stdio.h>
 #include <iostream>
 
@@ -82,6 +83,7 @@ namespace axtor {
 	typedef std::set<const llvm::BasicBlock*> ConstBlockSet;
     typedef std::pair<llvm::BasicBlock*,llvm::BasicBlock*> BlockPair;
     typedef std::vector<std::pair<llvm::BasicBlock*,llvm::BasicBlock*> > BlockPairVector;
+    typedef std::stack<llvm::BasicBlock*> BlockStack;
 
     typedef std::vector<llvm::Loop*> LoopVector;
     typedef std::set<llvm::Loop*> LoopSet;

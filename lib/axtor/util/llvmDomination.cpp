@@ -6,6 +6,7 @@
  */
 
 #include <axtor/util/llvmDomination.h>
+#include <axtor/util/llvmShortCuts.h>
 
 namespace axtor {
 
@@ -55,6 +56,30 @@ bool dominatesAll(llvm::DominatorTree & domTree, llvm::DomTreeNode * node, const
 	}
 	return true;
 }
+
+BlockSet computeDominatedRegion(llvm::DominatorTree & domTree, llvm::BasicBlock * header, BlockSet exits) {
+		BlockSet blocks;
+		BlockSet visited;
+
+		blocks.insert(header);
+
+		do {
+			BlockSet::iterator itBegin = blocks.begin();
+			llvm::BasicBlock * block = *itBegin;
+			blocks.erase(itBegin);
+
+			if (
+					!set_contains(exits, block)      && // this is not an exit from this region
+//					domTree.dominates(header, block) && // we dominate this
+					visited.insert(block).second        // we have not yet visited this node
+			) {
+				for (llvm::succ_iterator itSucc = llvm::succ_begin(block); itSucc != llvm::succ_end(block); ++itSucc)
+					blocks.insert(*itSucc);
+			}
+		} while (! blocks.empty());
+
+		return visited;
+	}
 
 llvm::DomTreeNode * findImmediateDominator(llvm::DominatorTree & domTree, const BlockSet & blocks)
 {

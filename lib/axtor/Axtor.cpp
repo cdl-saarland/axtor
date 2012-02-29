@@ -126,8 +126,15 @@ namespace axtor {
 		pm.add(loopExitEnum);
 		pm.add(preperator);
 
+		llvm::Pass * regMemPass = llvm::createDemoteRegisterToMemoryPass();
+		pm.add(regMemPass);
+
 		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
 		pm.add(restruct);
+
+		/*llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
+		pm.add(memRegPass);
+		*/
 
 		//opaque type renamer
 		//pm.add(renamer);

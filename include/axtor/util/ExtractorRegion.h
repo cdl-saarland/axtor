@@ -44,7 +44,7 @@ namespace axtor {
 		void dump() const;
 		void dump(std::string prefix) const;
 		bool verify(llvm::DominatorTree & domTree) const;
-		bool contains(llvm::DominatorTree & domTree, const llvm::BasicBlock * block) const;
+		bool contains(llvm::DominatorTree & domTree, const llvm::BasicBlock * block) const; //FIXME: does not check context-boundaries
 	};
 
 	typedef std::vector<ExtractorRegion> RegionVector;

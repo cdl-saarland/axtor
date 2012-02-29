@@ -311,7 +311,7 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 	bool NodeSplittingRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requiredExit, const ExtractorContext & context, AnalysisStruct & analysis, llvm::BasicBlock* & oExitBlock)
 	{
 #ifdef DEBUG
-		std::cerr << "NodeSplittingRestruct::Resolve(..):context ;\n";
+		std::cerr << "&&&&& NodeSplittingRestruct::Resolve(..):context ;\n";
 		context.dump();
 #endif
 		//split all exits until the regions satisfy the single exit node property

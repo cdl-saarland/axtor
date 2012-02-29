@@ -17,9 +17,11 @@
 namespace axtor
 {
 	/*
-	 * Interface for restructuring procedures for acyclic control-flow
+	 * Uses enumeration to tunnel the control-flow to joined exits through a virtual dispatch block ("fused")
 	 *
-	 * (Implement as Singleton)
+	 * This pass requires mem2reg: It will produce broken code, if values are used by instructions in
+	 * the joined exits from predecessors that are not received via PHI-nodes.
+	 *
 	 */
 
 	class PredicateRestruct : public RestructuringProcedure
