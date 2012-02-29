@@ -124,23 +124,26 @@ namespace axtor {
 
 		//axtor transformations building on LLVM analysis
 		pm.add(loopExitEnum);
-		pm.add(preperator);
 
+		//Required by restruct pass
 		llvm::Pass * regMemPass = llvm::createDemoteRegisterToMemoryPass();
 		pm.add(regMemPass);
 
-		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
-		pm.add(restruct);
-
-		/*llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
+			axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
+			pm.add(restruct);
+		
+		//recover registers
+		llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
 		pm.add(memRegPass);
-		*/
 
 		//opaque type renamer
 		//pm.add(renamer);
 
 		//backend specific passes
 		backend.addRequiredPasses(pm);
+		
+		// sanitize variable names
+		pm.add(preperator);
 
 		//read-only serialization pass
 		pm.add(serializer);
