@@ -576,9 +576,9 @@ std::string OCLWriter::getOperation(const WrappedOperation & op, StringVector op
 			  std::string targetCastStr;
 			  std::string suffixStr;
 			  if (isUnsigned) {
-				  targetCastStr =  "as_" + targetTypeStr + "(convert_u" + targetTypeStr + "("; suffixStr += "))";
+				  targetCastStr =  "as_" + targetTypeStr + "((u" + targetTypeStr + ")("; suffixStr += "))";
 			  } else {
-				  targetCastStr =  "convert_" + targetTypeStr + "(" ; suffixStr += ")";
+				  targetCastStr =  "(" + targetTypeStr + ")(" ; suffixStr += ")";
 			  }
 			  return targetCastStr + operands[0] + suffixStr;
 		  }
