@@ -1,10 +1,7 @@
-opencl
-glsl
-opencl_debug
-glsl_debug
-*.o
-*.d
-*/.dir
-*.log
-*.status
-Makefile.common
+Debug/
+Asserts/
+Checks/
+Debug+Asserts/
+Debug+Checks/
+Asserts+Checks/
+Debug+Asserts+Checks/

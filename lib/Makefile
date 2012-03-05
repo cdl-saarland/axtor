@@ -8,6 +8,7 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS=axtor axtor_ocl
+
+PARALLEL_DIRS=axtor axtor_ocl
 
 include $(LEVEL)/Makefile.common

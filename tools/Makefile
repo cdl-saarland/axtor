@@ -8,6 +8,8 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS=extractor
+PARALLEL_DIRS=extractor axtorOCLDriver oclang
+
+# Has only been tested on Linux. Disable for other OSes
 
 include $(LEVEL)/Makefile.common
