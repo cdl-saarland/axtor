@@ -24,6 +24,7 @@ This will, most likely, only work ..:
 As we are playing some funny games with the linker, the whole act
 can fail, if the wrapped driver is also linking against LLVM/exporting
 LLVM symbols. This is due to ld-symbol look-up semantics.
+Does not currently work with the packetizer.
 
 
 ##### Usage #####

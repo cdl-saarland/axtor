@@ -192,7 +192,7 @@ PipelineResult runPipeline(const char * options)
 	std::string sedCmdOne = "sed \'s/__inline/inline/\' -i " + inputOCLFile;
 	std::string sedCmdTwo = "sed \'s/inline/static inline/\' -i " + inputOCLFile;
 
-	std::string llvmPath = getEnvString("LLVM_PATH") + "/";
+	std::string llvmPath = getEnvString("LLVM_PATH", "/usr/bin") + "/";
 	std::string axtorBuildOptions = getEnvString("AXTOR_CLANG_OPTIONS", "-O0");
 	std::string axtorOptOptions = getEnvString("AXTOR_OPT_OPTIONS");
 
@@ -386,6 +386,10 @@ extern "C" cl_int clBuildProgram(
 		{
 		case CLANG_FAILURE:
 			std::cerr << "&&&&& CLANG_FAILURE!\n"; return CL_BUILD_ERROR;
+		case OPT_FAILURE:
+			std::cerr << "&&&&& OPT_FAILURE!\n"; return CL_BUILD_ERROR;
+		case PACKETIZER_FAILURE:
+			std::cerr << "&&&&& PACKETIZER_FAILURE!\n"; return CL_BUILD_ERROR;
 		case AXTOR_FAILURE:
 			std::cerr << "&&&&& AXTOR_FAILURE!\n"; return CL_BUILD_ERROR;
 		default:

@@ -12,6 +12,7 @@ This is the source-code of the AST-extractor (axtor) for the Low-Level Virtual
 Machine (LLVM). Axtor takes a generic LLVM-Bitcode module and generates
 high-level control-flow structures for its functions.
 For detailed information on the algorithm refer to the author's Bachelor thesis [1].
+Information about the LLVM can be found on http://llvm.org/ .
 
 
 ##### Remarks #####
@@ -24,10 +25,23 @@ as well.
 ##### Build Instructions #####
 This project is realised as a LLVM subproject and can be build
 according to the generic build instructions found on the LLVM website.
-Note, that the axtor OpenCL driver and oclang will only be build on linux
+Follow the instructions below to run OpenCL applications with
+the "loop" driver (found in tools/axtorOCLDriver).
+
+##### Loop Driver Build Instructions (Linux only) #####
+To get it all working, proceed as follows:
+1.) Checkout the project (e.g. into LLVM's projects/ folder)
+2.) Patch your Clang installation using the patches provided (folder patches/)
+3.) Rebuild Clang
+4.) Configure & build Axtor
+
+To run an executable with the loop driver, do as follows:
+1.) Make LLVM_PATH point to the LLVM binary directory
+2.) Run the OpenCL application with
+	LD_PRELOAD=<Path/To/libaxtorOpenCLDriver.so> <OpenCLApplication>
 
 
-##### Build Targets #####
+##### Project structure #####
 
 lib/axtor/ - AST-Extractor
 
@@ -38,7 +52,9 @@ lib/axtor/ - AST-Extractor
 
 lib/axtor_ocl/ -  OpenCL backend for Axtor
 
-	The OpenCL backend based on the AST-extractor serialization interface.
+	The OpenCL backend based on the AST-extractor serialization interface. Also
+	includes a custom header for the Clang OpenCL Frontend. 
+	
 	
 lib/axtor_glsl/ - (unreleased) GLSL backend for Axtor 
 
@@ -53,10 +69,10 @@ tools/extractor/
 
 tools/oclang/ - OpenCL LLVM frontend
 
-	Invokes clang with default settings for enabling the OpenCL frontend.
+	Passes command line arguments to clang with the OpenCL frontend enabled.
 	
 	
-tools/axtorOCLDriver/
+tools/axtorOCLDriver/ - driver for OpenCL kernel manipulation
 
 	OpenCL driver wrapper for source-to-source kernel transformations.
 	Loads OpenCL source-code into LLVM bitcode and serializes it back
@@ -68,5 +84,5 @@ tools/axtorOCLDriver/
 	
 	
 ##### References #####
-[1] Bachelor Thesis, "Decompilation of LLVM IR", Simon Moll 
+[1] Simon Moll, "Decompilation of LLVM IR", Bachelor Thesis
 	(http://www.cdl.uni-saarland.de/publications/theses/moll_bsc.pdf)
