@@ -11,6 +11,6 @@ echo -n "Regenerating Clang patch file (r${CLANG_REVISION}) .."
 svn diff ../../tools/clang > ${CLANG_PATCH}
 echo "DONE"
 
-echo -n "Regenerating LLVM patch file  (r${LLVM_REVISION}) .."
-svn diff ../.. > ${LLVM_PATCH}
-echo "DONE"
+# echo -n "Regenerating LLVM patch file  (r${LLVM_REVISION}) .."
+# svn diff ../.. > ${LLVM_PATCH}
+# echo "DONE"
