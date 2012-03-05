@@ -20,6 +20,8 @@ Has only been tested on Linux systems (Scientific Linux 6.1, Ubuntu). Although,
 the OpenCL backend and core library should work out of the box on other OSes
 as well.
 
+##### Build Prerequisites #####
+LLVM 3.1 (last tested revision revision 152026)
 
 
 ##### Build Instructions #####
