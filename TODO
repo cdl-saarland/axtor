@@ -1,0 +1,7 @@
+TODO
+* Harmonise the OpenCL backend with the unpatched OpenCL frontend for Clang.
+* Port the GLSL Backend to LLVM-SVN.
+* Dynamically read the address spaces from bitcode meta-data. Only default to the hard-coded values if that
+  meta-data is missing.
+* Port to other OSes than Linux.
+* Make work with whole-function-vectorizer.

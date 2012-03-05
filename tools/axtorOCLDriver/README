@@ -1,0 +1,49 @@
+--------------------------------------------------------------
+                  Axtor OpenCL wrapper the "loop" driver
+                          (axtor)
+--------------------------------------------------------------
+date    : 05.03.12
+author  : Simon Moll
+licence : GPL (read file "LICENSE")
+
+
+##### Requirements #####
+This will, most likely, only work ..:
+ * on Linux,
+ because the driver is making assumptions about the whereabouts of
+ temporary-files, needs "sed" and requires LD_PRELOAD to be loaded.
+
+ * with a patched Clang installation.
+ Apply the "clang_opencl_patch_r<YourRevision>.patch" patch found
+ in "patches/" on clang.
+ 
+ * with the two other tools: "oclang.sh" and "extractor"
+ 
+ 
+##### Known Issues #####
+As we are playing some funny games with the linker, the whole act
+can fail, if the wrapped driver is also linking against LLVM/exporting
+LLVM symbols. This is due to ld-symbol look-up semantics.
+
+
+##### Usage #####
+First, make sure that LLVM_PATH is set (explanation below).
+Run an executable using OpenCL with the following command line:
+
+	LD_PRELOAD=<PathToThisLibrary.so> ./<Executable>
+	
+	
+Try simple OpenCL demos to verify your installation.
+
+
+##### Environment variables #####
+LLVM_PATH (required)
+	installation path of the LLVM binaries.
+	
+AXTOR_CLANG_OPTIONS (optional)
+	additional options passed to the clang.
+	 
+AXTOR_OPT_OPTIONS (optional)
+	parameters for opt.
+	For portability apply your transformation here, instead
+	of patching the wrapper itself.

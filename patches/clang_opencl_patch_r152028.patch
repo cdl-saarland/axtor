@@ -1,8 +1,8 @@
 Index: ../../tools/clang/lib/Basic/Targets.cpp
 ===================================================================
---- ../../tools/clang/lib/Basic/Targets.cpp	(revision 151257)
+--- ../../tools/clang/lib/Basic/Targets.cpp	(revision 152028)
 +++ ../../tools/clang/lib/Basic/Targets.cpp	(working copy)
-@@ -923,9 +923,9 @@
+@@ -935,9 +935,9 @@
  
  namespace {
    static const unsigned PTXAddrSpaceMap[] = {
@@ -17,9 +17,9 @@ Index: ../../tools/clang/lib/Basic/Targets.cpp
      static const char * const GCCRegNames[];
 Index: ../../tools/clang/lib/Sema/SemaDecl.cpp
 ===================================================================
---- ../../tools/clang/lib/Sema/SemaDecl.cpp	(revision 151257)
+--- ../../tools/clang/lib/Sema/SemaDecl.cpp	(revision 152028)
 +++ ../../tools/clang/lib/Sema/SemaDecl.cpp	(working copy)
-@@ -7046,7 +7046,7 @@
+@@ -7064,7 +7064,7 @@
    // duration shall not be qualified by an address-space qualifier."
    // Since all parameters have automatic store duration, they can not have
    // an address space.
@@ -30,7 +30,7 @@ Index: ../../tools/clang/lib/Sema/SemaDecl.cpp
    }   
 Index: ../../tools/clang/lib/Sema/DeclSpec.cpp
 ===================================================================
---- ../../tools/clang/lib/Sema/DeclSpec.cpp	(revision 151257)
+--- ../../tools/clang/lib/Sema/DeclSpec.cpp	(revision 152028)
 +++ ../../tools/clang/lib/Sema/DeclSpec.cpp	(working copy)
 @@ -428,7 +428,7 @@
      case SCS_private_extern:
@@ -43,9 +43,9 @@ Index: ../../tools/clang/lib/Sema/DeclSpec.cpp
        return true;
 Index: ../../tools/clang/lib/Sema/SemaExpr.cpp
 ===================================================================
---- ../../tools/clang/lib/Sema/SemaExpr.cpp	(revision 151257)
+--- ../../tools/clang/lib/Sema/SemaExpr.cpp	(revision 152028)
 +++ ../../tools/clang/lib/Sema/SemaExpr.cpp	(working copy)
-@@ -5637,6 +5637,29 @@
+@@ -5663,6 +5663,29 @@
    // Handle the case of an ext vector and scalar.
    if (const ExtVectorType *LV = LHSType->getAs<ExtVectorType>()) {
      QualType EltTy = LV->getElementType();
@@ -75,44 +75,11 @@ Index: ../../tools/clang/lib/Sema/SemaExpr.cpp
      if (EltTy->isIntegralType(Context) && RHSType->isIntegralType(Context)) {
        int order = Context.getIntegerTypeOrder(EltTy, RHSType);
        if (order > 0)
-Index: ../../tools/clang/lib/CodeGen/CodeGenFunction.cpp
-===================================================================
---- ../../tools/clang/lib/CodeGen/CodeGenFunction.cpp	(revision 151257)
-+++ ../../tools/clang/lib/CodeGen/CodeGenFunction.cpp	(working copy)
-@@ -282,8 +282,26 @@
-         llvm::NamedMDNode *OpenCLMetadata = 
-           CGM.getModule().getOrInsertNamedMetadata("opencl.kernels");
-           
--        llvm::Value *Op = Fn;
--        OpenCLMetadata->addOperand(llvm::MDNode::get(Context, Op));
-+        llvm::SmallVector<llvm::Value *, 2> KernMetadata(1, Fn);
-+
-+        llvm::SmallVector<llvm::Value *, 8> AddrSpaces;
-+        for(FunctionDecl::param_const_iterator I = FD->param_begin(),
-+                                               E = FD->param_end();
-+                                               I != E;
-+                                               ++I) {
-+          unsigned AddrSpace;
-+
-+          if(const PointerType *Ty = dyn_cast<PointerType>((*I)->getType()))
-+            AddrSpace = Ty->getPointeeType().getAddressSpace();
-+          else
-+            AddrSpace = LangAS::Last;
-+
-+          AddrSpaces.push_back(
-+            llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), AddrSpace));
-+        }
-+        KernMetadata.push_back(llvm::MDNode::get(Context, AddrSpaces));
-+
-+        OpenCLMetadata->addOperand(llvm::MDNode::get(Context, KernMetadata));
-       }
-   }
- 
 Index: ../../tools/clang/lib/CodeGen/CodeGenModule.h
 ===================================================================
---- ../../tools/clang/lib/CodeGen/CodeGenModule.h	(revision 151257)
+--- ../../tools/clang/lib/CodeGen/CodeGenModule.h	(revision 152028)
 +++ ../../tools/clang/lib/CodeGen/CodeGenModule.h	(working copy)
-@@ -948,6 +948,11 @@
+@@ -962,6 +962,11 @@
    /// to emit the .gcno and .gcda files in a way that persists in .bc files.
    void EmitCoverageFile();
  
@@ -126,9 +93,9 @@ Index: ../../tools/clang/lib/CodeGen/CodeGenModule.h
    /// must be either a function or var decl.
 Index: ../../tools/clang/lib/CodeGen/CodeGenModule.cpp
 ===================================================================
---- ../../tools/clang/lib/CodeGen/CodeGenModule.cpp	(revision 151257)
+--- ../../tools/clang/lib/CodeGen/CodeGenModule.cpp	(revision 152028)
 +++ ../../tools/clang/lib/CodeGen/CodeGenModule.cpp	(working copy)
-@@ -163,6 +163,9 @@
+@@ -164,6 +164,9 @@
    if (getCodeGenOpts().EmitDeclMetadata)
      EmitDeclMetadata();
  
@@ -138,7 +105,7 @@ Index: ../../tools/clang/lib/CodeGen/CodeGenModule.cpp
    if (getCodeGenOpts().EmitGcovArcs || getCodeGenOpts().EmitGcovNotes)
      EmitCoverageFile();
  
-@@ -2510,6 +2513,39 @@
+@@ -2640,6 +2643,39 @@
    }
  }
  
@@ -180,7 +147,7 @@ Index: ../../tools/clang/lib/CodeGen/CodeGenModule.cpp
      if (llvm::NamedMDNode *CUNode = TheModule.getNamedMetadata("llvm.dbg.cu")) {
 Index: ../../tools/clang/lib/CodeGen/CGDecl.cpp
 ===================================================================
---- ../../tools/clang/lib/CodeGen/CGDecl.cpp	(revision 151257)
+--- ../../tools/clang/lib/CodeGen/CGDecl.cpp	(revision 152028)
 +++ ../../tools/clang/lib/CodeGen/CGDecl.cpp	(working copy)
 @@ -1023,16 +1023,18 @@
      llvm::ConstantInt::get(IntPtrTy,
@@ -204,15 +171,14 @@ Index: ../../tools/clang/lib/CodeGen/CGDecl.cpp
      if (!constant->isNullValue()) {
        Loc = Builder.CreateBitCast(Loc, constant->getType()->getPointerTo());
        emitStoresForInitAfterMemset(constant, Loc, isVolatile, Builder);
-@@ -1041,16 +1043,19 @@
+@@ -1041,16 +1043,17 @@
      // Otherwise, create a temporary global with the initializer then
      // memcpy from the global to the alloca.
      std::string Name = GetStaticDeclName(*this, D, ".");
--    llvm::GlobalVariable *GV =
-+  
-+    uint addrSpace = getLangOptions().OpenCL ? 3 : 0; //FIXME use PTXAddrSpace constant
 +
-+   llvm::GlobalVariable *GV =
++    uint addrSpace = getLangOptions().OpenCL ? clang::LangAS::opencl_constant: 0;
++
+     llvm::GlobalVariable *GV =
        new llvm::GlobalVariable(CGM.getModule(), constant->getType(), true,
                                 llvm::GlobalValue::PrivateLinkage,
 -                               constant, Name, 0, false, 0);
@@ -223,8 +189,6 @@ Index: ../../tools/clang/lib/CodeGen/CGDecl.cpp
      llvm::Value *SrcPtr = GV;
 -    if (SrcPtr->getType() != BP)
 -      SrcPtr = Builder.CreateBitCast(SrcPtr, BP);
-+    /*if (SrcPtr->getType() != BP)
-+      SrcPtr = Builder.CreateBitCast(SrcPtr, BP);*/
  
      Builder.CreateMemCpy(Loc, SrcPtr, SizeVal, alignment.getQuantity(),
                           isVolatile);

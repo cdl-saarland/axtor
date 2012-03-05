@@ -1,1 +1,72 @@
-TODO
+--------------------------------------------------------------
+                  AST - Extractor for LLVM
+                          (axtor)
+--------------------------------------------------------------
+date    : 05.03.12
+author  : Simon Moll
+licence : GPL (read file "LICENSE")
+
+
+##### Introduction #####
+This is the source-code of the AST-extractor (axtor) for the Low-Level Virtual
+Machine (LLVM). Axtor takes a generic LLVM-Bitcode module and generates
+high-level control-flow structures for its functions.
+For detailed information on the algorithm refer to the author's Bachelor thesis [1].
+
+
+##### Remarks #####
+Has only been tested on Linux systems (Scientific Linux 6.1, Ubuntu). Although,
+the OpenCL backend and core library should work out of the box on other OSes
+as well.
+
+
+
+##### Build Instructions #####
+This project is realised as a LLVM subproject and can be build
+according to the generic build instructions found on the LLVM website.
+Note, that the axtor OpenCL driver and oclang will only be build on linux
+
+
+##### Build Targets #####
+
+lib/axtor/ - AST-Extractor
+
+	The core library of Axtor. This contains all facilites for buildling
+	high-level control-flow structures from LLVM-bitcode. Along with it, come
+	header files for writing serialization backends.
+
+
+lib/axtor_ocl/ -  OpenCL backend for Axtor
+
+	The OpenCL backend based on the AST-extractor serialization interface.
+	
+lib/axtor_glsl/ - (unreleased) GLSL backend for Axtor 
+
+	The GLSL backend based on Axtor. Not yet ported to LLVM-svn, but will
+	follow.
+
+
+tools/extractor/
+
+	Tool for running axtor from the shell.
+
+
+tools/oclang/ - OpenCL LLVM frontend
+
+	Invokes clang with default settings for enabling the OpenCL frontend.
+	
+	
+tools/axtorOCLDriver/
+
+	OpenCL driver wrapper for source-to-source kernel transformations.
+	Loads OpenCL source-code into LLVM bitcode and serializes it back
+	for execution.
+	To be preloaded before an actual OpenCL implementation. This requires
+	both the extractor and oclang. 
+	(read tools/axtorOCLDriver/README for details).
+	
+	
+	
+##### References #####
+[1] Bachelor Thesis, "Decompilation of LLVM IR", Simon Moll 
+	(http://www.cdl.uni-saarland.de/publications/theses/moll_bsc.pdf)
