@@ -183,7 +183,7 @@ enum PipelineResult
 std::string getEnvString(const char * name, const char * defValue="")
 {
 	char * val = getenv(name);
-	return std::string(val ?: defValue);
+	return std::string(val ?val: defValue);
 }
 
 PipelineResult runPipeline(const char * options)
@@ -192,13 +192,13 @@ PipelineResult runPipeline(const char * options)
 	std::string sedCmdOne = "sed \'s/__inline/inline/\' -i " + inputOCLFile;
 	std::string sedCmdTwo = "sed \'s/inline/static inline/\' -i " + inputOCLFile;
 
-	std::string llvmPath = getEnvString("LLVM_PATH");
+	std::string llvmPath = getEnvString("LLVM_PATH") + "/";
 	std::string axtorBuildOptions = getEnvString("AXTOR_CLANG_OPTIONS", "-O0");
 	std::string axtorOptOptions = getEnvString("AXTOR_OPT_OPTIONS");
 
 	std::stringstream clangCmdOut;
 
-	std::string oclangBin = llvmPath + "oclang.sh";
+	std::string oclangBin = "bash " + llvmPath + "oclang.sh";
 	std::string optBin = llvmPath + "opt";
 	std::string axtorBin = llvmPath + "axtor";
 
@@ -206,7 +206,7 @@ PipelineResult runPipeline(const char * options)
 			<< oclangBin << " "
 
 			// options
-			<< (options ?: "") << " "   // passed through the OpenCL - API
+			<< (options ?options: "") << " "   // passed through the OpenCL - API
 			<< axtorBuildOptions << " " // specified by  AXTOR_CLANG_OPTIONS
 
 			//target
