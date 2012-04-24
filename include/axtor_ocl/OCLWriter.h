@@ -103,7 +103,6 @@ public:
 
 	std::string getAddressSpaceName(uint space);
   std::string getLocalVariableName(const std::string &variableFullName);
-  std::string getLocalVariableKernel(const std::string &variableFullName);
 
 	/*
 	 * generates a type name for @type

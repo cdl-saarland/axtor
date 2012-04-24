@@ -1,50 +1,14 @@
 /*
- * OCLWriter.cpp
+ * GenericCWriter.cpp
  *
- *  Created on: 25.04.2010
- *      Author: gnarf
+ *  Created on: Apr 24, 2012
+ *      Author: simoll
  */
 
-#include <axtor/config.h>
-#include <axtor_ocl/OCLWriter.h>
 
-#include <axtor_ocl/OCLEnum.h>
-#include <axtor/util/WrappedLiteral.h>
-#include <vector>
+#include <axtor/backend/generic/GenericCWriter.h>
 
 namespace axtor {
-
-
- void OCLWriter::put(std::string text)
-{
-	modInfo.getStream() << text;
-}
-
-inline void OCLWriter::putLine(std::string text)
-{
-	put( text + '\n');
-}
-
-inline void OCLWriter::putLineBreak()
-{
-	modInfo.getStream() <<  std::endl;
-}
-
-inline void OCLWriter::put(char c)
-{
-	put( "" + c );
-}
-
-inline void OCLWriter::putLine(char c)
-{
-	putLine( "" + c );
-}
-
- void OCLWriter::dump()
-{}
-
- void OCLWriter::print(std::ostream & out)
-{}
 
 /*
  *  ##### Type System #####
@@ -53,77 +17,6 @@ inline void OCLWriter::putLine(char c)
 /*
  * returns type symbols for default scalar types
  */
-std::string OCLWriter::getScalarType(const llvm::Type * type, bool asVectorElementType)
-{
-#ifdef DEBUG
-	std::cerr << "getScalarType("; type->dump(); std::cerr << ")\n";
-#endif
-
-	//### native platform type ###
-   std::string nativeStr;
-   std::string typeName = "";
-
-
-   /* NATIVE TYPES */
-   if (platform.lookUp(type, typeName, nativeStr))
-   {
-	   return nativeStr;
-   }
-
-	//### C default types ###
-  switch (type->getTypeID())
-  {
-     case llvm::Type::VoidTyID:  return "void";
-     case llvm::Type::FloatTyID: return "float";
-     case llvm::Type::DoubleTyID: return "double";
-     case llvm::Type::IntegerTyID:
-     {
-        const llvm::IntegerType * intType = llvm::cast<llvm::IntegerType>(type);
-        int width = intType->getBitWidth();
-
-        if (width == 1)
-           return (asVectorElementType ? "int": "bool");
-        else if (width <=8)
-           return "char";
-        else if (width <= 16)
-           return "short";
-        else if (width <= 32)
-           return "int";
-        else if (width <= 64) {
-           return "long";
-        } else
-           Log::fail(type, "(width > 64) over-sized integer type");
-     }
-
-  //FIXME
-	/*case llvm::Type::OpaqueTyID:
-	{
-		Log::fail(type, "OpenCL does not implement this opaque type");
-	};*/
-
-	case llvm::Type::PointerTyID:
-	{
-		Log::fail(type, "OpenCL does not support nested pointers");
-	}
-
-	case llvm::Type::VectorTyID:
-	{
-		const llvm::VectorType * vectorType = llvm::cast<llvm::VectorType>(type);
-		std::string elementStr = getScalarType(vectorType->getElementType());
-		int size = vectorType->getNumElements();
-
-		if (size > 16) {
-			Log::fail(type, "OpenCL does not support vector types with more than 16 elements");
-		}
-
-		return elementStr + str<int>(size);
-	}
-
-     default:
-        Log::fail(type, "not a scalar type");
-  };
-  abort();
-}
 
 // FIXME
 std::string OCLWriter::getAddressSpaceName(uint space)
@@ -145,8 +38,8 @@ std::string OCLWriter::getAddressSpaceName(uint space)
 }
 
 std::string OCLWriter::getLocalVariableName(const std::string &variableFullName) {
-  return variableFullName.substr(variableFullName.find_first_of('.') + 1, 
-                                 variableFullName.length() - 
+  return variableFullName.substr(variableFullName.find_first_of('.') + 1,
+                                 variableFullName.length() -
                                  variableFullName.find_first_of('.'));
 }
 
@@ -194,7 +87,7 @@ std::string OCLWriter::getType(const llvm::Type * type)
     std::vector<llvm::StructType*> structTypes;
     llvm::Module *module = modInfo.getModule();
     module->findUsedStructTypes(structTypes);
-    std::vector<llvm::StructType*>::iterator result = 
+    std::vector<llvm::StructType*>::iterator result =
       std::find(structTypes.begin(), structTypes.end(), type);
     if (result != structTypes.end())
       return "struct " + (*result)->getName().str();
@@ -497,6 +390,7 @@ std::string OCLWriter::getInstruction(llvm::Instruction * inst, std::vector<std:
 	return getOperation(WrappedInstruction(inst), operands);
 }
 
+// FIXME generalize to GLSL and OpenCL
 std::string OCLWriter::getOperation(const WrappedOperation & op, StringVector operands)
 {
   std::string tmp;
@@ -1083,7 +977,7 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
   /*
    * returns the string representation of a ShuffleInstruction
    */
-std::string OCLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, IdentifierScope & locals)
+std::string GenericCWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, IdentifierScope & locals)
 {
 	llvm::Value * firstVector = shuffle->getOperand(0);
 	const llvm::VectorType * firstType = llvm::cast<const llvm::VectorType>(firstVector->getType());
@@ -1119,7 +1013,8 @@ std::string OCLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, 
 
 	//build a string extracting values from one of the two vectors
 	std::string accu = "";
-	std::string elements = firstStr + ".s";
+	std::string elements;
+	IntVector indexStack; indexStack.reserve(4);
 
 	int firstMask = shuffle->getMaskValue(0);
 	bool wasLiteral = false;
@@ -1127,9 +1022,9 @@ std::string OCLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, 
 
 	if (firstMask >= 0) {
 		if (useFirst) {
-			elements = firstStr + ".s";
+			elements = firstStr + ".";
 		} else {
-			elements = secondStr + ".s";
+			elements = secondStr + ".";
 		}
 		wasLiteral = false;
 	} else {
@@ -1143,16 +1038,17 @@ std::string OCLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, 
 
 		//set up the element source (last was literal, current is literal unlike the last OR change of source vector)
 		if (wasLiteral || (mask < 0) || (useFirst != (mask < secondBase))) {
-			accu += elements;
+			accu += getVectorElementString(indexStack);
+			indexStack.clear();
 			wasLiteral = false;
 
 			if (mask >= 0) {
 				useFirst = mask < secondBase;
 				if (useFirst) {
-					elements = ", " + firstStr + ".s";
+					accu += ", " + firstStr + ".";
 				} else {
 					assert(hasSecond && "trying to access elements from undef vector");
-					elements = ", " + secondStr + ".s";
+					accu += ", " + secondStr + ".";
 				}
 			}
 		}
@@ -1160,19 +1056,19 @@ std::string OCLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, 
 		//pick elements
 		if (mask < 0) {
 			wasLiteral = true;
-			elements = ", " + getLiteral(llvm::Constant::getNullValue(elementType));
+			accu += ", " + getLiteral(llvm::Constant::getNullValue(elementType));
 		} else {
 			wasLiteral = false;
 			if (useFirst) {
-				elements += hexstr(mask);
+				indexStack.push_back(mask);
 			} else {
-				elements += hexstr(mask - secondBase);
+				indexStack.push_back(mask - secondBase);
 			}
 		}
 	}
 
 	//add last element
-	accu += elements;
+	accu += getVectorElementString(indexStack);
 
 	return "(" + typeStr + ")(" + accu + ")";
 }
@@ -1180,7 +1076,7 @@ std::string OCLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle, 
 /*
  * returns the string representation of an ExtractElementInstruction
  */
-std::string OCLWriter::getExtractElementInstruction(llvm::ExtractElementInst * extract, IdentifierScope & locals)
+std::string GenericCWriter::getExtractElementInstruction(llvm::ExtractElementInst * extract, IdentifierScope & locals)
 {
 	llvm::Value * indexVal= extract->getIndexOperand();
 	llvm::Value * vectorVal = extract->getVectorOperand();
@@ -1189,14 +1085,14 @@ std::string OCLWriter::getExtractElementInstruction(llvm::ExtractElementInst * e
 	uint64_t index;
 
 	if (evaluateInt(indexVal, index)) {
-		return vectorStr + ".s" + hexstr(index);
+		return vectorStr + "." + getVectorElementString(index);
 	}
 
 	Log::fail(extract, "can not randomly extract values from a vector");
 	abort();
 }
 
-void OCLWriter::writeInsertValueInstruction(llvm::InsertValueInst * insert, IdentifierScope & locals)
+void GenericCWriter::writeInsertValueInstruction(llvm::InsertValueInst * insert, IdentifierScope & locals)
 {
 	llvm::Value * derefValue = insert->getOperand(0);
 	llvm::Value * insertValue = insert->getOperand(1);
@@ -1237,7 +1133,7 @@ void OCLWriter::writeInsertValueInstruction(llvm::InsertValueInst * insert, Iden
  * returns the string representation of an InsertElementInstruction
  * if the vector value is defined this creates two instructions
  */
-void OCLWriter::writeInsertElementInstruction(llvm::InsertElementInst * insert, IdentifierScope & locals)
+void GenericCWriter::writeInsertElementInstruction(llvm::InsertElementInst * insert, IdentifierScope & locals)
 {
 	llvm::Value * vec = insert->getOperand(0);
 	llvm::Value * value = insert->getOperand(1);
@@ -1279,7 +1175,7 @@ void OCLWriter::writeInsertElementInstruction(llvm::InsertElementInst * insert, 
 		Log::fail(insert, "non-static parameter access");
 	}
 
-	putLine( descStr + ".s" + hexstr(index) + " = " + valueStr + ";" );
+	putLine( descStr + "." + getVectorElementString(index) + " = " + valueStr + ";" );
 
 	/*int width = vecType->getNumElements();
 
@@ -1307,7 +1203,7 @@ void OCLWriter::writeInsertElementInstruction(llvm::InsertElementInst * insert, 
 /*
 * write a single instruction or atomic value as isolated expression
 */
-std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, IdentifierScope & locals)
+std::string GenericCWriter::getInstructionAsExpression(llvm::Instruction * inst, IdentifierScope & locals)
 {
    //catch loads as they need a dereferenced operand
 	if (llvm::isa<llvm::LoadInst>(inst)) {
@@ -1454,7 +1350,7 @@ std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, Iden
 /*
 * write a complex expression made up of elements from valueBlock, starting from root, writing all included insts to @oExpressionInsts
 */
-std::string OCLWriter::getComplexExpression(llvm::BasicBlock * valueBlock, llvm::Value * root, IdentifierScope & locals, InstructionSet * oExpressionInsts)
+std::string GenericCWriter::getComplexExpression(llvm::BasicBlock * valueBlock, llvm::Value * root, IdentifierScope & locals, InstructionSet * oExpressionInsts)
 {
  // PHI-Nodes cant be part of a single expression
 if (llvm::isa<llvm::Instruction>(root) &&
@@ -1489,12 +1385,12 @@ if (llvm::isa<llvm::Instruction>(root) &&
 /*
 * writes a generic function header for utility functions and the default signature for the shade func
 */
- void OCLWriter::writeFunctionHeader(llvm::Function * func, IdentifierScope * locals)
+ void GenericCWriter::writeFunctionHeader(llvm::Function * func, IdentifierScope * locals)
 {
   putLine( getFunctionHeader(func, locals));
 }
 
- void OCLWriter::writeInstruction(const VariableDesc * desc, llvm::Instruction * inst, IdentifierScope & locals)
+ void GenericCWriter::writeInstruction(const VariableDesc * desc, llvm::Instruction * inst, IdentifierScope & locals)
 {
 #ifdef DEBUG
 		std::cerr << "writeInstruction:: var=" << (desc ? desc->name : "NULL") << std::endl;
@@ -1513,6 +1409,9 @@ if (llvm::isa<llvm::Instruction>(root) &&
     	writeAssignRaw(phiDesc->name, phiDesc->name + "_in");
     	return;
     }
+
+    if (writeInstructionCustomized(desc, inst, locals))
+    	return;
 
     //### Store instruction
 	if (llvm::isa<llvm::StoreInst>(inst)) {
@@ -1567,7 +1466,7 @@ if (llvm::isa<llvm::Instruction>(root) &&
 	}
 }
 
-void OCLWriter::writeIf(const llvm::Value * condition, bool negate, IdentifierScope & locals)
+void GenericCWriter::writeIf(const llvm::Value * condition, bool negate, IdentifierScope & locals)
 {
 	const VariableDesc * condVar = locals.lookUp(condition);
 
@@ -1590,27 +1489,27 @@ void OCLWriter::writeIf(const llvm::Value * condition, bool negate, IdentifierSc
 		putLine( "if (! " + condStr + ")" );
 }
 
- void OCLWriter::writeElse()
+ void GenericCWriter::writeElse()
 {
 	putLine( "else" );
 }
 
- void OCLWriter::writeLoopContinue()
+ void GenericCWriter::writeLoopContinue()
 {
 	putLine("continue;");
 }
 
- void OCLWriter::writeLoopBreak()
+ void GenericCWriter::writeLoopBreak()
 {
 	putLine( "break;" );
 }
 
- void OCLWriter::writeDo()
+ void GenericCWriter::writeDo()
 {
   putLine( "do" );
 }
 
-void OCLWriter::writeAssign(const VariableDesc & dest, const VariableDesc & src)
+void GenericCWriter::writeAssign(const VariableDesc & dest, const VariableDesc & src)
 {
 #ifdef DEBUG
 	std::cerr << "writeAssign:: enforcing assignment to " << dest.name << std::endl;
@@ -1618,7 +1517,7 @@ void OCLWriter::writeAssign(const VariableDesc & dest, const VariableDesc & src)
 	writeAssignRaw(dest.name, src.name);
 }
 
-void OCLWriter::writeAssignRaw(const std::string & destStr, llvm::Value * val, IdentifierScope & locals)
+void GenericCWriter::writeAssignRaw(const std::string & destStr, llvm::Value * val, IdentifierScope & locals)
 {
 	const VariableDesc * srcDesc = locals.lookUp(val);
 	std::string srcText;
@@ -1636,7 +1535,7 @@ void OCLWriter::writeAssignRaw(const std::string & destStr, llvm::Value * val, I
 	putLine(destStr + " = " + srcText + ";");
 }
 
-void OCLWriter::writeAssignRaw(const std::string & dest, const std::string & src)
+void GenericCWriter::writeAssignRaw(const std::string & dest, const std::string & src)
 {
 	putLine(dest + " = " + src + ";");
 }
@@ -1644,7 +1543,7 @@ void OCLWriter::writeAssignRaw(const std::string & dest, const std::string & src
 /*
  * write a while for a post<checked loop
  */
-void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierScope & locals, bool negate)
+void GenericCWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierScope & locals, bool negate)
 {
    llvm::Value * loopCond = branchInst->getCondition();
 
@@ -1663,7 +1562,7 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
 /*
  * write a while for a postchecked loop, if oExpressionInsts != NULL dont write, but put all consumed instructions in the set
  */
- void OCLWriter::writePrecheckedWhile(llvm::BranchInst * branchInst, IdentifierScope & locals, bool negate, InstructionSet * oExpressionInsts)
+ void GenericCWriter::writePrecheckedWhile(llvm::BranchInst * branchInst, IdentifierScope & locals, bool negate, InstructionSet * oExpressionInsts)
 {
   llvm::Value * loopCond = branchInst->getCondition();
 
@@ -1677,16 +1576,17 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
   }
 }
 
- void OCLWriter::writeInfiniteLoopBegin()
+ void GenericCWriter::writeInfiniteLoopBegin()
 {
    putLine ( "while(true)" );
 }
 
- void OCLWriter::writeInfiniteLoopEnd()
+ void GenericCWriter::writeInfiniteLoopEnd()
 {
    putLine( "" );
 }
 
+#if 0 // now virtual
  void OCLWriter::writeReturnInst(llvm::ReturnInst * retInst, IdentifierScope & locals)
 	{
    if (retInst->getNumOperands() > 0) //return value
@@ -1710,11 +1610,12 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
 	   putLine( "return;" );
    }
 	}
+#endif
 
 /*
 * writes a generic struct type declaration to the fragment shader
 */
- std::string OCLWriter::getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType)
+ std::string GenericCWriter::getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType)
 {
    std::string res =  "struct " + structName + "\n";
    res +=  "{\n";
@@ -1733,7 +1634,7 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
    return res;
 }
 
- void OCLWriter::writeFunctionPrologue(llvm::Function * func, IdentifierScope & locals)
+virtual void OCLWriter::writeFunctionPrologue(llvm::Function * func, IdentifierScope & locals)
 {
    typedef llvm::Function::ArgumentListType ArgList;
    const ArgList & argList = func->getArgumentList();
@@ -1766,6 +1667,9 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
 	   }
    }
 
+}
+//FIXME custom part
+#if 0
    //dump local storage declarations to kernel functions
    if (modInfo.isKernelFunction(func))
    {
@@ -1793,165 +1697,7 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
    writeLineBreak();
 }
 
-/*
-* dumps a generic vertex shader and all type&argument defs for the frag shader
-*/
-OCLWriter::OCLWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
-		modInfo(reinterpret_cast<OCLModuleInfo&>(_modInfo)),
-		platform(_platform)
-	{
-		llvm::Module * mod = modInfo.getModule();
-
-		//### dump extensions ###
-		if (modInfo.requiresDoubleType())
-			putLine("#pragma OPENCL EXTENSION cl_khr_fp64: enable");
-
-		putLine("");
-
-		StructTypeVector types;
-		modInfo.getModule()->findUsedStructTypes(types);
-
-		//### print type declarations ###
-		{
-			//### sort dependent types for forward declaration ###
-			{
-				TypeSet undeclaredTypes;
-
-				for (StructTypeVector::iterator itType = types.begin(); itType != types.end(); ++itType) {
-					undeclaredTypes.insert(*itType);
-				}
-
-				for (StructTypeVector::iterator itType = types.begin(); itType != types.end();) {
-
-					const llvm::StructType * type = *itType;
-					const std::string name = (*itType)->getName().str();
-
-					if (
-							undeclaredTypes.find(type) == undeclaredTypes.end() || //already declared
-							containsType(type, undeclaredTypes))
-					{
-						++itType;
-					} else {
-
-						//write declaration
-						std::string structStr = getStructTypeDeclaration(name, llvm::cast<const llvm::StructType>(type));
-						put( structStr );
-
-						undeclaredTypes.erase(type);
-						itType = types.begin();
-					}
-				}
-			}
-		}
-
-		putLine( "" );
-
-		//## spill globals
-		for (llvm::Module::global_iterator global = mod->global_begin(); global != mod->global_end(); ++global)
-		{
-			if (llvm::isa<llvm::GlobalVariable>(global)) {
-				llvm::GlobalVariable * var = llvm::cast<llvm::GlobalVariable>(global);
-				const llvm::PointerType * varType = var->getType();
-				const llvm::Type * contentType = varType->getElementType();
-				std::string varName = var->getName().str();
-
-				uint space = varType->getAddressSpace();
-
-				if (var->isConstant()) { // __constant
-					std::string initStr = getLiteral(var->getInitializer());
-					std::string declareStr = buildDeclaration(varName, contentType) + " = " + initStr + ";";
-					putLine( "__constant " + declareStr);
-
-				} else if (space == SPACE_GLOBAL) { //global variable with external initialization (keep the pointer)
-					std::string spaceName = getAddressSpaceName(space);
-					std::string declareStr = buildDeclaration(varName, varType) + ";";
-
-					putLine(spaceName + " " + declareStr );
-				} else if (space == SPACE_LOCAL) { //work group global variable with initialization (declare for content type)
-				/*	std::string spaceName = getAddressSpaceName(space);
-					std::string declareStr = buildDeclaration(varName, contentType) + ";";
-
-					putLine(spaceName + " " + declareStr );*/
-					//will declare this variable in any using kernel function
-
-				} else {
-					Log::warn(var, "discarding global variable declaration");
-				}
-			}
-		}
-
-		putLine( "" );
-
-		//## spill function declarations
-		for (llvm::Module::iterator func = mod->begin(); func != mod->end(); ++func)
-		{
-			if (! platform.implements(func))
-				putLine(getFunctionHeader(func) + ";");
-		}
-
-		putLine( "" );
-
-#ifdef DEBUG
-		std::cerr << "completed OCLWriter ctor\n";
 #endif
-	}
 
-OCLWriter::OCLWriter(OCLWriter & writer) :
-		modInfo(writer.modInfo),
-		platform(writer.platform)
-{}
-
-
-template class ResourceGuard<AddressIterator>;
-
-
-/*
- * BlockWriter (indents all writes and embraces them in curly brackets)
- */
- void OCLBlockWriter::put(std::string text)
-{
-	parent.put(INDENTATION_STRING + text);
-}
-
-OCLBlockWriter::OCLBlockWriter(OCLWriter & _parent) :
-	OCLWriter(_parent),
-	parent(_parent)
-{
-	parent.putLine("{");
-}
-
- OCLBlockWriter::~OCLBlockWriter()
-{
-	parent.putLine("}");
-}
-
-
-
-/*
- * PassThrough writer
- */
-OCLPassThroughWriter::OCLPassThroughWriter(OCLWriter & _parent) :
-	OCLWriter(_parent),
-	parent(_parent)
-{}
-
-void OCLPassThroughWriter::put(std::string msg)
-{
-	parent.put(msg);
-}
-
-/*
- * Multi writer
- */
-OCLMultiWriter::OCLMultiWriter(OCLWriter & _first, OCLWriter & _second) :
-		OCLWriter(_first),
-		first(_first), second(_second)
-{}
-
-void OCLMultiWriter::put(std::string msg)
-{
-	first.put(msg);
-	second.put(msg);
-}
 
 }
