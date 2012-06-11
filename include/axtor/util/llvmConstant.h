@@ -32,6 +32,7 @@
 #include <llvm/Instructions.h>
 #include <llvm/GlobalVariable.h>
 
+#include <axtor/config.h>
 #include <axtor/util/SharedContext.h>
 
 namespace axtor {

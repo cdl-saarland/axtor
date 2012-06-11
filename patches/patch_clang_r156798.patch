@@ -1,0 +1,230 @@
+diff --git a/lib/Basic/Targets.cpp b/lib/Basic/Targets.cpp
+index dd2a89a..e15a720 100644
+--- a/lib/Basic/Targets.cpp
++++ b/lib/Basic/Targets.cpp
+@@ -945,9 +945,9 @@ public:
+ 
+ namespace {
+   static const unsigned PTXAddrSpaceMap[] = {
+-    0,    // opencl_global
+-    4,    // opencl_local
+-    1     // opencl_constant
++    1,    // opencl_global
++    2,    // opencl_local
++    3     // opencl_constant
+   };
+   class PTXTargetInfo : public TargetInfo {
+     static const char * const GCCRegNames[];
+diff --git a/lib/CodeGen/CGDecl.cpp b/lib/CodeGen/CGDecl.cpp
+index 6447779..d9f2878 100644
+--- a/lib/CodeGen/CGDecl.cpp
++++ b/lib/CodeGen/CGDecl.cpp
+@@ -1033,16 +1033,18 @@ void CodeGenFunction::EmitAutoVarInit(const AutoVarEmission &emission) {
+     llvm::ConstantInt::get(IntPtrTy,
+                            getContext().getTypeSizeInChars(type).getQuantity());
+ 
+-  llvm::Type *BP = Int8PtrTy;
+-  if (Loc->getType() != BP)
+-    Loc = Builder.CreateBitCast(Loc, BP);
++//  llvm::Type *BP = Int8PtrTy;
+ 
+   // If the initializer is all or mostly zeros, codegen with memset then do
+   // a few stores afterward.
+   if (shouldUseMemSetPlusStoresToInitialize(constant,
+                 CGM.getTargetData().getTypeAllocSize(constant->getType()))) {
++/*    if (Loc->getType() != BP)
++      Loc = Builder.CreateBitCast(Loc, BP); */
++    
+     Builder.CreateMemSet(Loc, llvm::ConstantInt::get(Int8Ty, 0), SizeVal,
+                          alignment.getQuantity(), isVolatile);
++
+     if (!constant->isNullValue()) {
+       Loc = Builder.CreateBitCast(Loc, constant->getType()->getPointerTo());
+       emitStoresForInitAfterMemset(constant, Loc, isVolatile, Builder);
+@@ -1051,16 +1053,19 @@ void CodeGenFunction::EmitAutoVarInit(const AutoVarEmission &emission) {
+     // Otherwise, create a temporary global with the initializer then
+     // memcpy from the global to the alloca.
+     std::string Name = GetStaticDeclName(*this, D, ".");
+-    llvm::GlobalVariable *GV =
++  
++    uint addrSpace = getLangOpts().OpenCL ? 3 : 0; //FIXME use PTXAddrSpace constant
++
++   llvm::GlobalVariable *GV =
+       new llvm::GlobalVariable(CGM.getModule(), constant->getType(), true,
+                                llvm::GlobalValue::PrivateLinkage,
+-                               constant, Name, 0, false, 0);
++                               constant, Name, 0, false, addrSpace);
+     GV->setAlignment(alignment.getQuantity());
+     GV->setUnnamedAddr(true);
+ 
+     llvm::Value *SrcPtr = GV;
+-    if (SrcPtr->getType() != BP)
+-      SrcPtr = Builder.CreateBitCast(SrcPtr, BP);
++    /*if (SrcPtr->getType() != BP)
++      SrcPtr = Builder.CreateBitCast(SrcPtr, BP);*/
+ 
+     Builder.CreateMemCpy(Loc, SrcPtr, SizeVal, alignment.getQuantity(),
+                          isVolatile);
+diff --git a/lib/CodeGen/CodeGenFunction.cpp b/lib/CodeGen/CodeGenFunction.cpp
+index 2939062..3217a93 100644
+--- a/lib/CodeGen/CodeGenFunction.cpp
++++ b/lib/CodeGen/CodeGenFunction.cpp
+@@ -284,8 +284,26 @@ void CodeGenFunction::StartFunction(GlobalDecl GD, QualType RetTy,
+         llvm::NamedMDNode *OpenCLMetadata = 
+           CGM.getModule().getOrInsertNamedMetadata("opencl.kernels");
+           
+-        llvm::Value *Op = Fn;
+-        OpenCLMetadata->addOperand(llvm::MDNode::get(Context, Op));
++        llvm::SmallVector<llvm::Value *, 2> KernMetadata(1, Fn);
++
++        llvm::SmallVector<llvm::Value *, 8> AddrSpaces;
++        for(FunctionDecl::param_const_iterator I = FD->param_begin(),
++                                               E = FD->param_end();
++                                               I != E;
++                                               ++I) {
++          unsigned AddrSpace;
++
++          if(const PointerType *Ty = dyn_cast<PointerType>((*I)->getType()))
++            AddrSpace = Ty->getPointeeType().getAddressSpace();
++          else
++            AddrSpace = LangAS::Last;
++
++          AddrSpaces.push_back(
++            llvm::ConstantInt::get(llvm::Type::getInt32Ty(Context), AddrSpace));
++        }
++        KernMetadata.push_back(llvm::MDNode::get(Context, AddrSpaces));
++
++        OpenCLMetadata->addOperand(llvm::MDNode::get(Context, KernMetadata));
+       }
+   }
+ 
+diff --git a/lib/CodeGen/CodeGenModule.cpp b/lib/CodeGen/CodeGenModule.cpp
+index 9a55c08..30e8844 100644
+--- a/lib/CodeGen/CodeGenModule.cpp
++++ b/lib/CodeGen/CodeGenModule.cpp
+@@ -164,6 +164,9 @@ void CodeGenModule::Release() {
+   if (getCodeGenOpts().EmitDeclMetadata)
+     EmitDeclMetadata();
+ 
++  if (getLangOpts().OpenCL)
++      EmitOpenCLMetadata();
++
+   if (getCodeGenOpts().EmitGcovArcs || getCodeGenOpts().EmitGcovNotes)
+     EmitCoverageFile();
+ 
+@@ -2649,6 +2652,39 @@ void CodeGenFunction::EmitDeclMetadata() {
+   }
+ }
+ 
++// Emits OpenCL related metadata.
++void CodeGenModule::EmitOpenCLMetadata() {
++  // Forcing emission of opencl.kernels for modules not defining any OpenCL
++  // kernels.
++  TheModule.getOrInsertNamedMetadata("opencl.kernels");
++
++  // Address space mappings.
++  llvm::Value *AddrSpaceNo;
++  llvm::NamedMDNode *AddrSpaceMetadata;
++
++  llvm::Value *values[] = {
++    AddrSpaceNo = llvm::ConstantInt::get(llvm::Type::getInt32Ty(VMContext),
++                                         clang::LangAS::opencl_global)
++  };
++
++  AddrSpaceMetadata =
++    TheModule.getOrInsertNamedMetadata("opencl.global_address_space");
++  AddrSpaceMetadata->addOperand(llvm::MDNode::get(VMContext, values));
++
++  AddrSpaceNo = llvm::ConstantInt::get(llvm::Type::getInt32Ty(VMContext),
++                                       clang::LangAS::opencl_local);
++  AddrSpaceMetadata =
++    TheModule.getOrInsertNamedMetadata("opencl.local_address_space");
++  AddrSpaceMetadata->addOperand(llvm::MDNode::get(VMContext, values));
++
++  AddrSpaceNo = llvm::ConstantInt::get(llvm::Type::getInt32Ty(VMContext),
++                                       clang::LangAS::opencl_constant);
++  AddrSpaceMetadata =
++    TheModule.getOrInsertNamedMetadata("opencl.constant_address_space");
++  AddrSpaceMetadata->addOperand(llvm::MDNode::get(VMContext, values));
++}
++
++
+ void CodeGenModule::EmitCoverageFile() {
+   if (!getCodeGenOpts().CoverageFile.empty()) {
+     if (llvm::NamedMDNode *CUNode = TheModule.getNamedMetadata("llvm.dbg.cu")) {
+diff --git a/lib/CodeGen/CodeGenModule.h b/lib/CodeGen/CodeGenModule.h
+index 38f5008..dcf49db 100644
+--- a/lib/CodeGen/CodeGenModule.h
++++ b/lib/CodeGen/CodeGenModule.h
+@@ -971,6 +971,11 @@ private:
+   /// to emit the .gcno and .gcda files in a way that persists in .bc files.
+   void EmitCoverageFile();
+ 
++  /// EmitOpenCLMetadata - Emit the OpenCL global metadata. These include
++  /// opencl.kernels, if not yet done, and
++  /// opencl.{global,local,constant}_address_space.
++  void EmitOpenCLMetadata();
++
+   /// MayDeferGeneration - Determine if the given decl can be emitted
+   /// lazily; this is only relevant for definitions. The given decl
+   /// must be either a function or var decl.
+diff --git a/lib/Sema/DeclSpec.cpp b/lib/Sema/DeclSpec.cpp
+index b531acc..8d69119 100644
+--- a/lib/Sema/DeclSpec.cpp
++++ b/lib/Sema/DeclSpec.cpp
+@@ -430,7 +430,7 @@ bool DeclSpec::SetStorageClassSpec(Sema &S, SCS SC, SourceLocation Loc,
+     case SCS_private_extern:
+     case SCS_auto:
+     case SCS_register:
+-    case SCS_static:
++    //case SCS_static:
+       DiagID   = diag::err_not_opencl_storage_class_specifier;
+       PrevSpec = getSpecifierName(SC);
+       return true;
+diff --git a/lib/Sema/SemaDecl.cpp b/lib/Sema/SemaDecl.cpp
+index 1227e92..927bc81 100644
+--- a/lib/Sema/SemaDecl.cpp
++++ b/lib/Sema/SemaDecl.cpp
+@@ -7143,7 +7143,7 @@ ParmVarDecl *Sema::CheckParameter(DeclContext *DC, SourceLocation StartLoc,
+   // duration shall not be qualified by an address-space qualifier."
+   // Since all parameters have automatic store duration, they can not have
+   // an address space.
+-  if (T.getAddressSpace() != 0) {
++  if (!getLangOpts().OpenCL && T.getAddressSpace() != 0) {
+     Diag(NameLoc, diag::err_arg_with_address_space);
+     New->setInvalidDecl();
+   }   
+diff --git a/lib/Sema/SemaExpr.cpp b/lib/Sema/SemaExpr.cpp
+index d2e0e6b..6c44179 100644
+--- a/lib/Sema/SemaExpr.cpp
++++ b/lib/Sema/SemaExpr.cpp
+@@ -5852,6 +5852,29 @@ QualType Sema::CheckVectorOperands(ExprResult &LHS, ExprResult &RHS,
+   // Handle the case of an ext vector and scalar.
+   if (const ExtVectorType *LV = LHSType->getAs<ExtVectorType>()) {
+     QualType EltTy = LV->getElementType();
++
++        // In OpenCL, if one operand is a vector, and the other one is a scalar
++        // the scalar should be converted to the element type used by the vector
++        // and then widened to a vector of the same size. (OpenCL 1.1, section 6.3)
++        if(getLangOpts().OpenCL && RHSType->isScalarType()) {
++          if(EltTy->isIntegerType()) {
++            if(RHSType->isFloatingType())
++              RHS = ImpCastExprToType(RHS.take(), EltTy, CK_FloatingToIntegral);
++            else if(RHSType != EltTy)
++              RHS = ImpCastExprToType(RHS.take(), EltTy, CK_IntegralCast);
++          } else {
++            if(RHSType->isIntegralType(Context))
++              RHS = ImpCastExprToType(RHS.take(), EltTy, CK_IntegralToFloating);
++            else if(RHSType != EltTy)
++              RHS = ImpCastExprToType(RHS.take(), EltTy, CK_FloatingCast);
++          }
++
++          RHS = ImpCastExprToType(RHS.take(), LHSType, CK_VectorSplat);
++
++          if (swapped) std::swap(RHS, LHS);
++          return LHSType;
++        }
++
+     if (EltTy->isIntegralType(Context) && RHSType->isIntegralType(Context)) {
+       int order = Context.getIntegerTypeOrder(EltTy, RHSType);
+       if (order > 0)

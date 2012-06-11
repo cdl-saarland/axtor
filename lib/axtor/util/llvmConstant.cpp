@@ -43,7 +43,6 @@ llvm::ConstantInt * axtor::get_int(int val, llvm::LLVMContext & context, llvm::I
 llvm::Constant * axtor::get_stringGEP(llvm::Module * module, std::string content)
 {
 	llvm::LLVMContext & context = module->getContext();
-
 	llvm::Constant * charArray = llvm::ConstantDataArray::getString(context, content, true);
 	llvm::Constant * strGlobal = module->getOrInsertGlobal("const", charArray->getType());
 	llvm::Constant * zeroConst = llvm::Constant::getNullValue(llvm::Type::getInt32Ty(context));
@@ -73,7 +72,12 @@ bool axtor::evaluateString(llvm::Value * val, std::string & out)
 	//get string constant
 	llvm::GlobalVariable * strGlobal = llvm::cast<llvm::GlobalVariable>(strVal);
 	llvm::Constant * strConst = strGlobal->getInitializer();
+
+#ifdef AXTOR_LLVM30
+	llvm::ConstantArray * strArray = llvm::cast<llvm::ConstantArray>(strConst);
+#else
 	llvm::ConstantDataArray * strArray = llvm::cast<llvm::ConstantDataArray>(strConst);
+#endif
 	std::string tmp = strArray->getAsString();
 	out = tmp.substr(0, tmp.length() - 1);
 	return true;

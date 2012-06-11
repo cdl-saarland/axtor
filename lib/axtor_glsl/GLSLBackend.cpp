@@ -192,7 +192,7 @@ SyntaxWriter * GLSLBackend::createFunctionWriter(SyntaxWriter * modWriter, llvm:
 
 	if (func == modInfo.getFragFunc()) {
 #ifdef DEBUG
-		std::cerr << "created fragment writer for func : " << func->getNameStr() << "\n";
+		std::cerr << "created fragment writer for func : " << func->getName().str() << "\n";
 #endif
 		return new GLSLFragWriter(writer, *modInfo.getFragStream());
 	} else if (func == modInfo.getVertFunc()){

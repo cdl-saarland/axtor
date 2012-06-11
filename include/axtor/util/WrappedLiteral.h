@@ -8,9 +8,11 @@
 #ifndef WRAPPEDLITERAL_H_
 #define WRAPPEDLITERAL_H_
 
+#include <axtor/config.h>
 #include <llvm/Constants.h>
 
 namespace axtor {
+
 
 class WrappedLiteral
 {

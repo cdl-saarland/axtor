@@ -8,7 +8,8 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-PARALLEL_DIRS=extractor axtorOCLDriver oclang
+PARALLEL_DIRS=axtorOCLDriver oclang
+# extractor
 
 # Has only been tested on Linux. Disable for other OSes
 

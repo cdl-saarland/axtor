@@ -9,7 +9,7 @@ LEVEL=../..
 # Give the name of a library.  This will build a dynamic version.
 #
 
-ENABLE_PACKETIZER=0
+# ENABLE_PACKETIZER=0
 
 LIBRARYNAME=axtorOpenCLDriver
 SHARED_LIBRARY=1

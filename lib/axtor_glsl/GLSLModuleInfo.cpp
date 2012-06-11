@@ -114,7 +114,7 @@ std::vector<int> GLSLModuleInfo::determineFragmentInputModifiers(llvm::Function 
 			llvm::CallInst * operandCall = llvm::cast<llvm::CallInst>(operand);
 			llvm::Function * calledFunc = operandCall->getCalledFunction();
 
-			std::string interpolantName = calledFunc->getNameStr();
+			std::string interpolantName = calledFunc->getName().str();
 #ifdef DEBUG
 			std::cerr <<"interpolant name : " << interpolantName << "\n";
 #endif
@@ -159,9 +159,9 @@ void GLSLModuleInfo::dump()
 	std::cerr
 		  << "GLSL shader module descriptor\n"
 		  << "vertex shader function:\n"
-		  << (vertFunc ? " * " + vertFunc->getNameStr() : "NONE") << "\n"
+		  << (vertFunc ? " * " + vertFunc->getName().str() : "NONE") << "\n"
 		  << "fragment shader function:\n"
-		  << (fragFunc ? " * " + fragFunc->getNameStr() : "NONE") << "\n";
+		  << (fragFunc ? " * " + fragFunc->getName().str() : "NONE") << "\n";
 
 	std::cerr << "vertex -> fragment shader variables\n";
 	uint i  = 0;
@@ -204,7 +204,7 @@ IdentifierScope GLSLModuleInfo::createGlobalBindings()
 				(llvm::cast<llvm::Function>(func) == getVertFunc()))
 			continue;
 
-		globals[func] = VariableDesc(func, func->getNameStr());
+		globals[func] = VariableDesc(func, func->getName().str());
 	}
 
 	//add bindings for the shader registers
@@ -214,13 +214,13 @@ IdentifierScope GLSLModuleInfo::createGlobalBindings()
 	//declare function arguments in global scope
 	for(ArgList::iterator fragArg = fragArgs.begin();fragArg != fragArgs.end(); ++fragArg)
 	{
-		std::string name = fragArg->getNameStr();
+		std::string name = fragArg->getName().str();
 		globals[fragArg] = VariableDesc(fragArg, name);
 	}
 
 	for(ArgList::iterator vertArg = vertArgs.begin();vertArg != vertArgs.end(); ++vertArg)
 	{
-		std::string name = vertArg->getNameStr();
+		std::string name = vertArg->getName().str();
 		globals[vertArg] = VariableDesc(vertArg, name);
 	}
 
@@ -273,18 +273,6 @@ GLSLModuleInfo * GLSLModuleInfo::createTestInfo(llvm::Module * mod, std::ostream
 void GLSLModuleInfo::runPassManager(llvm::PassManager & pm)
 {
 	pm.run(*getModule());
-}
-
-void GLSLModuleInfo::writeToLLVMStream(llvm::formatted_raw_ostream & out)
-{
-	/*std::stringstream * vertStream = getVertStream();
-	std::stringstream * fragStream = getFragStream();
-
-	out << "##DELIMIT_FRAGMENT_SHADER##\n" << (vertStream ? vertStream->str() : "")
-		<< "\n##DELIMIT_VERTEX_SHADER##\n" << (fragStream ? fragStream->str() : "");
-
-	assert(false && "not implemented");
-	*/
 }
 
 }

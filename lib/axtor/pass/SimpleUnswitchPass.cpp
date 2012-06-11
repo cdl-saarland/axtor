@@ -6,6 +6,7 @@
  */
 
 #include <axtor/pass/SimpleUnswitchPass.h>
+#include <llvm/Constants.h>
 
 #include <llvm/Instruction.h>
 
@@ -48,10 +49,16 @@ namespace axtor {
 		llvm::BasicBlock * exitBlock = switchInst->getDefaultDest();
 
 		//create IF-cascade (skip the default case)
-		for(uint i = 1; i < switchInst->getNumCases(); ++i)
+		typedef llvm::SwitchInst::CaseIt CaseIt;
+		CaseIt caseBegin = switchInst->case_begin();
+		CaseIt secondCase = caseBegin; secondCase++;
+		CaseIt caseEnd = switchInst->case_end();
+
+		for (CaseIt itCase = secondCase; itCase != caseEnd; ++itCase)
 		{
-			llvm::Value * succVal =(llvm::Value*)switchInst->getSuccessorValue(i);
-			llvm::BasicBlock * succBlock = switchInst->getSuccessor(i);
+			uint i =itCase.getCaseIndex();
+			llvm::Value * succVal = itCase.getCaseValue();
+			llvm::BasicBlock * succBlock = itCase.getCaseSuccessor();
 
 			{
 				llvm::BasicBlock * caseBlock = llvm::BasicBlock::Create(context, "cascade" + str<uint>(i), func,  exitBlock);

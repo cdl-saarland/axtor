@@ -16,26 +16,6 @@ namespace axtor {
 	assert(false && "must not write with the root GLSL writer (use derived classes instead)");
 }
 
-inline void GLSLWriter::putLine(std::string text)
-{
-	put( text + '\n');
-}
-
-inline void GLSLWriter::putLineBreak()
-{
-	putLine("");
-}
-
-inline void GLSLWriter::put(char c)
-{
-	put( "" + c );
-}
-
-inline void GLSLWriter::putLine(char c)
-{
-	putLine( "" + c );
-}
-
 void GLSLWriter::dump()
 {}
 
@@ -91,11 +71,6 @@ std::string GLSLWriter::getScalarType(const llvm::Type * type, bool signedInt)
         else
            assert(width <= 64 && "over-sized integer type");
      }
-
-	case llvm::Type::OpaqueTyID:
-	{
-		Log::fail(type, "GLSL does not implement this opaque type");
-	};
 
 	case llvm::Type::PointerTyID:
 	{
@@ -291,6 +266,11 @@ std::string GLSLWriter::getFunctionHeader(llvm::Function * func, IdentifierScope
 	{
 		const llvm::Type * argType = type->getParamType(i);
 
+		// dereference byVal pointers
+		if (arg->hasByValAttr()) {
+			argType = llvm::cast<llvm::PointerType>(argType)->getElementType();
+		}
+
 		//std::string modifierStr = inferModifiers(arg);
 		std::string typeStr = getArgumentType(argType);
 
@@ -390,193 +370,134 @@ std::string GLSLWriter::getFunctionHeader(llvm::Function * func)
 }
 
 /*
- * default C Style operators
- */
-std::string GLSLWriter::getBinaryOperator(llvm::Instruction * inst, std::string leftOp, std::string rightOp)
-{
-  bool isBool = inst->getType()->getPrimitiveSizeInBits() == 1;
-
-  std::string token = "";
-  bool intOps = //has integer operands
-  	  inst->getOperand(0)->getType()->isIntegerTy(32);
-  bool castUint = false; //cast operands to uint
-  bool intResult = false; //cast result to int
-
-
-  switch (inst->getOpcode())
-  {
-     //Arithmetic
-	  case llvm::Instruction::Add: intResult = true;
-     case llvm::Instruction::FAdd:
-    	 token = "+"; break;
-
-     case llvm::Instruction::Mul: intResult = true;
-     case llvm::Instruction::FMul:
-    	 token = "*"; break;
-
-     case llvm::Instruction::Sub: intResult = true;
-     case llvm::Instruction::FSub:
-    	 token = "-"; break;
-
-     case llvm::Instruction::UDiv: castUint = true;
-     case llvm::Instruction::SDiv:
-    	 intResult = true;
-     case llvm::Instruction::FDiv:
-        token = "/";
-        break;
-
-     case llvm::Instruction::URem: castUint = true;
-     case llvm::Instruction::SRem:
-    	 intResult = true;
-     case llvm::Instruction::FRem:
-    	 token = "%";
-    	 break;
-
- //binary integer ops
-     case llvm::Instruction::Shl:
-    	 intResult = true;
-    	 token = "<<";break;
-     case llvm::Instruction::LShr:
-    	 intResult = true;
-    	 token= ">>"; break;
-
-     case llvm::Instruction::AShr:
-    	 intResult = true;
-    	 token =">>>"; break;
-
-     case llvm::Instruction::And:
-    	 intResult = true;
-    	 token = isBool ? "&&" : "&";break;
-
-     case llvm::Instruction::Or:
-    	 intResult = true;
-    	 token = isBool ? "||" : "|";break;
-
-     case llvm::Instruction::Xor:
-    	 intResult = true;
-    	 token = isBool ? "!=" : "^";break;
-
-     //predicated CmpInsts
-     case llvm::Instruction::FCmp:
-     {
-        llvm::CmpInst * cmpInst = llvm::cast<llvm::CmpInst>(inst);
-        switch (cmpInst->getPredicate())
-        {
-           case llvm::CmpInst::FCMP_FALSE:
-             assert(false && "why did nobody optimize that out?");
-
-           case llvm::CmpInst::FCMP_OGT:
-           case llvm::CmpInst::FCMP_UGT:
-              token = ">";
-              break;
-
-           case llvm::CmpInst::FCMP_OGE:
-           case llvm::CmpInst::FCMP_UGE:
-              token = ">=";
-              break;
-
-           case llvm::CmpInst::FCMP_OLT:
-           case llvm::CmpInst::FCMP_ULT:
-              token = "<";
-              break;
-
-           case llvm::CmpInst::FCMP_OLE:
-           case llvm::CmpInst::FCMP_ULE:
-              token= "<=";
-              break;
-
-           case llvm::CmpInst::FCMP_OEQ:
-              token = "=="; //overloaded operator in C
-              break;
-
-           default:
-              assert(false && "unmapped cmp predicate");
-        };
-     }
-     break;
-
-     case llvm::Instruction::ICmp:
-     {
-        llvm::CmpInst * cmpInst = llvm::cast<llvm::CmpInst>(inst);
-        switch (cmpInst->getPredicate())
-        {
-           case llvm::CmpInst::ICMP_UGT: castUint = true;
-           case llvm::CmpInst::ICMP_SGT:
-              token = ">";
-              break;
-
-           case llvm::CmpInst::ICMP_UGE: castUint = true;
-           case llvm::CmpInst::ICMP_SGE:
-              token = ">=";
-              break;
-
-           case llvm::CmpInst::ICMP_ULT: castUint = true;
-           case llvm::CmpInst::ICMP_SLT:
-              token= "<";
-              break;
-
-           case llvm::CmpInst::ICMP_ULE: castUint = true;
-           case llvm::CmpInst::ICMP_SLE:
-              token= "<=";
-              break;
-
-           case llvm::CmpInst::ICMP_EQ:
-              token = "=="; //overloaded operator in C
-              break;
-
-           case llvm::CmpInst::ICMP_NE:
-              token = "!=";
-              break;
-
-           default:
-              assert(false && "unmapped cmp predicate");
-        };
-     }
-	 break;
-
-     default:
-    	 Log::fail(inst, str<uint>(inst->getOpcode()) + " unsupported operator type");
-	}
-	intResult = intResult && !isBool;
-
-	std::string leftStr = leftOp;
-	std::string rightStr = rightOp;
-
-	//add appropriate casts for integer operands
-	if (castUint) {
-		leftStr = "uint(" + leftOp + ")";
-		rightStr = "uint(" + rightOp + ")";
-	} else if (intOps) {
-		leftStr = "int(" + leftOp + ")";
-		rightStr = "int(" + rightOp + ")";
-	}
-
-	if (intResult)
-		return "int(" + leftStr + " " + token + " " + rightStr + ")";
-	else
-		return "(" + leftStr + " " + token + " " + rightStr + ")";
-}
-
-/*
 * returns the string representation of a operator using @operands as operand literals
 */
-std::string GLSLWriter::getInstruction(llvm::Instruction * inst, std::vector<std::string> operands)
+std::string GLSLWriter::getInstruction(llvm::Instruction * inst, StringVector operands)
+{
+	return getOperation(WrappedInstruction(inst), operands);
+}
+
+std::string GLSLWriter::getOperation(const WrappedOperation & op, StringVector operands)
 {
   std::string tmp;
   StringVector::const_iterator begin = operands.begin();
 
+	StringVector::const_iterator beginParams = operands.begin();
+	StringVector::const_iterator endParams = operands.end();
 
-  //# function call
-  if (llvm::isa<llvm::CallInst>(inst)) {
-	  llvm::CallInst * caller = llvm::cast<llvm::CallInst>(inst);
-	  llvm::Function * callee = caller->getCalledFunction();
-	  if (platform.implements(callee))
-	  {
-		  return platform.build(callee->getNameStr(), operands.begin(), operands.end());// - 1);
+	//# binary infix operator
+	if (op.isBinaryOp() || op.isCompare()) {
+		bool signedOps = true;
+		std::string token = getOperatorToken(op, signedOps);
 
+		if (signedOps) {
+			return "(" + operands[0] + token + operands[1] + ")";
+
+	} else {
+		const llvm::Type * operandType = op.getOperand(0)->getType();
+		std::string opTypeStr = getType(operandType);
+		std::string convUnsignedStr = "u" + opTypeStr;
+
+		return  "(" +
+				convUnsignedStr + "(" + operands[0] + ") " + token + " " +
+				convUnsignedStr + "(" + operands[1] + "))";
+
+	}
+
+
+  //# bitcast
+  } else if (op.isa(llvm::Instruction::BitCast)) {
+     assert(operands.size() == 1 && "cast a single value . . non?");
+
+     //fake assignment instruction (cast to same type)
+     if (op.getOperand(0)->getType() == op.getType()) {
+    	 return operands[0];
+
+     } else {
+		 Log::fail(op.getValue(), "GLSL does not support bitcasts");
+     }
+
+  //# generic cast FIXME
+  } else if (op.isCast()) {
+	  const llvm::Type * sourceType = op.getOperand(0)->getType();
+	  const llvm::Type * targetType = op.getType();
+
+	  if (op.isa(llvm::Instruction::UIToFP)) { //integers are declared signed
+		  std::string intCast = "u" + getType(sourceType);
+		  return getType(targetType) + "(" + intCast + "(" + operands[0] + "))";
+
+	  // truncation: mask out bits and cast to smaller type
+	  } else if (op.isa(llvm::Instruction::Trunc)) {
+		  const llvm::Type * destIntType = llvm::cast<llvm::IntegerType>(targetType);
+		  uint destWidth = destIntType->getPrimitiveSizeInBits();
+
+		  uint64_t maskInt = generateTruncMask(destWidth);
+
+		  std::string fittedStr = operands[0] + " & 0x" + convertToHex(maskInt, std::max<int>(1, destWidth / 4));
+
+		  //convert_bool is not supported
+		  return (destWidth == 1 ? "bool(" : getType(targetType)) + "(" + fittedStr + ")";
+
+	  } else if (! targetType->isIntegerTy(1)){ //use ints for bools
+		  bool isUnsigned = op.isa(llvm::Instruction::ZExt);
+		  std::string targetTypeStr = getType(targetType);
+		  std::string srcTypeStr = getType(sourceType);
+
+		  // special cast bool to int case
+		  if (sourceType->isIntegerTy(1)) {
+			  std::string targetCastStr;
+			  std::string suffixStr;
+			  if (isUnsigned) {
+				  targetCastStr =  targetTypeStr + "(u" + targetTypeStr + "("; suffixStr += "))";
+			  } else {
+				  targetCastStr =  targetTypeStr + "(" ; suffixStr += ")";
+			  }
+			  return targetCastStr + operands[0] + suffixStr;
+		  }
+
+		  // we need to operate on unsigned data types to get a zero extension
+		  if (isUnsigned) {
+			  std::string srcCastStr = "u" + srcTypeStr + "(";
+			  std::string targetCastStr =  targetTypeStr + "(u" + targetTypeStr;
+			  return targetCastStr + srcCastStr + "(" + operands[0] + ")))";
+
+		 // bool conversions and sign/float extension will do without casts (hopefully)
+		  } else {
+			  return getType(targetType) + "(" + operands[0] + ")";
+		  }
+	  }
+
+#if 0 //legacy GLSL code
+  //# value cast
+  } else if (op.isa(llvm::Instruction::Cast)) {
+	  const llvm::Type * sourceType = op.getOperand(0)->getType();
+	  const llvm::Type * targetType = op.getType();
+
+	  if (op.isa(llvm::Instruction::UIToFP)) { //all integers are declared as signed
+		  std::string intCast = "(unsigned " + getType(sourceType) + ")";
+		  return getType(targetType) + "(" + intCast + "(" + operands[0] + "))";
 	  } else {
-		  tmp += callee->getNameStr() + '(';
-		 for(StringVector::const_iterator itOp = begin; itOp != operands.end(); ++itOp)
+		  return getType(targetType) + "(" + operands[0] + ")";
+	  }
+#endif
+
+  //# select
+  } else if (op.isa(llvm::Instruction::Select)) {
+	  return "(" + operands[0] + " ? " + operands[1] + " : " + operands[2] + ")";
+
+  //# generic opcode based scheme
+  //# function call
+  } else if (op.isa(llvm::Instruction::Call)) {
+	llvm::CallInst * caller = llvm::cast<llvm::CallInst>(op.getValue());
+	llvm::Function * callee = caller->getCalledFunction();
+
+	if (platform.implements(callee))
+	{
+		  return platform.build(callee->getName().str(), beginParams, endParams);// - 1);
+
+	} else {
+		  tmp += callee->getName().str() + '(';
+		 for(StringVector::const_iterator itOp = beginParams; itOp != endParams; ++itOp)
 		 {
 			if (itOp != begin)
 			   tmp +=", " + *itOp;
@@ -586,44 +507,11 @@ std::string GLSLWriter::getInstruction(llvm::Instruction * inst, std::vector<std
 		 tmp += ')';
 		 return tmp;
 
-	  }
-
-  //# binary infix operator
-  } else if (inst->isBinaryOp() || llvm::isa<llvm::CmpInst>(inst)) {
-	  return getBinaryOperator(inst, operands[0], operands[1]);
-
-  //# bitcast
-  } else if (llvm::isa<llvm::BitCastInst>(inst)) {
-     assert(operands.size() == 1 && "cast a single value . . non?");
-
-     //fake assignment instruction (cast to same type)
-     if (inst->getOperand(0)->getType() == inst->getType()) {
-    	 return operands[0];
-
-     } else {
-		 Log::fail(inst, "GLSL does not support bitcasts");
-     }
-
-  //# value cast
-  } else if (llvm::isa<llvm::CastInst>(inst)) {
-	  const llvm::Type * sourceType = inst->getOperand(0)->getType();
-	  const llvm::Type * targetType = inst->getType();
-
-	  if (llvm::isa<llvm::UIToFPInst>(inst)) { //all integers are declared as signed
-		  std::string intCast = "(unsigned " + getType(sourceType) + ")";
-		  return getType(targetType) + "(" + intCast + "(" + operands[0] + "))";
-	  } else {
-		  return getType(targetType) + "(" + operands[0] + ")";
-	  }
-
-  //# select
-  } else if (llvm::isa<llvm::SelectInst>(inst)) {
-	  return "(" + operands[0] + " ? " + operands[1] + " : " + operands[2] + ")";
-
-  //# generic opcode based scheme
+	}
   }
 
-  Log::fail(inst, "unimplemented instruction type");
+
+  Log::fail(std::string(llvm::Instruction::getOpcodeName(op.getOpcode())) + " unimplemented instruction type");
   return "<unreachable in GLSLWriter::getInstruction>";
 }
 
@@ -633,6 +521,8 @@ std::string GLSLWriter::getInstruction(llvm::Instruction * inst, std::vector<std
 */
 std::string GLSLWriter::dereferenceContainer(std::string root, const llvm::Type * type, AddressIterator *& address, IdentifierScope & locals, const llvm::Type *& oElementType)
 {
+	uint64_t index;
+
 	if (llvm::isa<llvm::StructType>(type)) {
 		uint64_t index;
 		llvm::Value * indexVal = address->getValue();
@@ -647,15 +537,8 @@ std::string GLSLWriter::dereferenceContainer(std::string root, const llvm::Type 
 		return root + ".x" + str<int>(index);
 
 	} else if (llvm::isa<llvm::ArrayType>(type)) {
-		llvm::Value * indexVal = address->getValue();
 		oElementType = type->getContainedType(0);
-		const VariableDesc * desc = locals.lookUp(indexVal);
-		assert(desc && "undefined index value");
-
-		address = address->getNext();
-
-
-		return root + "[" + desc->name + "]";
+		return buildArraySubscript(root, address, locals);
 
 
 	} else if (llvm::isa<llvm::PointerType>(type)) {
@@ -663,35 +546,29 @@ std::string GLSLWriter::dereferenceContainer(std::string root, const llvm::Type 
 		llvm::Value * indexVal = address->getValue();
 		oElementType = type->getContainedType(0);
 
-		address = address->getNext();
+		if (ptrType->getAddressSpace() == SPACE_NOPTR) {
+			address = address->getNext();
+			uint64_t index;
 
-		uint64_t index;
-
-		//NV_shader_buffer_* - extensions support
-		if (ptrType->getAddressSpace() == SPACE_POINTER) {
-			if (evaluateInt(indexVal, index)) {
-				if (index == 0) {
-					return "(*" + root + ")";
-				} else {
-					if (index > 0 && address) {
-						address = address->getNext();
-					}
-					return "(" + root + ")[" + str<int>(index) + "]";
-				}
-			} else {
-				const VariableDesc * desc = locals.lookUp(indexVal);
-				assert(desc && "undefined index value");
-
-				return "(" + root + ")[" + desc->name + "]";
+			if (!evaluateInt(indexVal,index) || (index != 0)) {
+				Log::fail(ptrType, "can not index to into a NOPTR address space value (may only dereference it directly)");
 			}
 
-		} else if (evaluateInt(indexVal, index) && index == 0) {
 			return root;
+
+			} else {
+				// address = address->getNext();
+				return buildArraySubscript(root, address, locals);
+			}
+
+		} else if (evaluateInt(address->getValue(), index) && index == 0) {
+			return root;
+
 		} else {
 			Log::fail(type, "GLSL does not support dynamic arrays");
 		}
-	}
 
+//FIXME will break if a GEP addresses into vector types
 	Log::fail(type, "can not dereference this type");
 }
 
@@ -699,7 +576,8 @@ std::string GLSLWriter::dereferenceContainer(std::string root, const llvm::Type 
  * return a name representing a dereferenced pointer
  *if noImplicitDeref is false, the exact address of the value is returned
  */
-std::string GLSLWriter::getDereffedPointer(llvm::Value * val, IdentifierScope & locals)
+std::string GLSLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oDereferenced, const std::string * rootName)
+//std::string GLSLWriter::getDereffedPointer(llvm::Value * val, IdentifierScope & locals)
 {
 	AddressIterator::AddressResult result = AddressIterator::createAddress(val, platform.getDerefFuncs());
 	ResourceGuard<AddressIterator> __guardAddress(result.iterator);
@@ -902,7 +780,7 @@ std::string GLSLWriter::getDereffedPointer(llvm::Value * val, IdentifierScope & 
 		   return phiDesc->name;
 
 	   } else if (llvm::isa<llvm::ConstantExpr>(value)) { //ConstantExpr -> probably deref
-		   return getDereffedPointer(value, locals);
+		   return getReferenceTo(value, locals);
 
       } else if (llvm::isa<llvm::Constant>(value)) { //arbitrary constant
          return getLiteral(llvm::cast<llvm::Constant>(value));
@@ -925,7 +803,7 @@ std::string GLSLWriter::getShuffleInstruction(llvm::ShuffleVectorInst * shuffle,
 	llvm::Value * indexVector = shuffle->getOperand(2);
 	const llvm::VectorType * indexType =  llvm::cast<const llvm::VectorType>(indexVector->getType());
 
-	const llvm::Type * elementType = firstType->getElementType();
+	llvm::Type * elementType = firstType->getElementType();
 
 	int secondBase = firstType->getNumElements();
 	int numIndices = indexType->getNumElements();
@@ -1191,7 +1069,7 @@ std::string GLSLWriter::getInstructionAsExpression(llvm::Instruction * inst, Ide
 		llvm::LoadInst * load = llvm::cast<llvm::LoadInst>(inst);
 		llvm::Value * pointer = load->getOperand(0);
 
-		return getDereffedPointer(pointer, locals);
+		return getReferenceTo(pointer, locals);
 
 	//interpret this PHINode as a variable assignment
 	} else if (llvm::isa<llvm::PHINode>(inst)) {
@@ -1342,7 +1220,7 @@ void GLSLWriter::writeInstruction(const VariableDesc * desc, llvm::Instruction *
 	if (llvm::isa<llvm::CallInst>(inst)) {
 		llvm::CallInst * call = llvm::cast<llvm::CallInst>(inst);
 		llvm::Function * callee = call->getCalledFunction();
-		if(callee->getNameStr() == "shadeFragment") {
+		if(modInfo.getFragFunc() == callee) {
 			writeFragmentCall(call, locals);
 			return;
 		}
@@ -1361,7 +1239,7 @@ void GLSLWriter::writeInstruction(const VariableDesc * desc, llvm::Instruction *
 		}
 
 		//decode the GEP and store the value
-		std::string name = getDereffedPointer(pointer, locals);
+		std::string name = getReferenceTo(pointer, locals);
 		putLine(name + " = " + srcString + ";" );
 
 	} else if (llvm::isa<llvm::InsertElementInst>(inst)) {
@@ -1390,39 +1268,6 @@ void GLSLWriter::writeIf(const llvm::Value * condition, bool negate, IdentifierS
 		putLine( "if (" + condStr + ")" );
 	else
 		putLine( "if (! " + condStr + ")" );
-}
-
-void GLSLWriter::writeElse()
-{
-	putLine( "else" );
-}
-
-void GLSLWriter::writeLoopContinue()
-{
-	putLine("continue;");
-}
-
-void GLSLWriter::writeLoopBreak()
-{
-	putLine( "break;" );
-}
-
-void GLSLWriter::writeDo()
-{
-  putLine( "do" );
-}
-
-void GLSLWriter::writeAssign(const VariableDesc & dest, const VariableDesc & src)
-{
-#ifdef DEBUG
-	std::cerr << "writeAssign:: enforcing assignment to " << dest.name << std::endl;
-#endif
-	writeAssignRaw( dest.name, src.name);
-}
-
-void GLSLWriter::writeAssignRaw(const std::string & dest, const std::string & src)
-{
-	putLine(dest + " = " + src + ";");
 }
 
 /*
@@ -1495,33 +1340,6 @@ void GLSLWriter::writeReturnInst(llvm::ReturnInst * retInst, IdentifierScope & l
 	} else { ///void return
 		putLine( "return;" );
 	}
-}
-
-/*
-* writes a generic struct type declaration to the fragment shader
-*/
-std::string GLSLWriter::getStructTypeDeclaration(const llvm::Type * type)
-{
-   const llvm::StructType * structType = llvm::cast<const llvm::StructType>(type);
-
-   std::string structName;
-   bool structHasName = getTypeSymbol(modInfo.getTypeSymbolTable(), type, structName);
-   AXTOR_ASSERT(structHasName && "struct should have a name");
-
-   std::string res =  "struct " + structName + "\n{\n";
-
-   for(uint i = 0; i < structType->getNumElements(); ++i)
-   {
-	   const llvm::Type * elementType = structType->getElementType(i);
-
-	   std::string memberName = "x" + str<int>(i);
-	   std::string memberStr = buildDeclaration(memberName, elementType);
-
-	   res += INDENTATION_STRING + memberStr + ";\n";
-   }
-
-   res += "};\n";
-   return res;
 }
 
 void GLSLWriter::writeFunctionPrologue(llvm::Function * func, IdentifierScope & locals)
@@ -1626,18 +1444,7 @@ GLSLWriter::GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, P
 		both->putLine("");
 
 		//### write struct defs ###
-		llvm::TypeSymbolTable & types = modInfo.getTypeSymbolTable();
-		for (llvm::TypeSymbolTable::const_iterator itType = types.begin(); itType != types.end(); ++itType)
-		{
-			std::string name = itType->first;
-			const llvm::Type * type = itType->second;
-
-			if (type && llvm::isa<const llvm::StructType>(type))
-			{
-				std::string structStr = getStructTypeDeclaration(type);
-				both->put( structStr );
-			}
-		}
+		spillStructTypeDeclarations(modInfo.getModule(), both);
 
 		//## spill globals
 		for (llvm::Module::global_iterator global = mod->global_begin(); global != mod->global_end(); ++global)
@@ -1791,7 +1598,7 @@ void GLSLMultiStageWriter::writeFunctionPrologue(llvm::Function * func, Identifi
    typedef llvm::Function::ArgumentListType ArgList;
    const ArgList & argList = func->getArgumentList();
 
-   std::cerr << "Multi::prologue func=" << func->getNameStr() << "\n";
+   std::cerr << "Multi::prologue func=" << func->getName().str() << "\n";
 
    ConstValueSet arguments;
    for(ArgList::const_iterator arg = argList.begin(); arg != argList.end(); ++arg)

@@ -24,14 +24,12 @@
 #ifndef GLSLMODULEINFO_H_
 #define GLSLMODULEINFO_H_
 
-#include <llvm/TypeSymbolTable.h>
+#include <axtor/console/CompilerLog.h>
+#include <axtor/metainfo/ModuleInfo.h>
+#include <axtor/util/llvmShortCuts.h>
+#include <axtor/util/InstructionIterator.h>
 
-#include <axtor/console/CompilerLog.hpp>
-#include <axtor/metainfo/ModuleInfo.hpp>
-#include <axtor/util/llvmShortCuts.hpp>
-#include <axtor/util/InstructionIterator.hpp>
-
-#include "GLSLCommon.hpp"
+#include "GLSLCommon.h"
 
 namespace axtor {
 
@@ -108,8 +106,6 @@ public:
 	int getAttributeInterpolant(uint index) const;
 
 	std::string getAttributeInterpolantStr(uint idx) const;
-
-	void writeToLLVMStream(llvm::formatted_raw_ostream & out);
 };
 
 }

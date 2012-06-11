@@ -32,7 +32,6 @@
 #include <llvm/Value.h>
 #include <llvm/Instruction.h>
 #include <llvm/Function.h>
-#include <llvm/TypeSymbolTable.h>
 #include <llvm/Module.h>
 #include <llvm/Constants.h>
 #include <llvm/Support/raw_ostream.h>
@@ -47,6 +46,10 @@
 #include <axtor/util/ResourceGuard.h>
 #include <axtor/intrinsics/AddressIterator.h>
 #include <axtor/backend/AddressSpaces.h>
+#include <axtor/util/WrappedOperation.h>
+
+#include <axtor/backend/generic/GenericCSerializer.h>
+#include <axtor/backend/generic/GenericCWriter.h>
 
 #include "GLSLModuleInfo.h"
 #include "GLSLBackend.h"
@@ -59,7 +62,7 @@ namespace axtor {
 /*
 * Generic SlangWriter interface
 */
-class GLSLWriter : public SyntaxWriter
+class GLSLWriter : public GenericCWriter, protected GenericCSerializer
 {
 		friend class GLSLBlockWriter;
 		friend class GLSLRedirectedWriter;
@@ -74,14 +77,6 @@ protected:
 	void writeFragmentCall(llvm::CallInst * call, IdentifierScope & funcContext);
 
 	virtual void put(std::string text);
-
-	void putLine(std::string text);
-
-	void putLineBreak();
-
-	void put(char c);
-
-	void putLine(char c);
 
 	void writeShaderFunctionHeader(llvm::Function * func, IdentifierScope * funcContext);
 	/*
@@ -149,15 +144,11 @@ public:
 
 	virtual void writeFunctionDeclaration(llvm::Function * func, IdentifierScope * funcContext = NULL);
 
-	/*
-	 * default C Style operators
-	 */
-   std::string getBinaryOperator(llvm::Instruction * inst, std::string leftOp, std::string rightOp);
-
    /*
    * returns the string representation of a operator using @operands as operand literals
    */
-   std::string getInstruction(llvm::Instruction * inst, std::vector<std::string> operands);
+   std::string getInstruction(llvm::Instruction * inst, StringVector operands);
+   std::string getOperation(const WrappedOperation & op, StringVector operands);
 
    typedef std::vector<llvm::Value*> ValueVector;
 
@@ -171,6 +162,9 @@ public:
 	 *if noImplicitDeref is false, the exact address of the value is returned
 	 */
 	std::string getDereffedPointer(llvm::Value * val, IdentifierScope & funcContext);
+	std::string unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oDereferenced, const std::string * rootName);
+
+	std::string getReferenceTo(llvm::Value * val, IdentifierScope & funcContext);
 
 	std::string getAllNullLiteral(const llvm::Type * type);
 	/*
@@ -231,9 +225,6 @@ public:
 
 	virtual void writeDo();
 
-	virtual void writeAssign(const VariableDesc & desc, const VariableDesc & src);
-
-	virtual void writeAssignRaw(const std::string & dest, const std::string & src);
 
 	/*
 	 * write a while for a post<checked loop
@@ -251,12 +242,10 @@ public:
 
    virtual void writeReturnInst(llvm::ReturnInst * retInst, IdentifierScope & funcContext);
 
-   /*
-    * writes a generic struct type declaration to the fragment shader
-    */
-   virtual std::string getStructTypeDeclaration(const llvm::Type * type);
 
    virtual void writeFunctionPrologue(llvm::Function * func, IdentifierScope & funcContext);
+
+
 
    /*
     * dumps a generic vertex shader and all type&argument defs for the frag shader
@@ -264,6 +253,12 @@ public:
    GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, PlatformInfo & _platform);
 
    GLSLModuleInfo & getModuleInfo();
+
+protected:
+   /*
+    * writes a generic struct type declaration to the fragment shader
+    */
+   virtual std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
 };
 
 class GLSLBlockWriter : public GLSLWriter

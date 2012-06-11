@@ -51,6 +51,9 @@
 #include <axtor/util/ResourceGuard.h>
 #include <axtor/intrinsics/AddressIterator.h>
 
+#include <axtor/backend/generic/GenericCSerializer.h>
+#include <axtor/backend/generic/GenericCWriter.h>
+
 #include "OCLCommon.h"
 #include "OCLModuleInfo.h"
 
@@ -63,7 +66,7 @@ class OCLBlockWriter;
 /*
 * Generic SlangWriter interface
 */
-class OCLWriter : public SyntaxWriter
+class OCLWriter : public GenericCWriter, protected GenericCSerializer
 {
 		friend class OCLBlockWriter;
 		friend class OCLPassThroughWriter;
@@ -74,18 +77,6 @@ private:
 
 protected:
 	virtual void put(std::string text);
-
-	inline void putLine(std::string text);
-
-	inline void putLineBreak();
-
-	inline void put(char c);
-
-	inline void putLine(char c);
-
-private: //helper methods
-	// consumes the first and all following cumulative values in a string to build an array dereferencing sum of indices "DATA[add0+add1+add2+add3]"
-	std::string buildArraySubscript(std::string root, AddressIterator *& address, IdentifierScope & locals);
 
 public:
 	virtual void dump();
@@ -110,12 +101,13 @@ public:
 	 */
 	std::string getType(const llvm::Type * type);
 
+protected:
 	/*
 	 * build a C-style declaration for @root of type @type
 	 */
 	std::string buildDeclaration(std::string root, const llvm::Type * type);
 
-
+public:
 	/*
 	* ##### DECLARATIONS / OPERATORS & INSTRUCTIONS ######
 	 */
@@ -133,15 +125,10 @@ public:
 
 	virtual void writeFunctionDeclaration(llvm::Function * func, IdentifierScope * locals = NULL);
 
-	/*
-	 * default C Style operators (returns if operand casting is required)
-	 */
-   std::string getOperatorToken(const WrappedOperation & op, bool & isSigned);
-
    /*
    * returns the string representation of a operator using @operands as operand literals
    */
-   std::string getInstruction(llvm::Instruction * inst, std::vector<std::string> operands);
+   std::string getInstruction(llvm::Instruction * inst, StringVector operands);
 
    /*
     * returns the string representation of a constant
@@ -226,14 +213,6 @@ public:
 
 	virtual void writeIf(const llvm::Value * condition, bool negateCondition, IdentifierScope & locals);
 
-	virtual void writeElse();
-
-	virtual void writeLoopContinue();
-
-	virtual void writeLoopBreak();
-
-	virtual void writeDo();
-
 	//half-unchecked assign
 	virtual void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals);
 
@@ -257,10 +236,6 @@ public:
 
    virtual void writeReturnInst(llvm::ReturnInst * retInst, IdentifierScope & locals);
 
-   /*
-    * writes a generic struct type declaration to the module
-    */
-   virtual std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
 
    virtual void writeFunctionPrologue(llvm::Function * func, IdentifierScope & locals);
 
