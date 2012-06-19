@@ -10,11 +10,15 @@
 #include <llvm/Module.h>
 #include <axtor/writer/SyntaxWriter.h>
 
+#include <axtor/util/llvmShortCuts.h>
+#include <axtor/util/WrappedOperation.h>
+#include <axtor/console/CompilerLog.h>
+
 #define INDENTATION_STRING "   "
 
 namespace axtor {
 
-	void GenericCSerializer::spillStructTypeDeclarations(llvm::Module * mod, SyntaxWriter * stream)
+	void GenericCSerializer::spillStructTypeDeclarations(llvm::Module * mod, GenericCWriter * stream)
 	{
 		StructTypeVector types;
 		mod->findUsedStructTypes(types);
@@ -43,7 +47,7 @@ namespace axtor {
 
 						//write declaration
 						std::string structStr = getStructTypeDeclaration(name, llvm::cast<const llvm::StructType>(type));
-						put( structStr );
+						stream->put( structStr );
 
 						undeclaredTypes.erase(type);
 						itType = types.begin();

@@ -12,6 +12,8 @@
 #include <axtor/writer/SyntaxWriter.h>
 #include <axtor/intrinsics/AddressIterator.h>
 #include <axtor/CommonTypes.h>
+#include <axtor/util/WrappedOperation.h>
+
 #include <sstream>
 
 namespace axtor {
@@ -25,6 +27,7 @@ namespace axtor {
  */
 class GenericCWriter : public SyntaxWriter
 {
+	friend class GenericCSerializer;
 public:
 	void writeElse();
 
@@ -41,6 +44,20 @@ public:
 	virtual void writeAssignRaw(const std::string & dest, const std::string & src);
 	virtual void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals);
 
+	virtual std::string getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
+	virtual std::string getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
+	virtual std::string getConstant(llvm::Constant * constant, IdentifierScope & locals)=0;
+
+
+	// needs to be implemented
+ 	virtual std::string unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oIsDereffed, const std::string * rootName) = 0;
+	virtual std::string getNonInstruction(llvm::Value * op, IdentifierScope & locals) = 0;
+	virtual std::string getOperation(const WrappedOperation & op, StringVector operands) = 0;
+	virtual std::string getLiteral(llvm::Constant * const)= 0;
+
+
+
+
 	inline void writeAssign(const VariableDesc & dest, const VariableDesc & src)
 	{
 	#ifdef DEBUG
@@ -51,14 +68,14 @@ public:
 
 protected:
 
-	virtual void put(std::string)=0;
+	virtual void put(const std::string&)=0;
 
 	inline void putLineBreak()
 	{
 		put ('\n');
 	}
 
-	inline  void putLine(std::string text)
+	inline void putLine(std::string text)
 	{
 		{
 			put( text + '\n');

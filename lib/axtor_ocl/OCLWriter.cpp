@@ -15,7 +15,7 @@
 namespace axtor {
 
 
- void OCLWriter::put(std::string text)
+void OCLWriter::put(const std::string & text)
 {
 	modInfo.getStream() << text;
 }
@@ -570,30 +570,7 @@ std::string OCLWriter::getVolatilePointerTo(llvm::Value * val, IdentifierScope &
 	return "(" + castStr + ")(" + ptrStr + ")";
 }
 
-std::string OCLWriter::getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
-{
-	bool isDereffed;
-	std::string core = unwindPointer(val, locals, isDereffed, rootName);
-	std::string ptrStr;
-	if (isDereffed) {
-		ptrStr =  "&(" + core + ")";
-	} else {
-		ptrStr = core;
-	}
 
-	return ptrStr;
-}
-
-std::string OCLWriter::getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
-{
-	bool isDereffed;
-	std::string core = unwindPointer(val, locals, isDereffed, rootName);
-	if (isDereffed) {
-		return core;
-	} else {
-		return "*(" + core + ")";
-	}
-}
 
 /*
  * return a name representing a dereferenced pointer
@@ -882,27 +859,6 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 	 return "";
    }
 
-
-   std::string OCLWriter::getConstant(llvm::Constant * constant, IdentifierScope & locals)
-   {
-	   if (llvm::isa<llvm::ConstantExpr>(constant)) { //arbitrary constant
-		   llvm::ConstantExpr * expr = llvm::cast<llvm::ConstantExpr>(constant);
-		   if (expr->getOpcode() == llvm::Instruction::GetElementPtr) {
-			   return getPointerTo(constant, locals);
-
-		   } else {
-			   StringVector operands(expr->getNumOperands());
-			   for(uint i = 0; i < expr->getNumOperands(); ++i)
-			   {
-				   operands[i] = getNonInstruction(expr->getOperand(i), locals);
-			   }
-			   return getOperation(WrappedConstExpr(expr), operands);
-
-		   }
-	   } else {
-		   return getLiteral(constant);
-	   }
-   }
 
   /*
    * returns the string representation of a ShuffleInstruction
@@ -1626,7 +1582,7 @@ template class ResourceGuard<AddressIterator>;
 /*
  * BlockWriter (indents all writes and embraces them in curly brackets)
  */
- void OCLBlockWriter::put(std::string text)
+ void OCLBlockWriter::put(const std::string &  text)
 {
 	parent.put(INDENTATION_STRING + text);
 }
@@ -1653,7 +1609,7 @@ OCLPassThroughWriter::OCLPassThroughWriter(OCLWriter & _parent) :
 	parent(_parent)
 {}
 
-void OCLPassThroughWriter::put(std::string msg)
+void OCLPassThroughWriter::put(const std::string &  msg)
 {
 	parent.put(msg);
 }
@@ -1666,7 +1622,7 @@ OCLMultiWriter::OCLMultiWriter(OCLWriter & _first, OCLWriter & _second) :
 		first(_first), second(_second)
 {}
 
-void OCLMultiWriter::put(std::string msg)
+void OCLMultiWriter::put(const std::string &  msg)
 {
 	first.put(msg);
 	second.put(msg);

@@ -76,7 +76,7 @@ private:
 protected:
 	void writeFragmentCall(llvm::CallInst * call, IdentifierScope & funcContext);
 
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 
 	void writeShaderFunctionHeader(llvm::Function * func, IdentifierScope * funcContext);
 	/*
@@ -90,6 +90,9 @@ protected:
 	std::string getComponentDesignator(int index);
 
 public:
+    virtual std::string getConstant(llvm::Constant * constant, IdentifierScope & locals);
+
+
 	enum ArgumentQualifier
 	{
 		INOUT = 0,
@@ -164,7 +167,7 @@ public:
 	std::string getDereffedPointer(llvm::Value * val, IdentifierScope & funcContext);
 	std::string unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oDereferenced, const std::string * rootName);
 
-	std::string getReferenceTo(llvm::Value * val, IdentifierScope & funcContext);
+	//std::string getReferenceTo(llvm::Value * val, IdentifierScope & funcContext);
 
 	std::string getAllNullLiteral(const llvm::Type * type);
 	/*
@@ -266,7 +269,7 @@ class GLSLBlockWriter : public GLSLWriter
 	GLSLWriter & parent;
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 
 public:
 
@@ -288,7 +291,7 @@ class GLSLRedirectedWriter : public GLSLWriter
 	std::ostream & stream;
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 
 public:
 	GLSLRedirectedWriter(GLSLWriter & _parent, std::ostream & _stream);
@@ -306,7 +309,7 @@ class GLSLMultiStageWriter : public GLSLWriter
 	GLSLWriter * frag;
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 
 public:
 	/*
@@ -323,7 +326,7 @@ public:
 class GLSLDummyWriter : public GLSLWriter
 {
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 
 public:
 	GLSLDummyWriter(GLSLWriter & parent);

@@ -12,6 +12,8 @@
 #include <axtor/writer/SyntaxWriter.h>
 #include <axtor/util/WrappedOperation.h>
 
+#include "GenericCWriter.h"
+
 typedef std::vector<llvm::StructType*> StructTypeVector;
 
 typedef std::vector<int> IntVector;
@@ -28,7 +30,7 @@ namespace axtor {
 	{
 	public:
 	   // GENERIC:
-		void spillStructTypeDeclarations(llvm::Module * mod, SyntaxWriter * stream);
+		void spillStructTypeDeclarations(llvm::Module * mod, GenericCWriter * stream);
 		std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
 
 

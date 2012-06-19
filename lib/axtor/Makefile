@@ -12,7 +12,7 @@ LIBRARYNAME=axtorInterface
 # SHARED_LIBRARY = 1
 # ARCHIVE_LIBRARY = 1
 
-PARALLEL_DIRS=ast cns console intrinsics metainfo parsers pass solvers util writer
+PARALLEL_DIRS=ast cns console intrinsics metainfo parsers pass solvers util writer backend
 
 # 
 

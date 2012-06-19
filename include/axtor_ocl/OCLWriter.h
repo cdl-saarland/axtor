@@ -76,7 +76,7 @@ private:
 	PlatformInfo & platform;
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string & text);
 
 public:
 	virtual void dump();
@@ -261,7 +261,7 @@ public:
 	OCLPassThroughWriter(OCLWriter & _parent);
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 };
 
 /*
@@ -276,7 +276,7 @@ public:
 	OCLMultiWriter(OCLWriter & _first, OCLWriter & _second);
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 };
 
 /*
@@ -287,7 +287,7 @@ class OCLBlockWriter : public OCLWriter
 	OCLWriter & parent;
 
 protected:
-	virtual void put(std::string text);
+	virtual void put(const std::string &  text);
 
 public:
 

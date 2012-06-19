@@ -11,7 +11,7 @@
 namespace axtor {
 
 
- void GLSLWriter::put(std::string text)
+ void GLSLWriter::put(const std::string &  text)
 {
 	assert(false && "must not write with the root GLSL writer (use derived classes instead)");
 }
@@ -1531,7 +1531,7 @@ GLSLModuleInfo & GLSLWriter::getModuleInfo()
 	return modInfo;
 }
 
-void GLSLBlockWriter::put(std::string text)
+void GLSLBlockWriter::put(const std::string &  text)
 {
 	parent.put(INDENTATION_STRING + text);
 }
@@ -1559,7 +1559,7 @@ GLSLBlockWriter::~GLSLBlockWriter()
 	parent.putLine("}");
 }
 
-void GLSLRedirectedWriter::put(std::string text)
+void GLSLRedirectedWriter::put(const std::string &  text)
 {
 	stream << text;
 }
@@ -1572,7 +1572,7 @@ GLSLRedirectedWriter::GLSLRedirectedWriter(GLSLWriter & _parent, std::ostream & 
 GLSLRedirectedWriter::~GLSLRedirectedWriter()
 {}
 
-void GLSLMultiStageWriter::put(std::string text)
+void GLSLMultiStageWriter::put(const std::string &  text)
 {
 	if (vert)
 		vert->put(text);
@@ -1670,7 +1670,7 @@ GLSLDummyWriter::GLSLDummyWriter(GLSLWriter & parent) :
 	GLSLWriter(parent)
 {}
 
-void GLSLDummyWriter::put(std::string text)
+void GLSLDummyWriter::put(const std::string &  text)
 {}
 
 GLSLFragWriter::GLSLFragWriter(axtor::GLSLWriter & parent, std::ostream & fragStream) :

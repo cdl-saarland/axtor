@@ -9,6 +9,10 @@
 #include <axtor/backend/generic/GenericCWriter.h>
 #include <llvm/Instructions.h>
 
+#include <axtor/util/llvmShortCuts.h>
+#include <axtor/util/WrappedOperation.h>
+#include <axtor/console/CompilerLog.h>
+
 namespace axtor {
 
 void GenericCWriter::writeElse()
@@ -210,6 +214,52 @@ void GenericCWriter::writeDo()
 	 	}
 
 	 	putLine(destStr + " = " + srcText + ";");
+	 }
+
+	 std::string GenericCWriter::getConstant(llvm::Constant * constant, IdentifierScope & locals)
+	{
+	   if (llvm::isa<llvm::ConstantExpr>(constant)) { //arbitrary constant
+		   llvm::ConstantExpr * expr = llvm::cast<llvm::ConstantExpr>(constant);
+		   if (expr->getOpcode() == llvm::Instruction::GetElementPtr) {
+			   return getPointerTo(constant, locals);
+
+		   } else {
+			   StringVector operands(expr->getNumOperands());
+			   for(uint i = 0; i < expr->getNumOperands(); ++i)
+			   {
+				   operands[i] = getNonInstruction(expr->getOperand(i), locals);
+			   }
+			   return getOperation(WrappedConstExpr(expr), operands);
+
+		   }
+	   } else {
+		   return getLiteral(constant);
+	   }
+	}
+
+	 std::string GenericCWriter::getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
+	 {
+	 	bool isDereffed;
+	 	std::string core = unwindPointer(val, locals, isDereffed, rootName);
+	 	std::string ptrStr;
+	 	if (isDereffed) {
+	 		ptrStr =  "&(" + core + ")";
+	 	} else {
+	 		ptrStr = core;
+	 	}
+
+	 	return ptrStr;
+	 }
+
+	 std::string GenericCWriter::getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName)
+	 {
+	 	bool isDereffed;
+	 	std::string core = unwindPointer(val, locals, isDereffed, rootName);
+	 	if (isDereffed) {
+	 		return core;
+	 	} else {
+	 		return "*(" + core + ")";
+	 	}
 	 }
 
 }
