@@ -18,11 +18,6 @@ namespace axtor
 
 	char Serializer::ID = 0;
 
-	Serializer::Serializer() :
-		llvm::ModulePass(ID)
-	{}
-
-
 	/*
 	 * translates the instruction list contained in @bb
 	 */

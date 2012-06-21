@@ -259,14 +259,10 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 #endif
 		}
 
-		Preparator::Preparator() :
-			ModulePass(ID)
+		Preparator::~Preparator()
 		{}
 
-		 Preparator::~Preparator()
-		{}
-
-		 bool Preparator::runOnModule(llvm::Module& M)
+		bool Preparator::runOnModule(llvm::Module& M)
 		{
 #ifdef DEBUG_PASSRUN
 		std::cerr << "\n\n##### PASS: Preparator #####\n\n";

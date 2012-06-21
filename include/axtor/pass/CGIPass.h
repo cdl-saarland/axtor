@@ -67,7 +67,9 @@ class CGIPass : public llvm::ModulePass
 	public:
 		static char ID;
 
-		CGIPass();
+		CGIPass() :
+			llvm::ModulePass(ID)
+		{}
 
 		virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 

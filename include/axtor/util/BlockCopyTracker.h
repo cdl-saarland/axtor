@@ -41,7 +41,7 @@ class BlockCopyTracker
 
 public:
 	BlockCopyTracker(llvm::Module & M);
-	virtual ~BlockCopyTracker();
+	virtual ~BlockCopyTracker() {}
 
 	//duplicate tracker functionality
 	void identifyBlocks(ConstBlock first, ConstBlock second);

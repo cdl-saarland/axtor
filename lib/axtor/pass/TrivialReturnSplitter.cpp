@@ -15,18 +15,13 @@ namespace axtor {
 
 	char TrivialReturnSplitter::ID = 0;
 
-	TrivialReturnSplitter::TrivialReturnSplitter() :
-		llvm::FunctionPass(ID)
-	{}
-
 	bool TrivialReturnSplitter::runOnFunction(llvm::Function & F)
 	{
 		for(llvm::Function::iterator block = F.begin(); block != F.end(); ++block)
 		{
 			if (llvm::isa<llvm::ReturnInst>(block->begin()))
 			{
-				BlockCopyTracker tracker(*F.getParent());
-				splitNode(tracker, block);
+				splitNode(block);
 				return true;
 			}
 		}

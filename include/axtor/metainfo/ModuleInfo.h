@@ -31,7 +31,6 @@
 //#include <llvm/TypeSymbolTable.h>
 
 #include <axtor/CommonTypes.h>
-#include <axtor/util/BlockCopyTracker.h>
 
 #include <string>
 
@@ -43,14 +42,14 @@ namespace axtor {
  * base class for Backend specific ModuleInfo classes that
  * provides additional information about the target llvm::Module
  */
-class ModuleInfo : public BlockCopyTracker
+class ModuleInfo
 {
 	llvm::Module & M;
 
 public:
 	ModuleInfo(llvm::Module & _M);
 
-	virtual ~ModuleInfo();
+	virtual ~ModuleInfo() {}
 
 	const llvm::Module * getModule() const;
 

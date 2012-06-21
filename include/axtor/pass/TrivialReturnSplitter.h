@@ -61,7 +61,9 @@ namespace axtor
 
 			virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 
-			TrivialReturnSplitter();
+			TrivialReturnSplitter() :
+				llvm::FunctionPass(ID)
+			{}
 
 			virtual ~TrivialReturnSplitter();
 

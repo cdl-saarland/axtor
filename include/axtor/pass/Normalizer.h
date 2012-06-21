@@ -26,10 +26,9 @@
 
 #include <axtor/config.h>
 
-#include <axtor/util/BlockCopyTracker.h>
-
 #include <llvm/Module.h>
 #include <llvm/Pass.h>
+#include <llvm/Analysis/LoopInfo.h>
 
 namespace axtor {
 
@@ -42,11 +41,11 @@ class Normalizer : public llvm::ModulePass
 {
 	static char ID;
 
-	bool normalizeSubLoopGraphs(BlockCopyTracker & tracker, llvm::Function & func, llvm::Loop * loop);
+	bool normalizeSubLoopGraphs(llvm::Function & func, llvm::Loop * loop);
 
-	bool normalizePostDomSubgraphs(BlockCopyTracker & tracker, llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * barrierBlock, llvm::Loop * loopScope);
+	bool normalizePostDomSubgraphs(llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * barrierBlock, llvm::Loop * loopScope);
 
-	bool normalizeNode(BlockCopyTracker & tracker, llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * entryPostDom, llvm::Loop * loopScope);
+	bool normalizeNode(llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * entryPostDom, llvm::Loop * loopScope);
 
 	EdgeVector getAbstractSuccessors(llvm::LoopInfo& loopInfo, llvm::BasicBlock * entry, llvm::Loop * loopScope);
 

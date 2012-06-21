@@ -28,7 +28,6 @@
 
 #include <llvm/Pass.h>
 
-#include <axtor/util/BlockCopyTracker.h>
 #include <axtor/pass/TargetProvider.h>
 
 #include <axtor/pass/OpaqueTypeRenamer.h>
@@ -50,13 +49,15 @@ class CNSPass : public llvm::ModulePass
 {
 	cns::SplitTree * generateSplitSequence(cns::SplitTree * root, BlockGraph::SubgraphMask & mask, BlockGraph & graph);
 
-	void applySplitSequence(BlockCopyTracker & tracker, BlockGraph & graph, std::vector<uint> nodes) const;
+	void applySplitSequence(BlockGraph & graph, std::vector<uint> nodes) const;
 
-	bool runOnFunction(BlockCopyTracker & tracker, llvm::Function & func);
+	bool runOnFunction(llvm::Function & func);
 public:
 	static char ID;
 
-	CNSPass();
+	CNSPass() :
+		llvm::ModulePass(ID)
+	{}
 
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 

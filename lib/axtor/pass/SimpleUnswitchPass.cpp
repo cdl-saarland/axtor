@@ -23,10 +23,6 @@ namespace axtor {
 							false /* transformation */);
 	}
 
-	SimpleUnswitchPass::SimpleUnswitchPass() :
-		llvm::ModulePass(ID)
-	{}
-
 	SimpleUnswitchPass::~SimpleUnswitchPass() {}
 
 	const char * SimpleUnswitchPass::getPassName() const

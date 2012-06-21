@@ -18,11 +18,6 @@
 
 namespace axtor {
 
-BlockSet splitNode(BlockCopyTracker & tracker, llvm::BasicBlock * srcBlock)
-{
-	return splitNode(srcBlock);
-}
-
 BlockSet splitNode(llvm::BasicBlock * srcBlock, llvm::DominatorTree * domTree)
 {
 	assert(srcBlock && "was NULL");
@@ -85,11 +80,6 @@ BlockVector splitNodeExt(llvm::BasicBlock * srcBlock, BlockSetVector predecessor
 	return clones;
 }
 
-
-LoopSet splitLoop(BlockCopyTracker & tracker, llvm::LoopInfo & loopInfo, llvm::Loop * loop, llvm::Pass * pass)
-{
-	return splitLoop(loopInfo, loop, pass);
-}
 
 LoopSet splitLoop(llvm::LoopInfo & loopInfo, llvm::Loop * loop, llvm::Pass * pass, llvm::DominatorTree * domTree)
 {
@@ -310,10 +300,6 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 	}
 }
 
-llvm::BasicBlock * cloneBlockForBranch(BlockCopyTracker & tracker, llvm::BasicBlock * srcBlock, llvm::BasicBlock * branchBlock)
-{
-	return cloneBlockForBranch(srcBlock, branchBlock);
-}
 /*
  * creates a copy of @srcBlock that replaces the original srcBlock on the edge coming from branchBlock
  */

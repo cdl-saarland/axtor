@@ -36,7 +36,7 @@ namespace axtor
 	/*
 	 * normalize all loops in th CFG
 	 */
-	bool Normalizer::normalizeSubLoopGraphs(BlockCopyTracker & tracker, llvm::Function & func, llvm::Loop * loop)
+	bool Normalizer::normalizeSubLoopGraphs(llvm::Function & func, llvm::Loop * loop)
 	{
 		bool changed = false;
 
@@ -46,10 +46,10 @@ namespace axtor
 
 		for(LoopVector::const_iterator itChildLoop = childLoops.begin(); itChildLoop != childLoops.end(); ++itChildLoop)
 		{
-			changed |= normalizeSubLoopGraphs(tracker, func, *itChildLoop);
+			changed |= normalizeSubLoopGraphs(func, *itChildLoop);
 		}
 
-		changed |= normalizePostDomSubgraphs(tracker, func, loop->getHeader(), NULL, loop);
+		changed |= normalizePostDomSubgraphs(func, loop->getHeader(), NULL, loop);
 
 		return changed;
 	}
@@ -57,7 +57,7 @@ namespace axtor
 	/*
 	 * subdivide the graph at its post dominators
 	 */
-	bool Normalizer::normalizePostDomSubgraphs(BlockCopyTracker & tracker, llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * barrierBlock, llvm::Loop * loopScope)
+	bool Normalizer::normalizePostDomSubgraphs(llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * barrierBlock, llvm::Loop * loopScope)
 	{
 		bool changed = false;
 
@@ -88,7 +88,7 @@ namespace axtor
 #ifdef DEBUG
 				std::cerr << "{\n";
 #endif
-				changed |= normalizeNode(tracker, func, graphHeader, splitBlock, loopScope);
+				changed |= normalizeNode(func, graphHeader, splitBlock, loopScope);
 #ifdef DEBUG
 				std::cerr << "}\n";
 #endif
@@ -140,7 +140,7 @@ namespace axtor
 	 */
 	//typedef llvm::SmallVector<llvm::BasicBlock*> SmallBlockVector;
 
-	bool Normalizer::normalizeNode(BlockCopyTracker & tracker, llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * entryPostDom, llvm::Loop * loopScope)
+	bool Normalizer::normalizeNode(llvm::Function & func, llvm::BasicBlock * entry, llvm::BasicBlock * entryPostDom, llvm::Loop * loopScope)
 	{
 		bool changed = false;
 #ifdef DEBUG
@@ -184,15 +184,15 @@ namespace axtor
 						llvm::LPPassManager lpm;
             //FIXME
 						//cloneLoopForBranch(tracker, lpm, this, loopInfo, childLoop, pred);
-						normalizeNode(tracker, func, child, entryPostDom, loopScope);
+						normalizeNode(func, child, entryPostDom, loopScope);
 
 					} else {
-						llvm::BasicBlock * clone = cloneBlockForBranch(tracker, child, entry);
+						llvm::BasicBlock * clone = cloneBlockForBranch(child, entry);
 
-						normalizePostDomSubgraphs(tracker, func, clone, entryPostDom, loopScope);
+						normalizePostDomSubgraphs(func, clone, entryPostDom, loopScope);
 					}
 				} else {
-					normalizePostDomSubgraphs(tracker, func, child, entryPostDom, loopScope);
+					normalizePostDomSubgraphs(func, child, entryPostDom, loopScope);
 				}
 			}
 		}
@@ -205,9 +205,6 @@ namespace axtor
 #ifdef DEBUG_PASSRUN
 		std::cerr << "\n\n##### PASS: Normalizer #####\n\n";
 #endif
-		TargetProvider & target = getAnalysis<TargetProvider>();
-		BlockCopyTracker & tracker = target.getTracker();
-
 		bool changed = false;
 		for (llvm::Module::iterator func = M.begin();func != M.end(); ++func)
 		{
@@ -217,12 +214,11 @@ namespace axtor
 				std::cerr << "\n\nnormalizing function=" << func->getName().str() << "\n";
 #endif
 				llvm::BasicBlock & entry = func->getEntryBlock();
-				changed |= normalizePostDomSubgraphs(tracker, *func, &entry, NULL, NULL);
+				changed |= normalizePostDomSubgraphs(*func, &entry, 0, 0);
 			}
 		}
 
 #ifdef DEBUG
-		tracker.dump();
 		verifyModule(M);
 #endif
 

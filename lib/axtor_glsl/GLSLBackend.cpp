@@ -93,7 +93,7 @@ void GLSLBackend::init()
 
 #endif
 
-#include <GLSL_Intrinsics.def>
+#include <axtor_glsl/GLSL_Intrinsics.def>
 
 BUILTIN(gl_MaxDrawBuffers,uint,gl_MaxDrawBuffers)
 BUILTIN(gl_MaxClipDistances,uint,gl_MaxClipDistances)

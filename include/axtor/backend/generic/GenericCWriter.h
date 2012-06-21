@@ -13,7 +13,6 @@
 #include <axtor/intrinsics/AddressIterator.h>
 #include <axtor/CommonTypes.h>
 #include <axtor/util/WrappedOperation.h>
-
 #include <sstream>
 
 namespace axtor {
@@ -41,19 +40,19 @@ public:
 
 	std::string buildArraySubscript(std::string root, AddressIterator *& address, IdentifierScope & locals);
 
-	virtual void writeAssignRaw(const std::string & dest, const std::string & src);
-	virtual void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals);
+	void writeAssignRaw(const std::string & dest, const std::string & src);
+	void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals);
 
-	virtual std::string getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
-	virtual std::string getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
-	virtual std::string getConstant(llvm::Constant * constant, IdentifierScope & locals)=0;
+	std::string getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
+	std::string getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
+	std::string getConstant(llvm::Constant * constant, IdentifierScope & locals);
 
 
 	// needs to be implemented
  	virtual std::string unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oIsDereffed, const std::string * rootName) = 0;
 	virtual std::string getNonInstruction(llvm::Value * op, IdentifierScope & locals) = 0;
 	virtual std::string getOperation(const WrappedOperation & op, StringVector operands) = 0;
-	virtual std::string getLiteral(llvm::Constant * const)= 0;
+	virtual std::string getLiteral(llvm::Constant * const) = 0;
 
 
 

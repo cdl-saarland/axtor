@@ -108,6 +108,13 @@ protected:
 	std::string buildDeclaration(std::string root, const llvm::Type * type);
 
 public:
+
+	/*
+	 * Given by GenericCWriter
+	 */
+	// virtual void writeAssignRaw(const std::string & dest, const std::string & src) { return GenericCWriter::writeAssignRaw(dest, src); }
+	// virtual void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals) { GenericCWriter::writeAssignRaw(destName, val,locals); }
+
 	/*
 	* ##### DECLARATIONS / OPERATORS & INSTRUCTIONS ######
 	 */
@@ -119,8 +126,6 @@ public:
 
 	std::string getFunctionHeader(llvm::Function * func);
 
-	virtual void writeLineBreak();
-
 	virtual void writeVariableDeclaration(const VariableDesc & desc);
 
 	virtual void writeFunctionDeclaration(llvm::Function * func, IdentifierScope * locals = NULL);
@@ -129,11 +134,6 @@ public:
    * returns the string representation of a operator using @operands as operand literals
    */
    std::string getInstruction(llvm::Instruction * inst, StringVector operands);
-
-   /*
-    * returns the string representation of a constant
-    */
-   std::string getConstant(llvm::Constant * constant, IdentifierScope & locals);
 
    /*
   * returns the string representation of a operator using @operands as operand literals
@@ -153,9 +153,7 @@ public:
 	std::string dereferenceContainer(std::string root, const llvm::Type * type, AddressIterator *& address, IdentifierScope & locals, const llvm::Type *& oElementType, uint addressSpace);
 
 	// auxiliary functions for obtaining dereferencing or pointer to strings
-	std::string getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
 	std::string getVolatilePointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
-	std::string getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
 	/*
 	 * return a name representing a dereferenced pointer
 	*/
@@ -212,13 +210,6 @@ public:
 	virtual void writeInstruction(const VariableDesc * desc, llvm::Instruction * inst, IdentifierScope & locals);
 
 	virtual void writeIf(const llvm::Value * condition, bool negateCondition, IdentifierScope & locals);
-
-	//half-unchecked assign
-	virtual void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals);
-
-	virtual void writeAssign(const VariableDesc & desc, const VariableDesc & src);
-
-	virtual void writeAssignRaw(const std::string & dest, const std::string & src);
 
 	/*
 	 * write a while for a post<checked loop

@@ -24,7 +24,7 @@ bool OCLModuleInfo::requiresDoubleType()
 }
 
 OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
-                             std::vector<llvm::Function*> kernels, 
+                             FunctionVector kernels,
                              std::ostream & out) : ModuleInfo(*mod), 
                                                    mod(mod), 
                                                    kernels(kernels), 

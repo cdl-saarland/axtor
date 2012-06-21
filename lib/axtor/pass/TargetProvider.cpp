@@ -17,28 +17,7 @@ namespace axtor {
 
 
 
-	TargetProvider::TargetProvider() :
-		llvm::ImmutablePass(ID),
-		backend(NULL),
-		modInfo(NULL)
-	{
-		assert(false && "invalid ctor");
-	}
-
-	TargetProvider::TargetProvider(AxtorBackend & _backend, ModuleInfo & _modInfo) :
-		llvm::ImmutablePass(ID),
-		backend(&_backend),
-		modInfo(&_modInfo)
-	{
-		assert(backend->hasValidType(modInfo) && "invalid ModuleInfo class for this backend");
-#ifdef DEBUG
-		std::cerr << "### INPUT MODULE ###\n";
-		modInfo->dumpModule();
-		std::cerr << "[EOF]\n";
-#endif
-	}
-
-	 void TargetProvider::initializePass() {}
+	void TargetProvider::initializePass() {}
 
 	AxtorBackend & TargetProvider::getBackend() const
 	{
@@ -57,9 +36,12 @@ namespace axtor {
 		getBackend().getAnalysisUsage(usage);
 	}
 
+	 //FIXME
+#if 0
 	 BlockCopyTracker & TargetProvider::getTracker() const
 	 {
 		 assert(modInfo && "was not properly initialized");
 		 return *modInfo;
 	 }
+#endif
 }

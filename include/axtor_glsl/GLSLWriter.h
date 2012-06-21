@@ -90,8 +90,6 @@ protected:
 	std::string getComponentDesignator(int index);
 
 public:
-    virtual std::string getConstant(llvm::Constant * constant, IdentifierScope & locals);
-
 
 	enum ArgumentQualifier
 	{
@@ -140,8 +138,6 @@ public:
 	std::string getFunctionHeader(llvm::Function * func, IdentifierScope * funcContext);
 
 	std::string getFunctionHeader(llvm::Function * func);
-
-	virtual void writeLineBreak();
 
 	virtual void writeVariableDeclaration(const VariableDesc & desc);
 
@@ -220,15 +216,6 @@ public:
 
 	virtual void writeIf(const llvm::Value * condition, bool negateCondition, IdentifierScope & locals);
 
-	virtual void writeElse();
-
-	virtual void writeLoopContinue();
-
-	virtual void writeLoopBreak();
-
-	virtual void writeDo();
-
-
 	/*
 	 * write a while for a post<checked loop
 	 */
@@ -261,7 +248,7 @@ protected:
    /*
     * writes a generic struct type declaration to the fragment shader
     */
-   virtual std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
+   // virtual std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
 };
 
 class GLSLBlockWriter : public GLSLWriter

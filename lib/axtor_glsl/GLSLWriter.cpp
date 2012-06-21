@@ -349,11 +349,6 @@ std::string GLSLWriter::getFunctionHeader(llvm::Function * func)
 	return getFunctionHeader(func, NULL);
 }
 
- void GLSLWriter::writeLineBreak()
-{
-	putLineBreak();
-}
-
  void GLSLWriter::writeVariableDeclaration(const VariableDesc & desc)
 {
 	const llvm::Type * type = desc.type;
@@ -1415,7 +1410,7 @@ void GLSLWriter::writeFunctionPrologue(llvm::Function * func, IdentifierScope & 
 		}
 	}
 
-   writeLineBreak();
+   putLineBreak();
 }
 
 /*
@@ -1497,7 +1492,7 @@ GLSLWriter::GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, P
 			}
 	}
 
-	both->writeLineBreak();
+	both->putLineBreak();
 
 
 	//## spill function prototypes
@@ -1509,7 +1504,7 @@ GLSLWriter::GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, P
 		}
 	}
 
-	both->writeLineBreak();
+	both->putLineBreak();
 
 	//## spill buffers
 	//program to vertex shader (no interpolation, vert shader is receiving)
@@ -1523,7 +1518,7 @@ GLSLWriter::GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, P
 #ifdef DEBUG
 		std::cerr << "completed GLSLWriter ctor\n";
 #endif
-		both->writeLineBreak();
+		both->putLineBreak();
 }
 
 GLSLModuleInfo & GLSLWriter::getModuleInfo()
@@ -1663,7 +1658,7 @@ void GLSLMultiStageWriter::writeFunctionPrologue(llvm::Function * func, Identifi
 		}
 	}
 
-   writeLineBreak();
+   putLineBreak();
 }
 
 GLSLDummyWriter::GLSLDummyWriter(GLSLWriter & parent) :

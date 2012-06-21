@@ -130,7 +130,9 @@ namespace axtor
 
 			virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 
-			Preparator();
+			Preparator() :
+				ModulePass(ID)
+			{}
 
 			virtual ~Preparator();
 

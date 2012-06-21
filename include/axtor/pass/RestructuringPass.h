@@ -76,7 +76,9 @@ namespace axtor {
 
 		static char ID;
 
-		RestructuringPass();
+		RestructuringPass() :
+			llvm::ModulePass(ID)
+		{}
 
 		virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 

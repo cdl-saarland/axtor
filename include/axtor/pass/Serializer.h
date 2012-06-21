@@ -46,7 +46,9 @@ namespace axtor
 
 	public:
 		static char ID;
-		Serializer();
+		Serializer() :
+			llvm::ModulePass(ID)
+		{}
 
 
 		/*

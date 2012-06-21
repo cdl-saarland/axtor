@@ -22,10 +22,6 @@ namespace axtor {
 
 	char RestructuringPass::ID = 0;
 
-	RestructuringPass::RestructuringPass() :
-		llvm::ModulePass(ID)
-	{}
-
 	ast::ControlNode * RestructuringPass::processRegion(bool enteredLoop, const ExtractorRegion & region, AnalysisStruct & analysis, BlockSet & visited)
 	{
 		ast::NodeVector nodes;

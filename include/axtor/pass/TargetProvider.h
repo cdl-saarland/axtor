@@ -43,9 +43,27 @@ private:
 	ModuleInfo * modInfo;
 
 public:
-	TargetProvider();
+	TargetProvider(AxtorBackend & _backend, ModuleInfo & _modInfo) :
+		llvm::ImmutablePass(ID),
+		backend(&_backend),
+		modInfo(&_modInfo)
+	{
+		assert(backend->hasValidType(modInfo) && "invalid ModuleInfo class for this backend");
+#ifdef DEBUG
+		std::cerr << "### INPUT MODULE ###\n";
+		modInfo->dumpModule();
+		std::cerr << "[EOF]\n";
+#endif
+	}
 
-	TargetProvider(AxtorBackend & _backend, ModuleInfo & _modInfo);
+
+	TargetProvider() :
+		llvm::ImmutablePass(ID),
+		backend(NULL),
+		modInfo(NULL)
+	{
+		assert(false && "invalid ctor");
+	}
 
 	virtual void initializePass();
 
@@ -55,7 +73,8 @@ public:
 
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 
-	BlockCopyTracker & getTracker() const;
+	//FIXME deprecated functionallity
+	//ModuleInfo & getTracker() const;
 };
 
 }

@@ -16,10 +16,6 @@ char CNSPass::ID = 0;
 
 llvm::RegisterPass<CNSPass> __regRegularizer("cns", "Controlled Node Splitting", true, false);
 
-CNSPass::CNSPass() :
-		llvm::ModulePass(ID)
-{}
-
 void CNSPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 {
 	//usage.addRequired<llvm::DominatorTree>();
@@ -99,9 +95,6 @@ cns::SplitTree * CNSPass::generateSplitSequence(cns::SplitTree * root, BlockGrap
 
 bool CNSPass::runOnModule(llvm::Module & M)
 {
-	TargetProvider & target = getAnalysis<TargetProvider>();
-	BlockCopyTracker & tracker = target.getTracker();
-
 #ifdef DEBUG_PASSRUN
 	verifyModule(M);
 	llvm::errs() << "\n\n##### PASS: CNS #####\n\n";
@@ -111,17 +104,16 @@ bool CNSPass::runOnModule(llvm::Module & M)
 
 	for(llvm::Module::iterator func = M.begin(); func != M.end(); ++func)
 		if (! func->isDeclaration())
-			changed |= runOnFunction(tracker, *func);
+			changed |= runOnFunction(*func);
 
 #ifdef DEBUG
-	tracker.dump();
 	verifyModule(M);
 #endif
 
 	return changed;
 }
 
-bool CNSPass::runOnFunction(BlockCopyTracker & tracker, llvm::Function & func)
+bool CNSPass::runOnFunction(llvm::Function & func)
 {
 	BlockGraph::SubgraphMask mask;
 	BlockGraph graph = BlockGraph::CreateFromFunction(func, mask);
@@ -150,7 +142,7 @@ bool CNSPass::runOnFunction(BlockCopyTracker & tracker, llvm::Function & func)
 
 	delete root;
 
-	applySplitSequence(tracker, graph, nodes);
+	applySplitSequence(graph, nodes);
 
 #ifdef DEBUG
 	llvm::errs() << "regularized function : \n";
@@ -165,14 +157,14 @@ const char * CNSPass::getPassName() const
 	return "Controlled Node Splitting pass";
 }
 
-void CNSPass::applySplitSequence(BlockCopyTracker & tracker, BlockGraph & graph, std::vector<uint> nodes) const
+void CNSPass::applySplitSequence(BlockGraph & graph, std::vector<uint> nodes) const
 {
 	for(uint i = 0; i < nodes.size(); ++i)
 	{
 		uint node = nodes[i];
 		llvm::BasicBlock * splitBlock = graph.getLabel(node);
 
-		splitNode(tracker, splitBlock);
+		splitNode(splitBlock);
 	}
 }
 

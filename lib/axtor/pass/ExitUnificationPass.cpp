@@ -94,8 +94,6 @@ char ExitUnificationPass::ID = 0;
 		return true;
 	}
 
-	ExitUnificationPass::ExitUnificationPass() : llvm::ModulePass(ID) {}
-
 
 	void ExitUnificationPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{

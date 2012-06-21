@@ -24,10 +24,6 @@ namespace axtor {
 				true); /* transformation */
 
 
-	CGIPass::CGIPass() :
-		llvm::ModulePass(ID)
-	{}
-
 	void CGIPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
 		usage.addRequired<llvm::CallGraph>();

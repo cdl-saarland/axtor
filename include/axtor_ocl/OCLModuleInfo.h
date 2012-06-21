@@ -32,6 +32,8 @@
 
 #include <vector>
 
+typedef std::vector<llvm::Function*> FunctionVector;
+
 namespace axtor {
 
 /*
@@ -68,7 +70,7 @@ public:
 
 	llvm::Module * getModule();
 
-	OCLModuleInfo(llvm::Module *mod, std::vector<llvm::Function*> kernelFunc, std::ostream &out);
+	OCLModuleInfo(llvm::Module *mod, FunctionVector kernelFunc, std::ostream &out);
 
 	/*
 	 * helper method for creating a ModuleInfo object from a module and a bind file

@@ -60,7 +60,9 @@ namespace axtor {
 
 		virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 
-		SimpleUnswitchPass();
+		SimpleUnswitchPass() :
+			llvm::ModulePass(ID)
+		{}
 
 		virtual ~SimpleUnswitchPass();
 

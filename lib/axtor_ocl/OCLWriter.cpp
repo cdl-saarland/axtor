@@ -327,11 +327,6 @@ std::string OCLWriter::getFunctionHeader(llvm::Function * func)
 	return getFunctionHeader(func, NULL);
 }
 
- void OCLWriter::writeLineBreak()
-{
-	putLineBreak();
-}
-
  void OCLWriter::writeVariableDeclaration(const VariableDesc & desc)
 {
 	const llvm::Type * type = desc.type;
@@ -1499,7 +1494,7 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
 			}
 		}
    }
-   writeLineBreak();
+   putLineBreak();
 }
 
 /*

@@ -87,7 +87,7 @@ void OCLBackend::init()
 #endif
 
 #define __AXTOR_INTERNAL
-#include "OCL_Intrinsics.def"
+#include <axtor_ocl/OCL_Intrinsics.def>
 #undef __AXTOR_INTERNAL
 
 

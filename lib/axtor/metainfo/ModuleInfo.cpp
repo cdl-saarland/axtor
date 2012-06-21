@@ -11,7 +11,6 @@
 namespace axtor
 {
 	ModuleInfo::ModuleInfo(llvm::Module & _M)  :
-		BlockCopyTracker(_M),
 		M(_M)
 	{
 		std::string errInfo;
@@ -25,9 +24,6 @@ namespace axtor
 	{
 		return & M;
 	}
-
-	ModuleInfo::~ModuleInfo()
-	{}
 
   //FIXME
 	/*const llvm::Type * ModuleInfo::lookUpType(const std::string & name) const

@@ -40,8 +40,7 @@ namespace axtor {
  */
 llvm::BasicBlock * cloneBlockAndMapInstructions(llvm::BasicBlock * block, ValueMap & cloneMap);
 
-BlockSet splitNode(BlockCopyTracker & tracker, llvm::BasicBlock * srcBlock); //dummy tracker argument (legacy code support)
-BlockSet splitNode(llvm::BasicBlock * srcBlock, llvm::DominatorTree * domTree = NULL);
+BlockSet splitNode(llvm::BasicBlock * srcBlock, llvm::DominatorTree * domTree = 0);
 
 // splits a node for a set of branches, does ignore empty sets in predecessorSet and returns 0 for the cloned block of them
 BlockVector splitNodeExt(llvm::BasicBlock * srcBlock, BlockSetVector predecessorSet, llvm::DominatorTree * domTree);
@@ -49,7 +48,6 @@ BlockVector splitNodeExt(llvm::BasicBlock * srcBlock, BlockSetVector predecessor
 LoopSet splitLoop(BlockCopyTracker & tracker, llvm::LoopInfo & loopInfo, llvm::Loop * loop, llvm::Pass * pass); //dummy tracker argument (legacy code support)
 LoopSet splitLoop(llvm::LoopInfo & loopInfo, llvm::Loop * loop, llvm::Pass * pass, llvm::DominatorTree * domTree = NULL);
 
-llvm::BasicBlock * cloneBlockForBranch(BlockCopyTracker & tracker, llvm::BasicBlock * srcBlock, llvm::BasicBlock * branchBlock);
 llvm::BasicBlock * cloneBlockForBranch(llvm::BasicBlock * srcBlock, llvm::BasicBlock * branchBlock, llvm::DominatorTree * domTree = NULL);
 llvm::BasicBlock * cloneBlockForBranchSet(llvm::BasicBlock * srcBlock, BlockSet branchSet, llvm::DominatorTree * domTree);
 

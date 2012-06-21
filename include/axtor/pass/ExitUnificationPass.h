@@ -65,7 +65,7 @@ class ExitUnificationPass : public llvm::ModulePass
 public:
 	static char ID;
 
-	ExitUnificationPass();
+	ExitUnificationPass() : llvm::ModulePass(ID) {}
 
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 

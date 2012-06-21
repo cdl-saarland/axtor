@@ -34,9 +34,6 @@ BlockCopyTracker::BlockCopyTracker(llvm::Module &M)
 	}*/
 }
 
-BlockCopyTracker::~BlockCopyTracker()
-{}
-
 int BlockCopyTracker::getIndex(ConstBlock block) const
 {
 	IndexMap::const_iterator it = indices.find(block);
