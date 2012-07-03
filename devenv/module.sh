@@ -208,6 +208,8 @@ _axtor_setup_own_env() {
     devenv_set_var obj_dir "$_OBJ_DIR"
     devenv_set_var build_dir "$_BUILD_DIR"
 
+	appendPathIfNo _LLVM_CPPPATH "$_BUILD_DIR/include"
+	
     appendPathIfNo _CPPPATH "$_BUILD_DIR/include"
     appendPathIfNo _LIBPATH "$_BUILD_DIR/lib"
 
