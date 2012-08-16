@@ -24,13 +24,52 @@ bool OCLModuleInfo::requiresDoubleType()
 }
 
 OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
+                             llvm::Function * kernel,
+                             std::ostream & out) : ModuleInfo(*mod),
+                                                   mod(mod),
+                                                   out(out)
+{
+	ValueVector kernelValues(1, kernel);
+	init(kernelValues);
+}
+
+
+OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
                              FunctionVector kernels,
-                             std::ostream & out) : ModuleInfo(*mod), 
-                                                   mod(mod), 
-                                                   kernels(kernels), 
-                                                   out(out) {
+                             std::ostream & out) : ModuleInfo(*mod),
+                                                   mod(mod),
+                                                   out(out)
+{
+	ValueVector kernelValues; kernelValues.reserve(kernels.size());
+
+	for (FunctionVector::iterator itFun = kernels.begin(); itFun != kernels.end(); ++itFun)
+		kernelValues.push_back(*itFun);
+
+	init(kernelValues);
+}
+
+OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
+                             ValueVector kernels,
+                             std::ostream & out) : ModuleInfo(*mod),
+                                                   mod(mod),
+                                                   out(out)
+{
+	init(kernels);
+}
+
+void OCLModuleInfo::init(const ValueVector & kernels)
+{
 	assert(mod && "no module specified");
 	usesDoubleType = scanForDoubleType();
+
+	llvm::LLVMContext & context = mod->getContext();
+	llvm::NamedMDNode * kernelMD = mod->getOrInsertNamedMetadata("opencl.kernels");
+
+	for (ValueVector::const_iterator itKernel = kernels.begin(); itKernel != kernels.end(); ++itKernel) {
+		llvm::Value * kernelVal = *itKernel;
+		llvm::MDNode * kernelEntryMD = llvm::MDNode::get(context, llvm::ArrayRef<llvm::Value*>(kernelVal));
+		kernelMD->addOperand(kernelEntryMD);
+	}
 }
 
 /*
@@ -67,15 +106,35 @@ bool OCLModuleInfo::isKernelFunction(llvm::Function *function)
     return false;
 
   for(unsigned K = 0, E = openCLMetadata->getNumOperands(); K != E; ++K) {
-    llvm::MDNode &kernelMD = *openCLMetadata->getOperand(K);
-    if(kernelMD.getOperand(0) == function)
-      return true;
+    llvm::MDNode * kernelMD = openCLMetadata->getOperand(K);
+    if (kernelMD != 0 && kernelMD->getNumOperands() > 0) {
+    	llvm::Value * op = kernelMD->getOperand(0);
+    	if(op == function)
+    		return true;
+    }
   }
   return false;
 }
 
-std::vector<llvm::Function*> OCLModuleInfo::getKernelFunctions()
+FunctionVector OCLModuleInfo::getKernelFunctions()
 {
+	FunctionVector kernels;
+
+	llvm::NamedMDNode *openCLMetadata = mod->getNamedMetadata("opencl.kernels");
+	  if(!openCLMetadata)
+	    return kernels;
+
+	  openCLMetadata->dump();
+
+	  for(unsigned K = 0, E = openCLMetadata->getNumOperands(); K != E; ++K) {
+	    llvm::MDNode * kernelMD = openCLMetadata->getOperand(K);
+	    if (kernelMD != 0 && kernelMD->getNumOperands() > 0) {
+	    	llvm::Value * op = kernelMD->getOperand(0);
+
+	    	if(op != 0 && llvm::isa<llvm::Function>(op))
+	    		kernels.push_back(llvm::cast<llvm::Function>(kernelMD->getOperand(0)));
+	    }
+	  }
 	return kernels;
 }
 
@@ -83,6 +142,7 @@ void OCLModuleInfo::dump()
 {
 	std::cerr << "OpenCL shader module descriptor\n"
 			      << "kernel functions:\n";
+	FunctionVector kernels = getKernelFunctions();
   for(std::vector<llvm::Function*>::const_iterator kernel = kernels.begin(), 
       end = kernels.end();
       kernel != end; ++kernel)

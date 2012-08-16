@@ -226,7 +226,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 
 	// give a generic name to all structs in @symTable
 	StringSet usedNames;
-	void Preparator::cleanStructNames(llvm::Module & M)
+	void Preparator::cleanStructNames(llvm::Module & M, ModuleInfo & modInfo)
 	{
 		StructTypeVector structTypes;
 		M.findUsedStructTypes(structTypes);
@@ -236,7 +236,10 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 				itStruct != structTypes.end();
 				++itStruct, ++idx)
 		{
-			(*itStruct)->setName("StructType" + str<uint>(idx));
+			std::string genericName = "StructType" + str<uint>(idx);
+			if (modInfo.setTypeName(*itStruct, genericName)) {
+				Log::warn("Type name " + genericName + " already in use!");
+			}
 		}
 	}
 
@@ -247,6 +250,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 
 		 void Preparator::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 		{
+			 usage.addRequired<TargetProvider>();
 			//usage.addRequired<llvm::PostDominatorTree>();
 			//usage.addRequired<llvm::DominatorTree>();
 
@@ -267,13 +271,16 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 #ifdef DEBUG_PASSRUN
 		std::cerr << "\n\n##### PASS: Preparator #####\n\n";
 #endif
+			TargetProvider & target = getAnalysis<TargetProvider>();
+			ModuleInfo & modInfo = target.getModuleInfo();
+
 			transformInstArguments(&M);
 
 			//nameAllNonOpaqueTypes(M, M.getTypeSymbolTable());
 
 			nameAllInstructions(&M);
 
-			cleanStructNames(M);
+			cleanStructNames(M, modInfo);
 
 			cleanInternalGlobalNames(M);
 			//sortTypeSymbolTable(M.getTypeSymbolTable());

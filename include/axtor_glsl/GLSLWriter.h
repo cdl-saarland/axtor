@@ -117,6 +117,11 @@ public:
 	std::string getArgumentType(const llvm::Type * type, ArgumentQualifier access = INOUT);
 
 	/*
+	 * @override: the GenericCWriter implementation
+	 */
+	std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
+
+	/*
 	 * generates a type name for @type
 	 * if this is a pointer type, operate on its element type instead
 	 */

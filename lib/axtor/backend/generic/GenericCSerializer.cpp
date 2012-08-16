@@ -9,6 +9,7 @@
 #include <axtor/backend/generic/GenericCSerializer.h>
 #include <llvm/Module.h>
 #include <axtor/writer/SyntaxWriter.h>
+#include <axtor/metainfo/ModuleInfo.h>
 
 #include <axtor/util/llvmShortCuts.h>
 #include <axtor/util/WrappedOperation.h>
@@ -18,8 +19,9 @@
 
 namespace axtor {
 
-	void GenericCSerializer::spillStructTypeDeclarations(llvm::Module * mod, GenericCWriter * stream)
+	void GenericCSerializer::spillStructTypeDeclarations(ModuleInfo & modInfo, GenericCWriter * stream)
 	{
+		const llvm::Module * mod = modInfo.getModule();
 		StructTypeVector types;
 		mod->findUsedStructTypes(types);
 
@@ -36,7 +38,7 @@ namespace axtor {
 				for (StructTypeVector::iterator itType = types.begin(); itType != types.end();) {
 
 					const llvm::StructType * type = *itType;
-					const std::string name = (*itType)->getName().str();
+					const std::string name = modInfo.getTypeName(*itType);
 
 					if (
 							undeclaredTypes.find(type) == undeclaredTypes.end() || //already declared
@@ -57,9 +59,9 @@ namespace axtor {
 		}
 	}
 
-	 std::string GenericCSerializer::getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType)
+	std::string GenericCSerializer::getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType)
 	{
-	   std::string res =  "struct " + structName + "\n";
+	   std::string res =  "typedef struct \n";
 	   res +=  "{\n";
 
 	   for(uint i = 0; i < structType->getNumElements(); ++i)
@@ -72,9 +74,7 @@ namespace axtor {
 		   res += INDENTATION_STRING + memberStr + ";\n";
 	   }
 
-	   res += "};\n";
+	   res += "} " + structName + ";\n";
 	   return res;
 	}
-
-
 }

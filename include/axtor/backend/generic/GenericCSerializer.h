@@ -30,8 +30,8 @@ namespace axtor {
 	{
 	public:
 	   // GENERIC:
-		void spillStructTypeDeclarations(llvm::Module * mod, GenericCWriter * stream);
-		std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
+		void spillStructTypeDeclarations(ModuleInfo & modInfo, GenericCWriter * stream);
+		virtual std::string getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType);
 
 
 	   // custom function for serialization of declarations

@@ -26,6 +26,25 @@ void GLSLWriter::print(std::ostream & out)
  *  ##### Type System #####
  */
 
+std::string GLSLWriter::getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType)
+{
+   std::string res =  "struct \n";
+   res +=  "{\n";
+
+   for(uint i = 0; i < structType->getNumElements(); ++i)
+   {
+	   const llvm::Type * elementType = structType->getElementType(i);
+
+	   std::string memberName = "x" + str<int>(i);
+	   std::string memberStr = buildDeclaration(memberName, elementType);
+
+	   res += INDENTATION_STRING + memberStr + ";\n";
+   }
+
+   res += "} " + structName + ";\n";
+   return res;
+}
+
 /*
  * returns type symbols for default scalar types
  */
@@ -138,17 +157,12 @@ std::string GLSLWriter::getType(const llvm::Type * type)
 		return getType(elementType) + "*";
 
 	} else if (llvm::isa<llvm::StructType>(type)) {
-		std::string name;
-
-		// FIXME
-#if 0
-		if (getTypeSymbol(modInfo.getTypeSymbolTable(), type, name))
-		{
+		std::string name = modInfo.getTypeName(type);
+		if (! name.empty()) {
 			return name;
 		} else {
-#endif
 			Log::fail(type, "anonymous structs not implemented");
-	// }
+		}
 	}
 
 
@@ -1439,7 +1453,7 @@ GLSLWriter::GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, P
 		both->putLine("");
 
 		//### write struct defs ###
-		spillStructTypeDeclarations(modInfo.getModule(), both);
+		spillStructTypeDeclarations(modInfo, both);
 
 		//## spill globals
 		for (llvm::Module::global_iterator global = mod->global_begin(); global != mod->global_end(); ++global)

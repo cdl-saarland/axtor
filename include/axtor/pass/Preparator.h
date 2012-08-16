@@ -107,7 +107,7 @@ namespace axtor
 		/*
 		 * give a generic name to all structs in @symTable
 		 */
-		void cleanStructNames(llvm::Module & M);
+		void cleanStructNames(llvm::Module & M, ModuleInfo & modInfo);
 
 
 		/*

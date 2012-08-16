@@ -25,10 +25,41 @@ namespace axtor
 		return & M;
 	}
 
-  //FIXME
-	/*const llvm::Type * ModuleInfo::lookUpType(const std::string & name) const
+	std::string ModuleInfo::getTypeName(const llvm::Type * type) const
 	{
-		return getModule()->getTypeSymbolTable().lookup(name);
-	}*/
+		for (StringToType::const_iterator it = stringToType.begin(); it != stringToType.end(); ++it)
+		{
+			if (it->second == type)
+				return it->first;
+		}
 
+		if (llvm::isa<const llvm::StructType>(type)) {
+			std::string structName = type->getStructName();
+
+			if (! structName.empty())
+				return structName;
+		}
+
+		return ""; //unnamed
+	}
+
+	llvm::Type * ModuleInfo::setTypeName(llvm::Type * type, const std::string & name)
+	{
+		StringToType::iterator itType = stringToType.find(name);
+
+		if (itType != stringToType.end()) {
+			return itType->second;
+		}
+		stringToType[name] = type;
+		return 0;
+	}
+
+	llvm::Type *  ModuleInfo::lookUpType(const std::string & name) const
+	{
+		StringToType::const_iterator it = stringToType.find(name);
+		if (it != stringToType.end())
+			return it->second;
+
+		return M.getTypeByName(name);
+	}
 }

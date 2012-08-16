@@ -53,8 +53,6 @@ private:
 
 	//bitcode & arguments
 	llvm::Module * mod;
-	//llvm::Function * kernelFunc;
-  std::vector<llvm::Function*> kernels;
 
 	//output streams
 	std::ostream & out;
@@ -65,12 +63,15 @@ private:
 	//scans the module for uses of the double type
 	bool scanForDoubleType();
 
+	void init(const ValueVector & kernels);
 public:
 	bool requiresDoubleType();
 
 	llvm::Module * getModule();
 
-	OCLModuleInfo(llvm::Module *mod, FunctionVector kernelFunc, std::ostream &out);
+	OCLModuleInfo(llvm::Module *mod, llvm::Function * kernel, std::ostream &out);
+	OCLModuleInfo(llvm::Module *mod, FunctionVector kernels, std::ostream &out);
+	OCLModuleInfo(llvm::Module *mod, ValueVector kernels, std::ostream &out);
 
 	/*
 	 * helper method for creating a ModuleInfo object from a module and a bind file

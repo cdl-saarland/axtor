@@ -171,13 +171,9 @@ std::string OCLWriter::getType(const llvm::Type * type)
 	} else if (llvm::isa<llvm::StructType>(type)) {
 
     // Get all of the struct types used in the module.
-    std::vector<llvm::StructType*> structTypes;
-    llvm::Module *module = modInfo.getModule();
-    module->findUsedStructTypes(structTypes);
-    std::vector<llvm::StructType*>::iterator result = 
-      std::find(structTypes.begin(), structTypes.end(), type);
-    if (result != structTypes.end())
-      return "struct " + (*result)->getName().str();
+    std::string structName = modInfo.getTypeName(type);
+    if (!structName.empty())
+      return structName;
     else
       Log::fail(type, "anonymous structs not implemented");
 
@@ -231,14 +227,11 @@ std::string OCLWriter::buildDeclaration(std::string root, const llvm::Type * typ
 	} else if (llvm::isa<llvm::StructType>(type)) {
 		std::string name;
     // Get all of the struct types used in the module.
-    std::vector<llvm::StructType*> structTypes;
-    llvm::Module *module = modInfo.getModule();
-    module->findUsedStructTypes(structTypes);
-    std::vector<llvm::StructType*>::iterator result =
-      std::find(structTypes.begin(), structTypes.end(), type);
 
-    if (result != structTypes.end())
-      return "struct " + (*result)->getName().str() + " " + root;
+	std::string structName = modInfo.getTypeName(type);
+    if (! structName.empty())
+      //return "struct " + structName + " " + root;
+    	return structName + " " + root;
     else
       Log::fail(type, "anonymous structs not implemented");
 	}
@@ -1512,7 +1505,7 @@ OCLWriter::OCLWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 
 		putLine("");
 
-		spillStructTypeDeclarations(modInfo.getModule(), this);
+		spillStructTypeDeclarations(modInfo, this);
 		putLine( "" );
 
 		//## spill globals

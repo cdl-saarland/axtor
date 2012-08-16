@@ -46,6 +46,11 @@ class ModuleInfo
 {
 	llvm::Module & M;
 
+	typedef std::map<std::string, llvm::Type*> StringToType;
+
+	StringToType stringToType;
+
+
 public:
 	ModuleInfo(llvm::Module & _M);
 
@@ -82,8 +87,14 @@ public:
 
 	/*
 	 * returns the type bound to that name
+	 *
+	 * (ModuleInfo typenames override llvm::Module struct type names)
 	 */
-	//virtual const llvm::Type * lookUpType(const std::string & name) const;
+
+	std::string getTypeName(const llvm::Type * type) const;
+	// will return a conflicting type, or 0 iff succeeded
+	llvm::Type * setTypeName(llvm::Type * type, const std::string & _typeName);
+	llvm::Type * lookUpType(const std::string & name) const;
 
 	/*
 	 * write all extracted data to the given output stream
