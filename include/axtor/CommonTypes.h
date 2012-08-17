@@ -88,6 +88,8 @@ namespace axtor {
     typedef std::vector<llvm::Loop*> LoopVector;
     typedef std::set<llvm::Loop*> LoopSet;
 
+    typedef std::set<int> IntSet;
+
 
 	/*
 	 * generic variable descriptor

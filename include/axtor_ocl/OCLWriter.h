@@ -59,6 +59,8 @@
 
 #define INDENTATION_STRING "   "
 
+#define FAKE_GLOBAL_SAMPLER_NAME "fake_global_sampler"
+
 namespace axtor {
 
 class OCLBlockWriter;
@@ -93,7 +95,7 @@ public:
 	std::string getScalarType(const llvm::Type * type, bool asVectorElementType = false);
 
 	std::string getAddressSpaceName(uint space);
-  std::string getLocalVariableName(const std::string &variableFullName);
+	std::string getLocalVariableName(const std::string &variableFullName);
 
 	/*
 	 * generates a type name for @type
@@ -106,6 +108,11 @@ protected:
 	 * build a C-style declaration for @root of type @type
 	 */
 	std::string buildDeclaration(std::string root, const llvm::Type * type);
+
+	/*
+	 * looks for all "get_global_sampler" calls and emits fake sampler variables for them
+	 */
+	void emitGlobalSamplers();
 
 public:
 

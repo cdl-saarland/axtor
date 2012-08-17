@@ -15,7 +15,6 @@
 #include "GenericCWriter.h"
 
 typedef std::vector<llvm::StructType*> StructTypeVector;
-
 typedef std::vector<int> IntVector;
 
 /*

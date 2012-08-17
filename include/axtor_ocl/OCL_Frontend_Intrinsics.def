@@ -95,6 +95,7 @@ MUTE(NAME) [only used for particular intrinsics]
 /*
  * surpressed functions (OpenCL Front-end intrinsics)
  */
+MUTE(fake_global_sampler)
 MUTE(mem_fence)
 MUTE(barrier)
 
