@@ -32,6 +32,7 @@ namespace axtor {
 				TypeSet undeclaredTypes;
 
 				for (StructTypeVector::iterator itType = types.begin(); itType != types.end(); ++itType) {
+					if ((*itType)->getStructNumElements() > 0) //opqaue types don't need to be declared
 					undeclaredTypes.insert(*itType);
 				}
 
@@ -41,6 +42,7 @@ namespace axtor {
 					const std::string name = modInfo.getTypeName(*itType);
 
 					if (
+							(type->getStructNumElements() == 0) || // don't declare opaque types
 							undeclaredTypes.find(type) == undeclaredTypes.end() || //already declared
 							containsType(type, undeclaredTypes))
 					{

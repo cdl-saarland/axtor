@@ -2,7 +2,7 @@
                   AST - Extractor for LLVM
                           (axtor)
 --------------------------------------------------------------
-date    : 05.03.12
+date    : 17.09.12
 author  : Simon Moll
 licence : GPL (read file "LICENSE")
 
@@ -21,7 +21,7 @@ the OpenCL backend and core library should work out of the box on other OSes
 as well.
 
 ##### Build Prerequisites #####
-LLVM 3.1 (last tested revision 152026)
+LLVM 3.1 (release)
 
 
 ##### Build Instructions #####
@@ -83,6 +83,11 @@ tools/axtorOCLDriver/ - driver for OpenCL kernel manipulation
 	both the extractor and oclang. 
 	(read tools/axtorOCLDriver/README for details).
 	
+tools/axtorIntrinsicHeaders
+
+	Installs headers for using OCL/GLSL builtin functions with C++/C through Clang. After installations,
+	these headers can be found in the llvm/include directory "axtor_glsl/GLSL_Intrinsics.h"
+	"axtor_ocl/OpenCL_Intrinsics.h", respectively.
 	
 	
 ##### References #####

@@ -1116,6 +1116,18 @@ std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, Iden
 			std::string result = calleeName + "(" + enumStr + ")";
 			return result;
 
+		} else if (callee->getName() == FAKE_GLOBAL_SAMPLER_NAME) {
+			std::string calleeName = callee->getName();
+
+			llvm::Value * arg = call->getArgOperand(0);
+			size_t cfg;
+
+			if (! evaluateInt(arg, cfg)) {
+				Log::fail(call, "expected enum value");
+			}
+			std::string samplerName = "samplerGlobal" + hexstr(cfg);
+
+			return samplerName;
 
 		} else { //regular intrinsic
 		#ifdef DEBUG
@@ -1490,6 +1502,47 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
    putLineBreak();
 }
 
+
+void OCLWriter::emitGlobalSamplers()
+{
+	llvm::Module * mod = modInfo.getModule();
+	llvm::Function * fakeSampler = mod->getFunction(FAKE_GLOBAL_SAMPLER_NAME);
+
+	IntSet requiredSamplers;
+
+	if (!fakeSampler)
+		return;
+
+	// collect all required sampler values
+	for (llvm::Value::use_iterator itUse = fakeSampler->use_begin(); itUse != fakeSampler->use_end(); ++itUse)
+	{
+		llvm::Value * user = *itUse;
+		assert( llvm::isa<llvm::CallInst>(user) && "can only call this function");
+		llvm::CallInst * call = llvm::cast<llvm::CallInst>(user);
+		llvm::Value * enumVal = call->getArgOperand(0);
+
+		size_t cfg;
+		if (! evaluateInt(enumVal, cfg))
+			Log::fail(user, "Could not infer enum value");
+
+		requiredSamplers.insert((int) cfg);
+	}
+
+	// emit sampler declarations
+	for (IntSet::const_iterator itCfg = requiredSamplers.begin(); itCfg != requiredSamplers.end(); ++itCfg) {
+		int cfg = *itCfg;
+		std::string cfgStr;
+		if (evaluateEnum_Sampler(cfg, cfgStr)) {
+			std::string samplerStr = "const sampler_t samplerGlobal" + hexstr(cfg) + " = " + cfgStr + ";";
+			putLine(samplerStr);
+		} else {
+			Log::warn("can not decode sampler values. Will not create sampler constant.");
+		}
+	}
+
+}
+
+
 /*
 * dumps a generic vertex shader and all type&argument defs for the frag shader
 */
@@ -1541,6 +1594,11 @@ OCLWriter::OCLWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 				}
 			}
 		}
+
+		putLine( "" );
+
+		//## create constants for requested sampler types
+		emitGlobalSamplers();
 
 		putLine( "" );
 

@@ -236,9 +236,23 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 				itStruct != structTypes.end();
 				++itStruct, ++idx)
 		{
-			std::string genericName = "StructType" + str<uint>(idx);
-			if (modInfo.setTypeName(*itStruct, genericName)) {
-				Log::warn("Type name " + genericName + " already in use!");
+			llvm::StructType * structType = (*itStruct);
+
+			// only remove the class. / struct. prefix from opaque types, if existent
+			if (structType->getStructNumElements() == 0) {
+				std::string opaqueName = structType->getStructName();
+				if (opaqueName.substr(0, 6) == "class.") {
+					structType->setName(opaqueName.substr(6, std::string::npos));
+				} else if (opaqueName.substr(0, 7) == "struct.") {
+					structType->setName(opaqueName.substr(7, std::string::npos));
+				}
+
+			// give all other structures a generic name
+			} else {
+				std::string genericName = "StructType" + str<uint>(idx);
+				if (modInfo.setTypeName(*itStruct, genericName)) {
+					Log::warn("Type name " + genericName + " already in use!");
+				}
 			}
 		}
 	}
