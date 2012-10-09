@@ -10,12 +10,31 @@
 #include <axtor/util/llvmDebug.h>
 
 #include "llvm/Metadata.h"
+#include <llvm/Analysis/FindUsedTypes.h>
 
 namespace axtor {
 
 bool OCLModuleInfo::scanForDoubleType()
 {
-	return true;
+	typedef llvm::SetVector<llvm::Type*> TypeSetVector;
+	typedef TypeSetVector::const_iterator TSV_Iterator;
+
+	llvm::PassManager PM;
+	llvm::FindUsedTypes * findTypesPass = new llvm::FindUsedTypes();
+	PM.add(findTypesPass);
+	PM.run(*mod);
+
+	const TypeSetVector & typeVec = findTypesPass->getTypes();
+
+	for (auto type : typeVec)
+	{
+
+		if (((llvm::Type*) type)->getTypeID() == llvm::Type::DoubleTyID)
+			return true;
+	}
+
+
+	return false;
 }
 
 bool OCLModuleInfo::requiresDoubleType()
