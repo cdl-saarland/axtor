@@ -242,16 +242,29 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 			if (structType->getStructNumElements() == 0) {
 				std::string opaqueName = structType->getStructName();
 				if (opaqueName.substr(0, 6) == "class.") {
-					structType->setName(opaqueName.substr(6, std::string::npos));
+					opaqueName = opaqueName.substr(6, std::string::npos);
 				} else if (opaqueName.substr(0, 7) == "struct.") {
-					structType->setName(opaqueName.substr(7, std::string::npos));
+					opaqueName = opaqueName.substr(7, std::string::npos);
 				}
 
-			// give all other structures a generic name
-			} else {
-				std::string genericName = "StructType" + str<uint>(idx);
-				if (modInfo.setTypeName(*itStruct, genericName)) {
-					Log::warn("Type name " + genericName + " already in use!");
+				size_t dotPos = std::string::npos;
+				dotPos=opaqueName.find('.');
+
+//#if 0 //won't work because LLVM will disambiguate with a new suffix if the name collides (TODO: merge types)
+				//assume it's a leading number or something
+				if (dotPos != std::string::npos) {
+					opaqueName = opaqueName.substr(0, dotPos);
+				}
+//#endif
+
+				// reassign the cleaned name
+				modInfo.setTypeName(structType, opaqueName);
+
+				// give all other structures a generic name
+				} else {
+					std::string genericName = "StructType" + str<uint>(idx);
+					if (modInfo.setTypeName(*itStruct, genericName)) {
+						Log::warn("Type name " + genericName + " already in use!");
 				}
 			}
 		}
