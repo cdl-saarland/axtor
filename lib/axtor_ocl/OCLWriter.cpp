@@ -570,9 +570,13 @@ std::string OCLWriter::getVolatilePointerTo(llvm::Value * val, IdentifierScope &
 
 std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oDereferenced, const std::string * rootName)
 {
-	const llvm::PointerType * ptrType = llvm::cast<llvm::PointerType>(val->getType());
+	uint addressSpace = 0;
+	// uncover the address space, if this is a pointer
+	if (llvm::isa<llvm::PointerType>(val->getType())) {
+		const llvm::PointerType * ptrType = llvm::cast<llvm::PointerType>(val->getType());
+		addressSpace = ptrType->getAddressSpace();
+	}
 
-	uint addressSpace = ptrType->getAddressSpace();
 	AddressIterator::AddressResult result = AddressIterator::createAddress(val, platform.getDerefFuncs());
 	ResourceGuard<AddressIterator> __guardAddress(result.iterator);
 
@@ -1116,19 +1120,6 @@ std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, Iden
 			std::string result = calleeName + "(" + enumStr + ")";
 			return result;
 
-		} else if (callee->getName() == FAKE_GLOBAL_SAMPLER_NAME) {
-			std::string calleeName = callee->getName();
-
-			llvm::Value * arg = call->getArgOperand(0);
-			size_t cfg;
-
-			if (! evaluateInt(arg, cfg)) {
-				Log::fail(call, "expected enum value");
-			}
-			std::string samplerName = "samplerGlobal" + hexstr(cfg);
-
-			return samplerName;
-
 		} else { //regular intrinsic
 		#ifdef DEBUG
 			std::cerr << "intrinsic call " << callee->getName().str() << "\n";
@@ -1141,6 +1132,23 @@ std::string OCLWriter::getInstructionAsExpression(llvm::Instruction * inst, Iden
 		  for(uint argIdx = 0; argIdx < call->getNumArgOperands(); ++argIdx, ++itArg)
 		  {
 			 llvm::Value * op = call->getArgOperand(argIdx);
+
+			 // special handling of the FAKE_GLOBAL_SAMPLER intrinsic
+			 if (llvm::isa<llvm::CallInst>(op)) {
+				 llvm::CallInst * samplerCall = llvm::cast<llvm::CallInst>(op);
+
+				if (samplerCall->getCalledFunction()->getName() == FAKE_GLOBAL_SAMPLER_NAME) {
+					size_t cfg;
+					llvm::Value * arg = samplerCall->getArgOperand(0);
+
+					if (! evaluateInt(arg, cfg)) {
+						Log::fail(samplerCall, "expected enum value");
+					}
+					operands.push_back("samplerGlobal" + hexstr(cfg));
+					continue;
+				}
+			 }
+
 			 const VariableDesc * opDesc = locals.lookUp(op);
 
 			 bool isByValue = itArg->hasByValAttr();
@@ -1336,12 +1344,14 @@ if (llvm::isa<llvm::Instruction>(root) &&
 
 	//### assigning instruction
 	} else if (desc) {
-		writeAssignRaw(desc->name, getInstructionAsExpression(inst, locals));
+		std::string instStr = getInstructionAsExpression(inst, locals);
+		if (instStr.size() > 0)
+			writeAssignRaw(desc->name, instStr);
 
 	//### void/discarded result instruction
 	} else {
 		std::string instStr = getInstructionAsExpression(inst, locals);
-		if (instStr != "") {
+		if (instStr.size() > 0) {
 			putLine( instStr + ';');
 		}
 	}
