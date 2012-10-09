@@ -24,10 +24,10 @@ namespace axtor {
 		CLK_NORMALIZED_COORDS_TRUE =  (1 << 0),
 
 		// 2 & 3 bit
-		CLK_ADDRESS_NONE =            (0 << 2),
-		CLK_ADDRESS_REPEAT =          (1 << 2),
-		CLK_ADDRESS_CLAMP_TO_EDGE =   (2 << 2),
-		CLK_ADDRESS_CLAMP32 =         (3 << 2),
+		CLK_ADDRESS_NONE =            (0 << 1),
+		CLK_ADDRESS_REPEAT =          (1 << 1),
+		CLK_ADDRESS_CLAMP_TO_EDGE =   (2 << 1),
+		CLK_ADDRESS_CLAMP32 =         (3 << 1),
 
 		// 4. bit
 		CLK_FILTER_NEAREST =          (0 << 3),

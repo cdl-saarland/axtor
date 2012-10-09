@@ -31,15 +31,15 @@ bool axtor::evaluateEnum_MemFence(llvm::Value * val, std::string & result)
 
 bool axtor::evaluateEnum_Sampler(size_t cfg, std::string & result)
 {
-		std::string normStr;
-	switch (cfg & 1)
+	std::string normStr;
+	switch (cfg & 1) //0x..00001
 	{
 		SAMPLER_CASE(normStr, CLK_NORMALIZED_COORDS_FALSE)
 		SAMPLER_CASE(normStr, CLK_NORMALIZED_COORDS_TRUE)
 	}
 
 	std::string addStr;
-	switch ((cfg >> 2) & 3)
+	switch (cfg & 6) //0x..00110
 	{
 		SAMPLER_CASE(addStr, CLK_ADDRESS_NONE)
 		SAMPLER_CASE(addStr, CLK_ADDRESS_REPEAT)
@@ -50,7 +50,7 @@ bool axtor::evaluateEnum_Sampler(size_t cfg, std::string & result)
 	}
 
 	std::string filterStr;
-	switch ((cfg >> 3) & 1)
+	switch (cfg & 8) //0X..01000
 	{
 		SAMPLER_CASE(filterStr, CLK_FILTER_NEAREST)
 		SAMPLER_CASE(filterStr, CLK_FILTER_LINEAR)
