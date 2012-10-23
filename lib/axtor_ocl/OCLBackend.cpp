@@ -86,6 +86,9 @@ void OCLBackend::init()
 
 #endif
 
+#define CONST_FUNC FUNC
+#define CONST_COMPLEX COMPLEX
+
 #define __AXTOR_INTERNAL
 #include <axtor_ocl/OCL_Intrinsics.def>
 #undef __AXTOR_INTERNAL
@@ -102,6 +105,19 @@ void OCLBackend::init()
 
 	platform = new PlatformInfo(nativeTypes, intrinsics);
 }
+
+
+bool OCLBackend::requiresDesignator(llvm::Instruction * inst)
+{
+	if (llvm::isa<llvm::CallInst>(inst)) {
+		llvm::CallInst * call = llvm::cast<llvm::CallInst>(inst);
+		if (call->getCalledFunction()->getName() == "fake_global_sampler")	{
+			return false;
+		}
+	}
+	return true;
+}
+
 
 OCLBackend::OCLBackend()
 {

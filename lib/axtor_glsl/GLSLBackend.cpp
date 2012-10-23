@@ -93,6 +93,9 @@ void GLSLBackend::init()
 
 #endif
 
+#define CONST_FUNC FUNC
+#define CONST_COMPLEX COMPLEX
+
 #include <axtor_glsl/GLSL_Intrinsics.def>
 
 BUILTIN(gl_MaxDrawBuffers,uint,gl_MaxDrawBuffers)

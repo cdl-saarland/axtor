@@ -244,6 +244,35 @@ std::string OCLWriter::buildDeclaration(std::string root, const llvm::Type * typ
  * ##### DECLARATIONS / OPERATORS & INSTRUCTIONS ######
  */
 
+
+// returns true if pure (only used in read_image or write_image)
+
+inline bool checkImageAccess(llvm::Value * imageVal, bool & oReadOnly)
+{
+	typedef llvm::Value::use_iterator UseIt;
+	UseIt itStart = imageVal->use_begin();
+	UseIt itEnd = imageVal->use_end();
+
+	bool hasRead = false;
+	bool hasWrite = false;
+	for(UseIt it = itStart; it!= itEnd; ++it)
+	{
+		llvm::CallInst* callInst = llvm::dyn_cast<llvm::CallInst>(*it);
+		if (callInst) {
+			std::string calledName = callInst->getCalledFunction()->getName();
+			hasWrite |= calledName.substr(0, 11) == "write_image";
+			hasRead |= calledName.substr(0,10) == "read_image";
+
+			if (hasRead && hasWrite) {
+				return false;
+			}
+		}
+	}
+
+	oReadOnly = hasRead;
+	return true;
+}
+
 	/*
 * writes a generic function header and declares the arguments as mapped by @locals
 */
@@ -295,6 +324,18 @@ std::string OCLWriter::getFunctionHeader(llvm::Function * func, IdentifierScope 
 
 		//std::string modifierStr = inferModifiers(arg);
 		std::string typeStr = getType(argType);
+
+		// TODO this is a hack
+		if (typeStr == "image2d_t") {
+			bool readOnly;
+			if (checkImageAccess(arg,readOnly)) {
+				if (readOnly)
+					typeStr = "__read_only image2d_t";
+				else
+					typeStr = "__write_only image2d_t";
+			}
+		}
+
 		std::string argName = typeStr;
 
 		if (locals) {

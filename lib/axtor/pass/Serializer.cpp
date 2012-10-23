@@ -44,9 +44,7 @@ namespace axtor
 
 			if (! desc) {
 				if (! isType(inst, llvm::Type::VoidTyID)) {
-					inst->dump();
-					inst->getType()->dump();
-					assert (false && "found undeclared variable");
+					Log::warn(inst, "undeclared variable! (may cause problems if instruction result is not ignored)");
 				}
 				writer->writeInstruction(0, inst, identifiers);
 			} else {
@@ -293,7 +291,7 @@ namespace axtor
 				assert(inst != 0 && "mapped zero value");
 
 				//dont overwrite preceeding mappings by PHI-Nodes
-				if (locals.lookUp(inst) == 0)
+				if (locals.lookUp(inst) == 0 && backend.requiresDesignator(inst))
 					locals.bind(inst, desc);
 				}
 			}
