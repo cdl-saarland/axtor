@@ -59,6 +59,9 @@ public:
 
 	virtual bool implementsFunction(llvm::Function * func);
 
+	//does suppress binding for the global_fake_sampler call
+	virtual bool requiresDesignator(llvm::Instruction * inst);
+
 	//interface for specifying passes specific to this backend
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 	virtual void addRequiredPasses(llvm::PassManager & pm) const;

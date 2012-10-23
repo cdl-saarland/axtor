@@ -95,13 +95,22 @@ inline float4 f4_ctor_f(float v)
 	return r;
 }
 
+
+inline float2 f2_ctor_ff(float x, float y)
+{
+	float2 r;
+	r.x = x;
+	r.y = y;
+	return r;
+}
+
 extern "C"
 {
 	// generic types
 	#include <axtor_ocl/OCL_Intrinsics.def>
 
 	//FIXME sampler hack
-	sampler_t NOPTR* fake_global_sampler(int config);
+	sampler_t NOPTR* fake_global_sampler(int config) __attribute__((const));
 }
 
 #include "UndefIntrinsicMakros.h"

@@ -44,6 +44,9 @@ struct AxtorBackend
 	//verifier
 	virtual bool hasValidType(ModuleInfo * moduleInfo)=0;
 
+	// returns if Serializer should emit a variable binding for this instruction
+	virtual bool requiresDesignator(llvm::Instruction * inst) { return true; };
+
 	//factory methods
 	virtual SyntaxWriter * createModuleWriter(ModuleInfo & modInfo, const IdentifierScope & globals)=0;
 	virtual SyntaxWriter * createFunctionWriter(SyntaxWriter * modWriter, llvm::Function * func)=0;
