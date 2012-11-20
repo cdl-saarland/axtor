@@ -270,7 +270,7 @@ inline bool checkImageAccess(llvm::Value * imageVal, bool & oReadOnly)
 	}
 
 	oReadOnly = hasRead;
-	return true;
+	return hasRead != hasWrite; //do not allow specialization if no uses occur
 }
 
 	/*
