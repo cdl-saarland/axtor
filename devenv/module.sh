@@ -1,10 +1,10 @@
 # LLVM 3.0 library
 
 
-thisModuleDependsOn llvm3
-
 declareModule "axtor" 0 \
     "LLVM-Axtor Library" "library"
+
+thisModuleDependsOn llvm3
 
 _axtor_init() {
     debug "[__${DEVENV_THIS_MODULE}_init called]"
