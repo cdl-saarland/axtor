@@ -149,15 +149,22 @@ _axtor_build() {
         local llvmObjRoot=`llvm-config --obj-root`
         local llvmSrcRoot=`llvm-config --src-root`
 
-        local llvmBin=llvmPrefix "\bin"
+        local srcDir=$(devenv_get_var source_dir)
+        #local llvmBin=llvmPrefix "\bin"
 
         if [ ! -e config.log -o $build_opt_reconfigure -eq 1 ] && \
             [ "$clean_target" = "no" ]; then
-            echo "$(devenv_get_var source_dir)/configure" --prefix="$llvmPrefix" \
+            echo "$srcDir/configure" --prefix="$llvmPrefix" \
                 --with-pic --enable-pic --enable-shared \
                 --disable-multilib \
-                --with-llvm-obj=$llvmObjRoot \
-                --with-llvm-src=$llvmSrcRoot \
+                --with-llvmobj=$llvmObjRoot \
+                --with-llvmsrc=$llvmSrcRoot \
+                $configure_opts
+            "$srcDir/configure" --prefix="$llvmPrefix" \
+                --with-pic --enable-pic --enable-shared \
+                --disable-multilib \
+                --with-llvmobj=$llvmObjRoot \
+                --with-llvmsrc=$llvmSrcRoot \
                 $configure_opts
 
            exit_code=$?
