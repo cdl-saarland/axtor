@@ -80,7 +80,7 @@
 /*
  * show CFGs after CFG operations
  */
-#define DEBUG_VIEW_CFGS
+//#define DEBUG_VIEW_CFGS
 
 //#define DEBUG_DOMFRONT
 
