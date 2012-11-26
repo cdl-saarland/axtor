@@ -513,8 +513,8 @@ CONST_FUNC(get_image_dim_3d,int4,get_image_dim,(image3d_t NOPTR * image),1)
 // native-intrinsic bindings
 INTERNAL( \
 	CONST_FUNC(floorf,float,floor,(float x),1) \
-	CONST_FUNC(ceilf,float,ceilf,(float x),1) \
-	CONST_FUNC(sqrtf,float,sqrtf,(float x),1) \
+	CONST_FUNC(ceilf,float,ceil,(float x),1) \
+	CONST_FUNC(sqrtf,float,sqrt,(float x),1) \
 )
 	
 	
