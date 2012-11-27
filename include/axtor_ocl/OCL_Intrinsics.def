@@ -473,11 +473,11 @@ CONST_FUNC(read_imageui_2d_f2,uint4,read_imageui,(image2d_t NOPTR * image, sampl
 
 FUNC(write_imagef_2d_f4,void,write_imagef,(image2d_t NOPTR * image, int2 coord, float4 color),3)
 FUNC(write_imagei_2d_i4,void,write_imagei,(image2d_t NOPTR * image, int2 coord, int4 color),3)
-FUNC(write_imageui_2d_i4,void,write_imageui,(image2d_t NOPTR * image, int2 coord, uint4 color),3)
+FUNC(write_imageui_2d_u4,void,write_imageui,(image2d_t NOPTR * image, int2 coord, uint4 color),3)
 
-//CONST_FUNC(write_imagef_3d_f4,void,write_imagef,(image3d_t NOPTR * image, int4 coord, float4 color),3)
-//CONST_FUNC(write_imagei_3d_i4,void,write_imagei,(image3d_t NOPTR * image, int4 coord, int4 color),3)
-//CONST_FUNC(write_imageui_3d_i4,void,write_imageui,(image3d_t NOPTR * image, int4 coord, uint4 color),3)
+//FUNC(write_imagef_3d_f4,void,write_imagef,(image3d_t NOPTR * image, int4 coord, float4 color),3)
+//FUNC(write_imagei_3d_i4,void,write_imagei,(image3d_t NOPTR * image, int4 coord, int4 color),3)
+//FUNC(write_imageui_3d_i4,void,write_imageui,(image3d_t NOPTR * image, int4 coord, uint4 color),3)
 
 
 //void write_imageh (image2d_t NOPTR * image, int2 coord, half4 color)               OPT
