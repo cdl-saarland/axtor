@@ -355,6 +355,7 @@ namespace axtor
 				ast::FunctionNode * funcNode = ASTs.at(func);
 #ifdef DEBUG
 				funcNode->dump();
+				func->dump();
 #endif
 				runOnFunction(backend, modWriter, globalScope, funcNode);
 			}
