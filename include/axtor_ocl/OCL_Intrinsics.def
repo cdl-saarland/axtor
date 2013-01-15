@@ -515,6 +515,12 @@ INTERNAL( \
 	CONST_FUNC(floorf,float,floor,(float x),1) \
 	CONST_FUNC(ceilf,float,ceil,(float x),1) \
 	CONST_FUNC(sqrtf,float,sqrt,(float x),1) \
+	CONST_FUNC(logf,float,log,(float x),1) \
+	
+	CONST_FUNC(atan2f,float,atan2,(float x, float y),2) \
+	CONST_FUNC(cosf,float,cos,(float x),1) \
+	CONST_FUNC(sinf,float,sin,(float x),1) \
+	CONST_FUNC(tansf,float,tan,(float x),1) \
 )
 	
 	
