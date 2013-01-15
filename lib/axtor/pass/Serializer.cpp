@@ -228,7 +228,21 @@ namespace axtor
 								(itNode + 2) == node->end() &&
 								(*(itNode + 1))->getEntryBlock() == 0
 						) {
-							nextExitBlock = exitBlock;
+							ast::ControlNode * nextNode = *(itNode + 1);
+							// TODO clean this up
+							switch (nextNode->getType())
+							{
+							case ast::ControlNode::CONTINUE:
+								assert(loopHeader && "can not CONTINUE w/o loop header");
+								nextExitBlock = loopHeader; break;
+
+							case ast::ControlNode::BREAK:
+								assert(loopExit && "can not BREAK w/o loop exit");
+								nextExitBlock = loopExit; break;
+
+							default:
+								nextExitBlock = exitBlock; break;
+							}
 
 						// inner node case
 						} else {
