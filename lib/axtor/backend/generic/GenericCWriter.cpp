@@ -110,8 +110,13 @@ void GenericCWriter::writeDo()
 	            case llvm::CmpInst::FCMP_ULE:
 	               return "<=";
 
+	            case llvm::CmpInst::FCMP_UEQ:
 	            case llvm::CmpInst::FCMP_OEQ:
 	               return "=="; //overloaded operator in C
+
+	            case llvm::CmpInst::FCMP_ONE:
+	            case llvm::CmpInst::FCMP_UNE:
+	            	return "!=";
 
 	            default:
 	               assert(false && "unmapped cmp predicate");
