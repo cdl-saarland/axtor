@@ -80,7 +80,7 @@ public:
 	inline bool isIntrinsic(llvm::Function * func)
 	{
 		IntrinsicDescriptor * desc = intrinsics[func->getName().str()];
-		return dynamic_cast<T*>(desc);
+		return static_cast<bool>(desc);
 	}
 
 	//TypeHandler * getDefaultHandler();
