@@ -26,10 +26,10 @@ bool OCLModuleInfo::scanForDoubleType()
 
 	const TypeSetVector & typeVec = findTypesPass->getTypes();
 
-	for (auto type : typeVec)
+	for (TypeSetVector::const_iterator type =typeVec.begin(); type!=typeVec.end(); ++type)
 	{
 
-		if (((llvm::Type*) type)->getTypeID() == llvm::Type::DoubleTyID)
+		if (((llvm::Type*) *type)->getTypeID() == llvm::Type::DoubleTyID)
 			return true;
 	}
 
