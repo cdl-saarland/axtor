@@ -177,7 +177,7 @@ GLSLWriter * GLSLBackend::createWriterIfDefined(GLSLWriter & writer, std::ostrea
 
 GLSLWriter * GLSLBackend::createFittingMultiWriter(GLSLWriter & writer, std::ostream * vertStream, std::ostream * fragStream)
 {
-	assert(dynamic_cast<GLSLWriter*>(&writer) && "not a GLSL writer object");
+	// assert(dynamic_cast<GLSLWriter*>(&writer) && "not a GLSL writer object");
 
 	GLSLWriter * vertWriter = new GLSLRedirectedWriter(writer, *vertStream);
 	GLSLWriter * fragWriter = new GLSLRedirectedWriter(writer, *fragStream);
@@ -188,7 +188,7 @@ SyntaxWriter * GLSLBackend::createFunctionWriter(SyntaxWriter * modWriter, llvm:
 {
 	assert(func && "was NULL");
 	assert(modWriter && "invalid module writer");
-	assert(dynamic_cast<GLSLWriter*>(modWriter) && "not a GLSL writer object");
+	// assert(dynamic_cast<GLSLWriter*>(modWriter) && "not a GLSL writer object");
 	GLSLWriter & writer = *static_cast<GLSLWriter*>(modWriter);
 
 	GLSLModuleInfo & modInfo = writer.getModuleInfo();
@@ -207,7 +207,7 @@ SyntaxWriter * GLSLBackend::createFunctionWriter(SyntaxWriter * modWriter, llvm:
 
 SyntaxWriter * GLSLBackend::createBlockWriter(SyntaxWriter * writer)
 {
-	assert(dynamic_cast<GLSLWriter*>(writer) && "not a GLSL writer object");
+	// assert(dynamic_cast<GLSLWriter*>(writer) && "not a GLSL writer object");
 	return new GLSLBlockWriter(*(static_cast<GLSLWriter*>(writer)));
 }
 
