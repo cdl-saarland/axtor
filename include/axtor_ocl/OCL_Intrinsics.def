@@ -518,8 +518,15 @@ INTERNAL( \
 	CONST_FUNC(logf,float,log,(float x),1) \
 	
 	CONST_FUNC(atan2f,float,atan2,(float x, float y),2) \
+	CONST_FUNC(llvm.pow.f32,float,pow,(float x, float y), 2) \
+	
+	CONST_FUNC(tanf,float,tan,(float x),1) \
 	CONST_FUNC(cosf,float,cos,(float x),1) \
 	CONST_FUNC(sinf,float,sin,(float x),1) \
+	
+	CONST_FUNC(atanf,float,atan,(float x),1) \
+	CONST_FUNC(acosf,float,acos,(float x),1) \
+	CONST_FUNC(asinf,float,asin,(float x),1) \
 	CONST_FUNC(tansf,float,tan,(float x),1) \
 )
 	
