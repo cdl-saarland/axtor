@@ -644,12 +644,19 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 	//byval function arguments don't need be dereferenced
 	if (llvm::isa<llvm::Argument>(rootValue))
 	{
+#ifdef DEBUG
+		std::cerr << "DEREF: argument case\n";
+#endif
 		llvm::Argument * arg = llvm::cast<llvm::Argument>(rootValue);
 		hasImplicitPtrDeref |= arg->hasByValAttr();
 	}
 
 	//local variables are initialised in the program, so assume implicit deref
 	if (llvm::isa<llvm::GlobalVariable>(rootValue)) {
+#ifdef DEBUG
+		std::cerr << "DEREF: Global case\n";
+#endif
+
 		llvm::GlobalVariable * gv = llvm::cast<llvm::GlobalVariable>(rootValue);
 		hasImplicitPtrDeref |= gv->isConstant() || gv->getType()->getAddressSpace() == SPACE_LOCAL || gv->getType()->getAddressSpace() == SPACE_CONSTANT;
 	}
@@ -669,7 +676,7 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 	if (rootName) {
 		tmp = *rootName;
 
-	} else if (llvm::isa<llvm::ConstantExpr>(rootValue)) {
+	} else if (llvm::isa<llvm::Constant>(rootValue)) {
 		tmp = getConstant(llvm::cast<llvm::Constant>(rootValue), locals);
 
 	} else {
@@ -680,6 +687,10 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 
 	  // this is a pointer
 	  if (!address) {
+#ifdef DEBUG
+		std::cerr << "DEREF: real pointer case. deref: " << hasImplicitPtrDeref << "\n";
+#endif
+
 		  oDereferenced = hasImplicitPtrDeref;
 		  return tmp;
 	  }
@@ -743,6 +754,8 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 			case llvm::Type::FloatTyID:
 				return "0.0f";
 
+			case llvm::Type::PointerTyID:
+				Log::warn(type, "Using null pointer literal");
 			case llvm::Type::IntegerTyID:
 				return "0";
 
@@ -1372,6 +1385,7 @@ if (llvm::isa<llvm::Instruction>(root) &&
 			writeAssignRaw(name, srcString);
 		} else {
 			std::string name = getReferenceTo(pointer, locals);
+			std::cerr << "store to " << name << "\n";
 			writeAssignRaw(name, srcString);
 		}
 

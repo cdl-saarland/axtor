@@ -208,10 +208,12 @@ void GenericCWriter::writeDo()
 	 	const VariableDesc * srcDesc = locals.lookUp(val);
 	 	std::string srcText;
 
-	 	if (srcDesc) {
-	 		srcText = srcDesc->name;
-	 	} else if (llvm::isa<llvm::GetElementPtrInst>(val)) {
+	 	// Allocas need to be dereferenced explicitely
+	 	if (val->getType()->isPointerTy()) {
 	 		srcText = getPointerTo(val, locals);
+	 	// non-ptr values can go by name
+	 	} else if (srcDesc) {
+	 		srcText = srcDesc->name;
 	 	} else if (llvm::isa<llvm::Constant>(val)) {
 	 		srcText = getConstant(llvm::cast<llvm::Constant>(val), locals);
 	 	} else {
@@ -260,6 +262,7 @@ void GenericCWriter::writeDo()
 	 {
 	 	bool isDereffed;
 	 	std::string core = unwindPointer(val, locals, isDereffed, rootName);
+	 	std::cerr << "[DEREF] getRet core " << core << " isDereffed " << isDereffed << "\n";
 	 	if (isDereffed) {
 	 		return core;
 	 	} else {
