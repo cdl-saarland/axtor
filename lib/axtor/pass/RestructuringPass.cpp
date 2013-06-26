@@ -75,6 +75,7 @@ namespace axtor {
 	{
 
 		assert(bb);
+		assert(!llvm::isa<llvm::SwitchInst>(bb->getTerminator()) && "does not support switches!");
 #ifdef DEBUG
 		llvm::errs() << "\tprocessBlock : " << bb->getName() << "\n";
 #endif

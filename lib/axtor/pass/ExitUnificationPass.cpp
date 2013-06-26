@@ -7,6 +7,9 @@
 
 #include <axtor/pass/ExitUnificationPass.h>
 #include <axtor/util/llvmDebug.h>
+#include <axtor/util/llvmTools.h>
+
+using namespace llvm;
 
 namespace axtor {
 
@@ -21,7 +24,8 @@ char ExitUnificationPass::ID = 0;
 	 */
 	void ExitUnificationPass::appendEnumerationSwitch(llvm::Value * val, std::vector<llvm::BasicBlock*> dests, llvm::BasicBlock * block)
 	{
-		llvm::SwitchInst * switchInst = llvm::SwitchInst::Create(val, NULL, dests.size(), block);
+		assert(! dests.empty() && block && val);
+		llvm::SwitchInst * switchInst = llvm::SwitchInst::Create(val, dests.front(), dests.size(), block);
 
 		uint exitID = 0;
 		for(BlockVector::iterator it = dests.begin(); it != dests.end(); ++it, ++exitID)
@@ -38,14 +42,26 @@ char ExitUnificationPass::ID = 0;
 	 */
 	bool ExitUnificationPass::unifyLoopExits(llvm::Function & func, llvm::Loop * loop)
 	{
+		bool changed = false;
+		for (llvm::Loop::iterator itSubLoop = loop->begin(); itSubLoop != loop->end(); ++itSubLoop) {
+			changed |= unifyLoopExits(func, *itSubLoop);
+		}
+
 		llvm::Loop * parent = loop->getParentLoop();
 
-		if (loop->getExitBlock())
-			return false; // exactly one exit
+		loop->dump();
 
-		if (! parent) {
+		if (loop->getLoopDepth() <= 1) {
 			std::cerr << "LEE: outer-most multi exit loop\n";
-			return false; // the exits will not reach this loop again, so we do not care
+			return changed; // the exits will not reach this loop again, so we do not care
+		}
+
+
+		BlockSet exitBlocks;
+		getUniqueExitBlocks(*loop, exitBlocks);
+		if (exitBlocks.size() <= 1) {
+			std::cerr << "LEE: loop has at most one exit block\n";
+			return changed;
 		} else {
 			std::cerr << "LEE: inner multi exit..\n";
 		}
@@ -83,6 +99,7 @@ char ExitUnificationPass::ID = 0;
 						phi->addIncoming(exitConstant, from);
 
 						term->setSuccessor(succIdx, uniqueExitBlock);
+						std::cerr << "LEE: exiting from " << from->getName().str() << " to " << to->getName().str() << " id " << exitID << "\n";
 						enumeratedExits.push_back(to);
 					}
 				}
@@ -103,12 +120,20 @@ char ExitUnificationPass::ID = 0;
 
 	bool ExitUnificationPass::runOnFunction(llvm::Function & func)
 	{
+#ifdef DEBUG_LEU
+		std::cerr << "### Function " << func.getName().str() << " before LEU ###\n";
+		func.dump();
+#endif
 		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfo>(func);
 
 		for(llvm::LoopInfo::iterator loop = loopInfo.begin(); loop != loopInfo.end(); ++loop)
 		{
 			unifyLoopExits(func, *loop);
 		}
+
+#ifdef DEBUG_LEU
+		std::cerr << "[EOF]\n";
+#endif
 
 		return false;
 	}
@@ -128,6 +153,7 @@ char ExitUnificationPass::ID = 0;
 
 #ifdef DEBUG
 		std::cerr << "\n\n### Module after LEE #####\n\n";
+		writeModuleToFile(&M, "Lee_dump.bc");
 		M.dump();
 		verifyModule(M);
 #endif

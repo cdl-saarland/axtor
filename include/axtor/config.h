@@ -54,6 +54,10 @@
  */
 //#define DEBUG_RESTRUCT
 
+/*
+ * enables debug mode for loop exit unification
+ */
+#define DEBUG_LEU
 
 /*
  * enables verbose debug
@@ -70,6 +74,8 @@
  */
 #define AXTOR_EXPENSIVE_CHECKS
 
+#define DEBUG
+
 //Debug flags
 #ifdef DEBUG
 /*
@@ -83,6 +89,11 @@
 //#define DEBUG_VIEW_CFGS
 
 //#define DEBUG_DOMFRONT
+
+/*
+ * dumps module after pass runs in separate files
+ */
+#define DEBUG_DUMP_MODULES
 
 #endif
 

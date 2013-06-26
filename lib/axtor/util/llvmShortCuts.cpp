@@ -363,6 +363,24 @@ uint getOpcode(const llvm::Value * value)
           ExitEdges.push_back(std::make_pair(*BI, *I));
   }
 
+  void getUniqueExitBlocks(llvm::Loop & loop, BlockSet & exits)
+  {
+	  llvm::SmallVector<llvm::BasicBlock*, 128> LoopBBs(loop.block_begin(), loop.block_end());
+	  std::sort(LoopBBs.begin(), LoopBBs.end());
+
+	  exits.clear();
+
+	  typedef llvm::GraphTraits<llvm::BasicBlock*> BlockTraits;
+	  for (llvm::Loop::block_iterator BI = loop.block_begin(), BE = loop.block_end(); BI != BE; ++BI)
+		for (BlockTraits::ChildIteratorType I =
+			 BlockTraits::child_begin(*BI), E = BlockTraits::child_end(*BI);
+			 I != E; ++I)
+		  if (!std::binary_search(LoopBBs.begin(), LoopBBs.end(), *I)) {
+			// Not in current loop? It must be an exit block.
+			  exits.insert(*I);
+		  }
+  }
+
 
 
   void LazyRemapBlock(llvm::BasicBlock *BB,

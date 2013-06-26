@@ -301,7 +301,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 			TargetProvider & target = getAnalysis<TargetProvider>();
 			ModuleInfo & modInfo = target.getModuleInfo();
 
-			transformInstArguments(&M);
+			//transformInstArguments(&M);
 
 			//nameAllNonOpaqueTypes(M, M.getTypeSymbolTable());
 

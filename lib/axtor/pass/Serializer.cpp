@@ -11,6 +11,7 @@
 
 #include <axtor/util/llvmDebug.h>
 #include <axtor/util/ResourceGuard.h>
+#include <axtor/util/llvmTools.h>
 
 namespace axtor
 {
@@ -340,6 +341,9 @@ namespace axtor
 	{
 #ifdef DEBUG_PASSRUN
 		std::cerr << "\n\n##### PASS: Serializer #####\n\n";
+#endif
+#ifdef DEBUG_DUMP_MODULES
+		writeModuleToFile(&M, "Dump_serializer_pre.bc");
 #endif
 
 		TargetProvider & target = getAnalysis<TargetProvider>();

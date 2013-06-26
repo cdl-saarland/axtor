@@ -107,6 +107,10 @@ bool isGEP(llvm::Value * val);
  *  Taken from LLVM
  */
 
+// returns all a set of all occuring exit blocks
+void getUniqueExitBlocks(llvm::Loop & loop, BlockSet & exits);
+
+
 /// getExitEdges - Return all pairs of (_inside_block_,_outside_block_).
   void getExitEdges(llvm::Loop & loop, BlockPairVector & ExitEdges);
 

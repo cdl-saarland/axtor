@@ -4,6 +4,7 @@
 #include <axtor/ast/BasicNodes.h>
 
 #include <axtor/util/stringutil.h>
+#include <axtor/util/llvmShortCuts.h>
 
 namespace axtor {
 	LoopParser LoopParser::instance;
@@ -40,15 +41,15 @@ namespace axtor {
 		if (!loop || loop == context.parentLoop)
 			return 0;
 
-		llvm::SmallVector<llvm::BasicBlock*, 16> exits;
-		loop->getUniqueExitBlocks(exits);
+		BlockSet exits;
+		getUniqueExitBlocks(*loop, exits);
 
 		if (exits.size() > 1 && loop->getParentLoop())
 		{
-/*			for(int i = 0 ; i < exits.size() ; ++i)
+			for(BlockSet::iterator itExit = exits.begin(); itExit != exits.end(); ++itExit)
 			{
-				std::cerr << exits[i]->getNameStr() << ",\n";
-			}*/
+				std::cerr << (*itExit)->getName().str() << ",\n";
+			}
 
 			Log::fail(entry, "(loop exits == " + str<int>(exits.size()) + " > 1) Use the loop exit enumeration pass to normalize inner loops");
 		}

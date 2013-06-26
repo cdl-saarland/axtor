@@ -98,8 +98,6 @@ namespace axtor {
 
 
 		// ## REQUIRED TRANSFORMATIONS ##
-		//get rid of switches early on
-    	pm.add(simpleUnswitch);
 
 		//LLVM transformations
 		//pm.add(loopUnswitch);
@@ -122,15 +120,19 @@ namespace axtor {
 		pm.add(regularizer);
 	#endif
 
-		//axtor transformations building on LLVM analysis
-		pm.add(loopExitEnum);
 
 		//Required by restruct pass
 		llvm::Pass * regMemPass = llvm::createDemoteRegisterToMemoryPass();
 		pm.add(regMemPass);
 
-			axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
-			pm.add(restruct);
+		//axtor transformations building on LLVM analysis
+		pm.add(loopExitEnum);
+
+		//get rid of switches early on
+    	pm.add(simpleUnswitch);
+
+		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
+		pm.add(restruct);
 		
 		//recover registers
 		llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
