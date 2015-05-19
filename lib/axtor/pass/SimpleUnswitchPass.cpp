@@ -6,9 +6,11 @@
  */
 
 #include <axtor/pass/SimpleUnswitchPass.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/Constants.h>
 
-#include <llvm/Instruction.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
 
 #include <axtor/util/stringutil.h>
 

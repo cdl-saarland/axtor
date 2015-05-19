@@ -9,7 +9,7 @@
 #define WRAPPEDLITERAL_H_
 
 #include <axtor/config.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/Constants.h>
 
 namespace axtor {
 

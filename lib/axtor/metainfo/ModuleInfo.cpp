@@ -14,9 +14,11 @@ namespace axtor
 		M(_M)
 	{
 		std::string errInfo;
+#if 0
 		if (M.MaterializeAll(&errInfo)) {
 			Log::fail("llvm::MaterializeAll error: " + errInfo);
 		}
+#endif
 	}
 
 	const llvm::Module * ModuleInfo::getModule() const

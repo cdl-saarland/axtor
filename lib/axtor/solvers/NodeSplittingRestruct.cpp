@@ -8,7 +8,7 @@
 #include <axtor/solvers/NodeSplittingRestruct.h>
 
 #include <axtor/util/llvmDebug.h>
-#include <llvm/Support/CFG.h>
+#include <llvm/IR/CFG.h>
 
 namespace axtor{
 

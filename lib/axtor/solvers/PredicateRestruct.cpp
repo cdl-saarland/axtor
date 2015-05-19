@@ -9,7 +9,7 @@
 
 #include <axtor/util/llvmConstant.h>
 #include <axtor/util/llvmDebug.h>
-#include <llvm/Support/CFG.h>
+#include <llvm/IR/CFG.h>
 #include <axtor/util/llvmDomination.h>
 
 namespace axtor {
@@ -256,7 +256,7 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 	}
 
 #ifdef DEBUG
-	analysis.getDomTree().dump();
+	analysis.getDomTree().print(llvm::errs());
 #endif
 
 EXPENSIVE_TEST verifyModule(*analysis.getFunction()->getParent());

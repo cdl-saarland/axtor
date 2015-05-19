@@ -24,7 +24,7 @@
 #ifndef MODULEINFO_HPP_
 #define MODULEINFO_HPP_
 
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/PassManager.h>

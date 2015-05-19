@@ -26,10 +26,10 @@
 
 #include <axtor/config.h>
 
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Pass.h>
-#include <llvm/BasicBlock.h>
-#include <llvm/Analysis/Dominators.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Dominators.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Transforms/Utils/Cloning.h>
 

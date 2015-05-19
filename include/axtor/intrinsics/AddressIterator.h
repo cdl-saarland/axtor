@@ -24,9 +24,12 @@
 #ifndef ADDRESSITERATOR_HPP_
 #define ADDRESSITERATOR_HPP_
 
-#include <llvm/Value.h>
 #include <axtor/util/llvmConstant.h>
 #include <axtor/CommonTypes.h>
+
+namespace llvm {
+	class Value;
+}
 
 namespace axtor {
 

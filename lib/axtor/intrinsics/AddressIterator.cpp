@@ -2,12 +2,14 @@
  * AddressIterator.cpp
  *
  *  Created on: 25.04.2010
- *      Author: gnarf
+ *      Author: Simon Moll
  */
 
 #include <axtor/intrinsics/AddressIterator.h>
 #include <axtor/util/llvmShortCuts.h>
 #include <axtor/util/ResourceGuard.h>
+
+#include <llvm/IR/Value.h>
 
 namespace axtor {
 

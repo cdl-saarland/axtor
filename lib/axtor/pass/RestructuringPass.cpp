@@ -16,7 +16,7 @@
 namespace axtor {
 
 	llvm::RegisterPass<RestructuringPass> __regRestructPass(
-			"restruct", "axtor - the new modular restructuring ast-^extraction pass",
+			"restruct", "axtor - the new modular restructuring ast-extraction pass",
 			false, /* mutates the CFG */
 			false); /* transformation */
 
@@ -64,8 +64,8 @@ namespace axtor {
 
 	void RestructuringPass::rebuildAnalysisStruct(llvm::Function & func, AnalysisStruct & analysis)
 	{
-		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfo>(func);
-		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTree>(func);
+		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
+		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
 		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTree>(func);
 		analysis = AnalysisStruct(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree);
 	}
@@ -199,8 +199,8 @@ namespace axtor {
 #endif
 
 				EXPENSIVE_TEST if (! region.verify(analysis.getDomTree())) {
-					analysis.getLoopInfo().dump();
-					analysis.getDomTree().dump();
+					analysis.getLoopInfo().print(llvm::errs());
+					analysis.getDomTree().print(llvm::errs());
 #ifdef DEBUG_VIEW_CFGS
 					llvm::errs() << "VIEWCFG: with invalid regions at header " << (region.getHeader() ? region.getHeader()->getName() : "0") << "\n";
 					bb->getParent()->viewCFGOnly();
@@ -233,8 +233,8 @@ namespace axtor {
 
 	ast::FunctionNode * RestructuringPass::runOnFunction(llvm::Function & func)
 	{
-		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfo>(func);
-		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTree>(func);
+		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
+		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
 		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTree>(func);
 		AnalysisStruct analysis(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree);
 
@@ -250,9 +250,9 @@ namespace axtor {
 		func.dump();
 		llvm::errs() << "Restruct: end dump\n";
 		llvm::errs() << "### LoopInfo ###\n";
-		funcLoopInfo.dump();
+		funcLoopInfo.print(llvm::errs());
 		llvm::errs() << "### DomTree ###\n";
-		funcDomTree.dump();
+		funcDomTree.print(llvm::errs());
 		llvm::errs() << "### PostDomTree ###\n";
 		funcPostDomTree.dump();
 		// func.viewCFGOnly();
@@ -270,8 +270,8 @@ namespace axtor {
 	void  RestructuringPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
 		usage.addRequired<llvm::PostDominatorTree>();
-		usage.addRequired<llvm::DominatorTree>();
-		usage.addRequired<llvm::LoopInfo>();
+		usage.addRequired<llvm::DominatorTreeWrapperPass>();
+		usage.addRequired<llvm::LoopInfoWrapperPass>();
 	}
 
 	bool RestructuringPass::runOnModule(llvm::Module & M)

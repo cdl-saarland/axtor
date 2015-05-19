@@ -24,10 +24,10 @@
 #ifndef AXTORBACKEND_HPP_
 #define AXTORBACKEND_HPP_
 
-#include <llvm/PassManagers.h>
+#include <llvm/IR/LegacyPassManagers.h>
 #include <llvm/PassAnalysisSupport.h>
 #include <llvm/PassManager.h>
-#include <llvm/Function.h>
+#include <llvm/IR/Function.h>
 
 #include <axtor/metainfo/ModuleInfo.h>
 #include <axtor/intrinsics/PlatformInfo.h>

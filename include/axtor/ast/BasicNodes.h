@@ -26,7 +26,7 @@
 
 #include <map>
 
-#include <llvm/Function.h>
+#include <llvm/IR/Function.h>
 
 #include "ASTNode.h"
 #include <axtor/CommonTypes.h>

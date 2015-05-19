@@ -27,11 +27,11 @@
 #include <axtor/config.h>
 
 #include <llvm/Pass.h>
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Transforms/Scalar.h>
-#include <llvm/BasicBlock.h>
-#include <llvm/Instructions.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/SmallVector.h>
 

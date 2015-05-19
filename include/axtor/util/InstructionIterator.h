@@ -24,7 +24,9 @@
 #ifndef INSTRUCTIONITERATOR_HPP_
 #define INSTRUCTIONITERATOR_HPP_
 
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/BasicBlock.h>
 
 namespace axtor {
 

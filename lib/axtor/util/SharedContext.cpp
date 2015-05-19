@@ -7,6 +7,8 @@
 
 #include <axtor/util/SharedContext.h>
 
+#include <llvm/IR/LLVMContext.h>
+
 namespace axtor {
 
 llvm::LLVMContext * SharedContext::context = NULL;

@@ -9,8 +9,8 @@
 #include <axtor/util/llvmShortCuts.h>
 #include <axtor/console/CompilerLog.h>
 
-#include <llvm/Constants.h>
-#include <llvm/Instructions.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Instructions.h>
 
 namespace axtor {
 
@@ -124,7 +124,7 @@ BlockSetPair computeExitSet(RegionVector regions, llvm::DominatorTree & domTree,
 		mergeInto<llvm::BasicBlock*>(usedRegularExits, ret.second);
 	}
 
-	return std::make_pair<BlockSet,BlockSet>(exitSet, usedRegularExits);
+	return std::pair<BlockSet,BlockSet>(exitSet, usedRegularExits);
 }
 
 bool reaches (llvm::BasicBlock * A, llvm::BasicBlock * B, BlockSet regularExits)
@@ -193,7 +193,7 @@ BlockSetPair computeDominanceFrontierExt(llvm::BasicBlock * start, llvm::Dominat
 		std::cerr << "start Block was anticipated exit\n";
 #endif
 		usedRegularExits.insert(start);
-		return std::make_pair<BlockSet, BlockSet>(nonDomExits, usedRegularExits);
+		return std::pair<BlockSet, BlockSet>(nonDomExits, usedRegularExits);
 	}
 
 
@@ -250,7 +250,7 @@ BlockSetPair computeDominanceFrontierExt(llvm::BasicBlock * start, llvm::Dominat
 
     std::copy( nonDomExits.begin(), nonDomExits.end(), output );*/
 
-    return std::make_pair<BlockSet, BlockSet>(nonDomExits, usedRegularExits);
+    return std::pair<BlockSet, BlockSet>(nonDomExits, usedRegularExits);
 }
 
 /* llvm::BasicBlock * getLatch(llvm::Loop & loop, llvm::BasicBlock * entry)
@@ -448,7 +448,7 @@ bool usedInFunction(llvm::Function * func, llvm::Value * val)
 {
 	for (llvm::Value::use_iterator itUse = val->use_begin(); itUse != val->use_end(); ++itUse)
 	{
-		llvm::User * user = *itUse;
+		llvm::User * user = itUse->getUser();
 
 		if (llvm::isa<llvm::Instruction>(user)) {
 			llvm::Instruction * inst = llvm::cast<llvm::Instruction>(user);

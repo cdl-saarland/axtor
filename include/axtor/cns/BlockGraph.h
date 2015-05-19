@@ -30,9 +30,9 @@
 #include <map>
 #include <iostream>
 
-#include <llvm/Function.h>
-#include <llvm/BasicBlock.h>
-#include <llvm/Support/CFG.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/CFG.h>
 
 #include <axtor/util/stringutil.h>
 #include "Bitmask.h"

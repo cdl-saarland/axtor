@@ -6,9 +6,9 @@
  */
 
 #include <axtor/util/llvmConstant.h>
-#include <llvm/Type.h>
+#include <llvm/IR/Type.h>
 
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 
 llvm::ConstantInt * axtor::get_uint(uint val)
 {

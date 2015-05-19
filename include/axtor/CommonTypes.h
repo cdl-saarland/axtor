@@ -36,17 +36,18 @@
 
 #include <llvm/Pass.h>
 #include <llvm/PassManager.h>
-#include <llvm/PassManagers.h>
-#include <llvm/BasicBlock.h>
-#include <llvm/Module.h>
-#include <llvm/Instructions.h>
-#include <llvm/Instruction.h>
+#include <llvm/IR/LegacyPassManagers.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Instruction.h>
 
 #include <llvm/Analysis/LoopInfo.h>
-#include <llvm/Analysis/Dominators.h>
+#include <llvm/IR/Dominators.h>
 #include <llvm/Analysis/PostDominators.h>
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Transforms/Utils/ValueMapper.h>
+
 
 
 //#include <util/llvmShortCuts.h>
@@ -79,7 +80,6 @@ namespace axtor {
 	typedef std::vector<std::string> StringVector;
 	typedef std::set<std::string> StringSet;
 
-	typedef std::set<llvm::BasicBlock*> BlockSet;
 	typedef std::set<const llvm::BasicBlock*> ConstBlockSet;
     typedef std::pair<llvm::BasicBlock*,llvm::BasicBlock*> BlockPair;
     typedef std::vector<std::pair<llvm::BasicBlock*,llvm::BasicBlock*> > BlockPairVector;

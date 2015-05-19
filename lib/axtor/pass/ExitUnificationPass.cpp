@@ -114,7 +114,7 @@ char ExitUnificationPass::ID = 0;
 
 	void ExitUnificationPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
-		usage.addRequired<llvm::LoopInfo>();
+		usage.addRequired<llvm::LoopInfoWrapperPass>();
 	}
 
 
@@ -124,7 +124,7 @@ char ExitUnificationPass::ID = 0;
 		std::cerr << "### Function " << func.getName().str() << " before LEU ###\n";
 		func.dump();
 #endif
-		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfo>(func);
+		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
 
 		for(llvm::LoopInfo::iterator loop = loopInfo.begin(); loop != loopInfo.end(); ++loop)
 		{

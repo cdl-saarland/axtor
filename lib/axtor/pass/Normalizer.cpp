@@ -11,7 +11,10 @@
 
 #include <llvm/Pass.h>
 #include <llvm/PassManager.h>
-#include <llvm/PassManagers.h>
+#include <llvm/IR/LegacyPassManagers.h>
+
+#include <llvm/IR/Module.h>
+#include <llvm/IR/DerivedTypes.h>
 
 #include <axtor/util/llvmDebug.h>
 #include <axtor/util/llvmDuplication.h>
@@ -147,12 +150,12 @@ namespace axtor
 		std::cerr << "\tnormalizeNode (from=" << entry->getName().str() << " to=" << (entryPostDom ? entryPostDom->getName().str() : "NULL") << ")\n";
 #endif
 
-		typedef llvm::GraphTraits<llvm::BasicBlock*> CFG;
+		// typedef llvm::GraphTraits<llvm::BasicBlock*> CFG;
 
 		assert(entry && "must not be NULL");
 
-		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfo>(func);
-		llvm::DominatorTree & domTree = getAnalysis<llvm::DominatorTree>(func);
+		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
+		llvm::DominatorTree & domTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
 
 		llvm::BasicBlock * loopHeader = loopScope ? loopScope->getHeader() : NULL;
 
@@ -227,9 +230,9 @@ namespace axtor
 
 	void Normalizer::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
-		usage.addRequired<llvm::LoopInfo>();
+		usage.addRequired<llvm::LoopInfoWrapperPass>();
 		usage.addRequired<llvm::PostDominatorTree>();
-		usage.addRequired<llvm::DominatorTree>();
+		usage.addRequired<llvm::DominatorTreeWrapperPass>();
 		usage.addRequired<TargetProvider>();
 		//usage.addRequired<Regularizer>();
 

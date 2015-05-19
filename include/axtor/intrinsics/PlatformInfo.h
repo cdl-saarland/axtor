@@ -24,7 +24,7 @@
 #ifndef PLATFORMINFO_HPP_
 #define PLATFORMINFO_HPP_
 
-#include <llvm/Function.h>
+#include <llvm/IR/Function.h>
 
 #include <axtor/intrinsics/IntrinsicDescriptors.h>
 #include <axtor/util/stringutil.h>

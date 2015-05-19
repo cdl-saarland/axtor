@@ -27,13 +27,17 @@
 #include <string>
 
 #include <llvm/ADT/APInt.h>
-#include <llvm/Value.h>
-#include <llvm/Constants.h>
-#include <llvm/Instructions.h>
-#include <llvm/GlobalVariable.h>
 
 #include <axtor/config.h>
 #include <axtor/util/SharedContext.h>
+
+#include <llvm/IR/Constants.h>
+
+namespace llvm {
+	class LLVMContext;
+	class IntegerType;
+	class Module;
+}
 
 namespace axtor {
 

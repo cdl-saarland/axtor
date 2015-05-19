@@ -24,7 +24,9 @@
 #ifndef LLVMOPTIMIZATION_HPP_
 #define LLVMOPTIMIZATION_HPP_
 
-#include <llvm/Module.h>
+namespace llvm {
+	class Module;
+}
 
 namespace axtor {
 

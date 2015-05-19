@@ -26,9 +26,16 @@
 
 #include <axtor/config.h>
 
-#include <llvm/Module.h>
 #include <llvm/Pass.h>
 #include <llvm/Analysis/LoopInfo.h>
+
+namespace llvm {
+	class Module;
+	class Function;
+	class BasicBlock;
+	class Loop;
+	class LoopInfo;
+}
 
 namespace axtor {
 

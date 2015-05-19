@@ -7,12 +7,15 @@
 
 #include <axtor/util/llvmTools.h>
 #include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/IRReader.h>
+#include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/raw_os_ostream.h>
-#include <llvm/Support/system_error.h>
+#include <llvm/Support/FileSystem.h>
+#include <system_error>
 #include <llvm/Bitcode/ReaderWriter.h>
 
 #include <iostream>
+
+using namespace llvm;
 
 namespace axtor {
 
@@ -25,31 +28,17 @@ namespace axtor {
 
 	llvm::Module* createModuleFromFile(std::string fileName, llvm::LLVMContext & context)
 	{
-		llvm::SMDiagnostic diag;
-		llvm::Module * mod = llvm::getLazyIRFileModule(fileName, diag, context);
-		if (!mod) {
-      std::cout << diag.getMessage() << "\n"; 
-			return 0;
-    }
-
-#ifdef DEBUG
-    std::cout << "module created correctly\n";
-#endif
-
-		std::string errInfo;
-		mod->MaterializeAll(&errInfo);
-		if (errInfo == "")
-			return mod;
-		else
-			return 0;
+		SMDiagnostic smDiag;
+		std::unique_ptr<Module> modPtr = parseIRFile(fileName, smDiag, context);
+		return modPtr.release();
 	}
-
 
 	void writeModuleToFile(llvm::Module * M, const std::string & fileName)
 	{
 		assert (M);
+		std::error_code EC;
 		std::string errorMessage = "";
-		llvm::raw_fd_ostream file(fileName.c_str(), errorMessage);
+		llvm::raw_fd_ostream file(fileName.c_str(), EC, sys::fs::F_None);
 		llvm::WriteBitcodeToFile(M, file);
 		file.close();
 	}

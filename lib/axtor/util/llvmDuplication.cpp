@@ -6,15 +6,15 @@
  */
 
 #include <axtor/util/llvmDuplication.h>
-#include <llvm/PassManagers.h>
+#include <llvm/IR/LegacyPassManagers.h>
 //#include <llvm/Transforms/Utils/ValueMapper.h>
 #include <axtor/util/llvmDebug.h>
 
 #include <axtor/util/llvmDomination.h>
-#include <llvm/ADT/ValueMap.h>
-#include <llvm/Module.h>
-#include <llvm/Instructions.h>
-#include <llvm/BasicBlock.h>
+#include <llvm/IR/ValueMap.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/BasicBlock.h>
 
 namespace axtor {
 

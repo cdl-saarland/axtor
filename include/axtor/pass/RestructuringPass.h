@@ -26,7 +26,7 @@
 
 #include <axtor/config.h>
 
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Pass.h>
 
 #include <axtor/CommonTypes.h>

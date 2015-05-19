@@ -7,15 +7,15 @@
 
 #include <axtor/util/llvmOptimization.h>
 
-#include <llvm/Target/TargetData.h>
-#include <llvm/Module.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Instructions.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/LinkAllPasses.h>
 #include <llvm/PassManager.h>
-#include <llvm/Linker.h>
+#include <llvm/Linker/Linker.h>
 #include <llvm/Transforms/Utils/Cloning.h>
 #include <llvm/Analysis/Passes.h>
+#include <llvm/IR/Module.h>
 
 namespace axtor {
 
@@ -98,8 +98,8 @@ static inline void createStandardModulePasses(llvm::PassManagerBase *PM, int thr
 
 		//module passes
 		llvm::PassManager MPM;
-		llvm::TargetData * td = new llvm::TargetData(module->getDataLayout());
-		MPM.add(td);
+		// llvm::DataLayout * layout = new llvm::DataLayout(module->getDataLayout());
+		// MPM.add(layout);
 		createStandardModulePasses(&MPM, 32);
 		MPM.add(llvm::createGlobalDCEPass());
 		MPM.add(llvm::createStripDeadPrototypesPass());

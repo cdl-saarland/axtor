@@ -10,7 +10,7 @@
 #include <axtor/pass/CGIPass.h>
 #include <axtor/util/llvmBuiltins.h>
 
-#include <llvm/Analysis/CallGraph.h>
+// #include <llvm/Analysis/CallGraph.h>
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ namespace axtor {
 
 	void CGIPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
-		usage.addRequired<llvm::CallGraph>();
+		// usage.addRequired<llvm::CallGraph>();
 	}
 
 	bool CGIPass::runOnModule(llvm::Module & M)
@@ -75,7 +75,7 @@ namespace axtor {
 #endif
 			for (llvm::Function::use_iterator itCall = llvmFunc->use_begin(); itCall != llvmFunc->use_end(); itCall = llvmFunc->use_begin())
 			{
-				llvm::User* user = *itCall;
+				llvm::User* user = itCall->getUser();
 				llvm::Instruction * call = llvm::cast<llvm::Instruction>(user);
 #ifdef DEBUG
 				llvm::errs() << "removing user " << call->getName().str() << "\n";

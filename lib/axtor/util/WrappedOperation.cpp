@@ -8,7 +8,7 @@
 
 #include <axtor/util/WrappedOperation.h>
 
-#include <llvm/Instructions.h>
+#include <llvm/IR/Instructions.h>
 #include <axtor/util/ResourceGuard.h>
 
 

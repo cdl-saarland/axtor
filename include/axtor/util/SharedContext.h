@@ -27,7 +27,9 @@
 #include <iostream>
 #include <assert.h>
 
-#include <llvm/LLVMContext.h>
+namespace llvm {
+	class LLVMContext;
+}
 
 namespace axtor {
 

@@ -24,7 +24,7 @@
 #ifndef ASTNODE_HPP_
 #define ASTNODE_HPP_
 
-#include <llvm/BasicBlock.h>
+#include <llvm/IR/BasicBlock.h>
 
 #include <vector>
 #include <map>

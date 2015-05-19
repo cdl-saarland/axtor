@@ -8,12 +8,43 @@
 
 #include <axtor/util/llvmBuiltins.h>
 
-#include <llvm/Constants.h>
-#include <llvm/Instructions.h>
-#include <llvm/DerivedTypes.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/DerivedTypes.h>
 
+#include <initializer_list>
+
+using namespace llvm;
 
 namespace axtor {
+
+	static AttributeSet CreateAttributeSet(int index, LLVMContext & context, std::initializer_list<llvm::Attribute::AttrKind> attribs) {
+#if 0 // arg attributes
+	  {
+	   AttrBuilder B;
+	   B.addAttribute(Attribute::ReadOnly);
+	   B.addAttribute(Attribute::NoCapture);
+	   PAS = AttributeSet::get(func->getContext(), 2U, B);
+	  }
+		Attrs.push_back(PAS);
+#endif
+	// function attributes
+		AttrBuilder B;
+		for (auto attrib : attribs)	{
+			B.addAttribute(attrib);
+		}
+		return AttributeSet::get(context, index, B);
+	}
+
+	static void SetAttributes(llvm::Function * func, std::initializer_list<AttributeSet> attribSets) {
+		SmallVector<AttributeSet, 4> attribs;
+		for (auto attribSet : attribSets) {
+			attribs.push_back(attribSet);
+		}
+		func->setAttributes(AttributeSet::get(func->getContext(), attribs));
+	}
+
 
 	llvm::Function * create_memset(llvm::Module & M, std::string funcName, uint space)
 	{
@@ -45,18 +76,10 @@ namespace axtor {
 		/*Name=*/funcName, mod);
 		func->setCallingConv(llvm::CallingConv::PTX_Kernel);
 	}
-	llvm::AttrListPtr func_PAL;
-	{
-		llvm::SmallVector<llvm::AttributeWithIndex, 4> Attrs;
-		llvm::AttributeWithIndex PAWI;
-		PAWI.Index = 1U; PAWI.Attrs = llvm::Attribute::NoCapture;
-		Attrs.push_back(PAWI);
-		PAWI.Index = 4294967295U; PAWI.Attrs = llvm::Attribute::NoUnwind;
-		Attrs.push_back(PAWI);
-		func_PAL = llvm::AttrListPtr::get(Attrs.begin(), Attrs.end());
-
-	}
-	func->setAttributes(func_PAL);
+	LLVMContext & context = M.getContext();
+	auto argAttribs = CreateAttributeSet(1, context, { Attribute::NoCapture } );
+	auto funcAttribs = CreateAttributeSet(-1, context, { Attribute::NoUnwind } );
+	SetAttributes(func, {funcAttribs, argAttribs} );
 
 
 
@@ -129,6 +152,7 @@ namespace axtor {
 
 		//function declaration
 		llvm::Function* func = mod->getFunction(funcName);
+		auto & context = func->getContext();
 		if (!func) {
 			func = llvm::Function::Create(
 			/*Type=*/FuncTy_0,
@@ -136,20 +160,10 @@ namespace axtor {
 			/*Name=*/funcName, mod);
 			func->setCallingConv(llvm::CallingConv::PTX_Kernel);
 		}
-		llvm::AttrListPtr func_PAL;
-		{
-			llvm::SmallVector<llvm::AttributeWithIndex, 4> Attrs;
-			llvm::AttributeWithIndex PAWI;
-			PAWI.Index = 1U; PAWI.Attrs = llvm::Attribute::NoCapture;
-			Attrs.push_back(PAWI);
-			PAWI.Index = 2U; PAWI.Attrs =llvm::Attribute::NoCapture;
-			Attrs.push_back(PAWI);
-			PAWI.Index = 4294967295U; PAWI.Attrs = llvm::Attribute::NoUnwind;
-			Attrs.push_back(PAWI);
-			func_PAL = llvm::AttrListPtr::get(Attrs.begin(), Attrs.end());
-
-		}
-		func->setAttributes(func_PAL);
+		auto arg1Attribs = CreateAttributeSet(1, context, { Attribute::NoCapture } );
+		auto arg2Attribs = CreateAttributeSet(2, context, { Attribute::NoCapture } );
+		auto funcAttribs = CreateAttributeSet(-1, context, { Attribute::NoUnwind } );
+		SetAttributes(func, {funcAttribs, arg1Attribs, arg2Attribs} );
 
 		// function body
 		llvm::Function::arg_iterator args = func->arg_begin();

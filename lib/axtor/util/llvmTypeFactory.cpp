@@ -8,6 +8,8 @@
 #include <axtor/util/llvmTypeFactory.h>
 #include "llvm/ADT/ArrayRef.h"
 
+#include <llvm/IR/DerivedTypes.h>
+
 llvm::Type * axtor::generateType(char * data, char ** oData)
 {
 	llvm::LLVMContext & context = SharedContext::get();

@@ -8,11 +8,11 @@
 #ifndef WRAPPEDOPERATION_H_
 #define WRAPPEDOPERATION_H_
 
-#include <llvm/Value.h>
-#include <llvm/Instructions.h>
-#include <llvm/Constants.h>
-#include <llvm/User.h>
-#include <llvm/Type.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/User.h>
+#include <llvm/IR/Type.h>
 
 namespace axtor {
 

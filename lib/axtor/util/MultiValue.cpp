@@ -7,7 +7,7 @@
 
 #include <axtor/util/MultiValue.h>
 
-#include "llvm/Constants.h"
+#include "llvm/IR/Constants.h"
 
 namespace axtor {
 

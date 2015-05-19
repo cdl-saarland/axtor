@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/Support/MemoryBuffer.h>
 

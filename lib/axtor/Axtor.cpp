@@ -10,7 +10,7 @@
 #include <axtor/config.h>
 
 #include <llvm/Analysis/LoopInfo.h>
-#include <llvm/Analysis/Dominators.h>
+#include <llvm/IR/Dominators.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/PassManager.h>
 

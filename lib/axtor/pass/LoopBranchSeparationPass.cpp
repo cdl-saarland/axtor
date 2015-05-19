@@ -22,7 +22,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 
 	void LoopBranchSeparationPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
-		usage.addRequired<llvm::LoopInfo>();
+		usage.addRequired<llvm::LoopInfoWrapperPass>();
 		usage.addRequired<TargetProvider>();
 	}
 
@@ -73,7 +73,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 	{
 		bool changed = false;
 
-		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfo>(func);
+		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
 
 		llvm::Function::iterator next;
 		for(llvm::Function::iterator block = func.begin(); block != func.end(); block = next)

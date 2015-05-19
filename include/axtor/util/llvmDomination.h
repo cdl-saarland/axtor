@@ -25,7 +25,7 @@
 #ifndef LLVMDOMINATION_HPP_
 #define LLVMDOMINATION_HPP_
 
-#include <llvm/Analysis/Dominators.h>
+#include <llvm/IR/Dominators.h>
 
 #include <axtor/CommonTypes.h>
 

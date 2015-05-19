@@ -42,7 +42,7 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		value->print(*msgStream, NULL);
+		value->print(*msgStream);
 		(*msgStream) << "\n\twarning: " << msg << '\n';
 	}
 
@@ -71,7 +71,7 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		value->print(*msgStream, NULL);
+		value->print(*msgStream);
 		(*msgStream) << "\n\terror: " << msg << '\n';
 		terminate();
 	}

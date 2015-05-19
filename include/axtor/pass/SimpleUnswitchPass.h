@@ -28,19 +28,8 @@
 #include <axtor/config.h>
 
 #include <llvm/PassManager.h>
-#include <llvm/Analysis/LoopInfo.h>
-#include <llvm/Analysis/Dominators.h>
-#include <llvm/Analysis/PostDominators.h>
-#include <llvm/PassManagers.h>
-#include <llvm/Module.h>
 #include <llvm/Pass.h>
-#include <llvm/ADT/APFloat.h>
-#include <llvm/Instructions.h>
-#include <llvm/Instruction.h>
 #include <llvm/Analysis/Passes.h>
-
-#include <axtor/util/llvmShortCuts.h>
-#include <axtor/CommonTypes.h>
 
 
 namespace axtor {

@@ -28,8 +28,8 @@
 #include <stack>
 #include <algorithm>
 
-#include <llvm/Type.h>
-#include <llvm/Function.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Function.h>
 //#include <llvm/TypeSymbolTable.h>
 
 #include <axtor/util/SharedContext.h>

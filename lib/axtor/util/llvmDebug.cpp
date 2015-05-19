@@ -44,10 +44,8 @@ void axtor::dumpBlockVector(const BlockVector & blocks)
 
 void axtor::verifyModule(llvm::Module & mod)
 {
-	std::string errorMessage;
-	if (llvm::verifyModule(mod, llvm::PrintMessageAction, &errorMessage)) {
-
-            llvm::errs() << "\n\n\n##### BROKEN MODULE #####\n";
+	if (llvm::verifyModule(mod, &llvm::errs())) {
+        llvm::errs() << "\n\n\n##### BROKEN MODULE #####\n";
 	    mod.dump();
 	    llvm::errs() << "##### END OF DUMP ##### \n\n\n";
 	    abort();
@@ -60,7 +58,7 @@ void axtor::dumpUses(llvm::Value * val)
 	std::cerr << "----- begin of user list ----\n";
 	for(llvm::Value::use_iterator use = val->use_begin(); use != val->use_end(); ++use)
 	{
-		use->dump();
+		use->getUser()->print(llvm::errs());
 	}
 	std::cerr << "----- end of user list -----\n";
 }

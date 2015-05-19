@@ -9,6 +9,8 @@
 #include <axtor/util/llvmDebug.h>
 #include <axtor/backend/AddressSpaces.h>
 
+#include <llvm/IR/TypeFinder.h>
+
 namespace axtor {
 
 llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator pass",
@@ -228,12 +230,12 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 	StringSet usedNames;
 	void Preparator::cleanStructNames(llvm::Module & M, ModuleInfo & modInfo)
 	{
-		StructTypeVector structTypes;
-		M.findUsedStructTypes(structTypes);
+		llvm::TypeFinder finder;
+		finder.run(M, false);
 
-		uint idx = 0;
-		for (StructTypeVector::iterator itStruct = structTypes.begin();
-				itStruct != structTypes.end();
+		unsigned idx = 0;
+		for (StructTypeVector::iterator itStruct = finder.begin();
+				itStruct != finder.end();
 				++itStruct, ++idx)
 		{
 			llvm::StructType * structType = (*itStruct);

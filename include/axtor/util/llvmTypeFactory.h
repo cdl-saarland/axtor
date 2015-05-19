@@ -27,10 +27,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <llvm/DerivedTypes.h>
-
 #include <axtor/util/stringutil.h>
 #include <axtor/util/SharedContext.h>
+
+namespace llvm {
+	class Type;
+}
 
 namespace axtor {
 

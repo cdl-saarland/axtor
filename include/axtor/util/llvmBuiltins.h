@@ -8,7 +8,12 @@
 #ifndef LLVMBUILTINS_H_
 #define LLVMBUILTINS_H_
 
-#include <llvm/Module.h>
+#include <string>
+
+namespace llvm {
+	class Function;
+	class Module;
+}
 
 namespace axtor {
 	llvm::Function * create_memcpy(llvm::Module & M, std::string funcName, uint destSpace, uint srcSpace);
