@@ -28,13 +28,13 @@
 #include <set>
 #include <string>
 
-#include <llvm/Module.h>
-#include <llvm/Value.h>
-#include <llvm/Instruction.h>
-#include <llvm/Function.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Function.h>
 //#include <llvm/TypeSymbolTable.h>
-#include <llvm/Module.h>
-#include <llvm/Constants.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <axtor/writer/SyntaxWriter.h>

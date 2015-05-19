@@ -63,20 +63,17 @@ private:
 	//scans the module for uses of the double type
 	bool scanForDoubleType();
 
-	void init(const ValueVector & kernels);
+	void encodeKernelsAsMetadata(llvm::Module * mod, const ValueVector & kernels);
 public:
 	bool requiresDoubleType();
 
 	llvm::Module * getModule();
 
-	OCLModuleInfo(llvm::Module *mod, llvm::Function * kernel, std::ostream &out);
-	OCLModuleInfo(llvm::Module *mod, FunctionVector kernels, std::ostream &out);
-	OCLModuleInfo(llvm::Module *mod, ValueVector kernels, std::ostream &out);
+	// ctor that reads kernels from opencl MDnode
+	OCLModuleInfo(llvm::Module * mod, std::ostream & out);
 
-	/*
-	 * helper method for creating a ModuleInfo object from a module and a bind file
-	 */
-	static OCLModuleInfo createTestInfo(llvm::Module * mod, std::ostream & out);
+	// Overrides the opencl.kernel metadata with @kernels
+	OCLModuleInfo(llvm::Module *mod, FunctionVector kernels, std::ostream &out);
 
 	std::ostream & getStream();
 

@@ -285,7 +285,7 @@ std::string OCLWriter::getFunctionHeader(llvm::Function * func, IdentifierScope 
 	//attributes
 	if (modInfo.isKernelFunction(func)) {
 		builder << "__kernel ";
-	} else if (func->hasFnAttr(llvm::Attribute::InlineHint | llvm::Attribute::AlwaysInline)) {
+	} else if (func->hasFnAttribute(llvm::Attribute::InlineHint) || func->hasFnAttribute(llvm::Attribute::AlwaysInline)) {
 		builder << "inline ";
 	}
 

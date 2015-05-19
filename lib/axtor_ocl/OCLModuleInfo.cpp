@@ -7,29 +7,24 @@
 
 #include <axtor_ocl/OCLModuleInfo.h>
 
+#include <llvm/IR/Module.h>
 #include <axtor/util/llvmDebug.h>
 
-#include "llvm/Metadata.h"
-#include <llvm/Analysis/FindUsedTypes.h>
+#include "llvm/IR/Metadata.h"
+#include <llvm/IR/TypeFinder.h>
+
+using namespace llvm;
 
 namespace axtor {
 
 bool OCLModuleInfo::scanForDoubleType()
 {
-	typedef llvm::SetVector<llvm::Type*> TypeSetVector;
-	typedef TypeSetVector::const_iterator TSV_Iterator;
+	TypeFinder finder;
+	finder.run(*mod, false);
 
-	llvm::PassManager PM;
-	llvm::FindUsedTypes * findTypesPass = new llvm::FindUsedTypes();
-	PM.add(findTypesPass);
-	PM.run(*mod);
+	for (auto * type : finder) {
 
-	const TypeSetVector & typeVec = findTypesPass->getTypes();
-
-	for (TypeSetVector::const_iterator type =typeVec.begin(); type!=typeVec.end(); ++type)
-	{
-
-		if (((llvm::Type*) *type)->getTypeID() == llvm::Type::DoubleTyID)
+		if (type->getTypeID() == llvm::Type::DoubleTyID)
 			return true;
 	}
 
@@ -43,15 +38,12 @@ bool OCLModuleInfo::requiresDoubleType()
 }
 
 OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
-                             llvm::Function * kernel,
                              std::ostream & out) : ModuleInfo(*mod),
                                                    mod(mod),
                                                    out(out)
 {
-	ValueVector kernelValues(1, kernel);
-	init(kernelValues);
+	usesDoubleType = scanForDoubleType();
 }
-
 
 OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
                              FunctionVector kernels,
@@ -59,56 +51,30 @@ OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
                                                    mod(mod),
                                                    out(out)
 {
+	usesDoubleType = scanForDoubleType();
 	ValueVector kernelValues; kernelValues.reserve(kernels.size());
 
 	for (FunctionVector::iterator itFun = kernels.begin(); itFun != kernels.end(); ++itFun)
 		kernelValues.push_back(*itFun);
 
-	init(kernelValues);
+	encodeKernelsAsMetadata(mod, kernelValues);
 }
 
-OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
-                             ValueVector kernels,
-                             std::ostream & out) : ModuleInfo(*mod),
-                                                   mod(mod),
-                                                   out(out)
-{
-	init(kernels);
-}
-
-void OCLModuleInfo::init(const ValueVector & kernels)
+void OCLModuleInfo::encodeKernelsAsMetadata(Module * mod, const ValueVector & kernels)
 {
 	assert(mod && "no module specified");
 	usesDoubleType = scanForDoubleType();
 
 	llvm::LLVMContext & context = mod->getContext();
-	llvm::NamedMDNode * kernelMD = mod->getOrInsertNamedMetadata("opencl.kernels");
-
+	NamedMDNode * kernelMD = mod->getOrInsertNamedMetadata("opencl.kernels");
+	std::vector<Metadata*> mdVec;
 	for (ValueVector::const_iterator itKernel = kernels.begin(); itKernel != kernels.end(); ++itKernel) {
 		llvm::Value * kernelVal = *itKernel;
-		llvm::MDNode * kernelEntryMD = llvm::MDNode::get(context, llvm::ArrayRef<llvm::Value*>(kernelVal));
-		kernelMD->addOperand(kernelEntryMD);
+		llvm::Metadata * kernelEntryMD = llvm::ValueAsMetadata::get(kernelVal);
+		mdVec.push_back(kernelEntryMD);
 	}
-}
 
-/*
- * helper method for creating a ModuleInfo object from a module and a bind file
- */
-OCLModuleInfo OCLModuleInfo::createTestInfo(llvm::Module *mod, 
-                                            std::ostream &out)
-{
-	//llvm::Function * kernelFunc = mod->getFunction("compute");
-  //assert(kernelFunc && "could not find \" compute \" - function");
-  std::vector<llvm::Function*> kernels; 
-  llvm::NamedMDNode *openCLMetadata = mod->getNamedMetadata("opencl.kernels");
-  assert(openCLMetadata && "No kernels in the module");
-
-  for(unsigned K = 0, E = openCLMetadata->getNumOperands(); K != E; ++K) {
-    llvm::MDNode &kernelMD = *openCLMetadata->getOperand(K);
-    kernels.push_back(llvm::cast<llvm::Function>(kernelMD.getOperand(0)));
-  }
-
-	return OCLModuleInfo(mod, kernels, out);
+	kernelMD->setOperand(0, MDNode::get(context, mdVec));
 }
 
 std::ostream & OCLModuleInfo::getStream()
@@ -124,13 +90,11 @@ bool OCLModuleInfo::isKernelFunction(llvm::Function *function)
   if(!openCLMetadata)
     return false;
 
-  for(unsigned K = 0, E = openCLMetadata->getNumOperands(); K != E; ++K) {
-    llvm::MDNode * kernelMD = openCLMetadata->getOperand(K);
-    if (kernelMD != 0 && kernelMD->getNumOperands() > 0) {
-    	llvm::Value * op = kernelMD->getOperand(0);
-    	if(op == function)
-    		return true;
-    }
+  llvm::MDNode * kernelListNode = openCLMetadata->getOperand(0);
+  for(unsigned K = 0, E = kernelListNode->getNumOperands(); K != E; ++K) {
+    ValueAsMetadata * kernelMD = cast<ValueAsMetadata>(kernelListNode->getOperand(K));
+	if(kernelMD->getValue() == function)
+		return true;
   }
   return false;
 }
@@ -144,15 +108,11 @@ FunctionVector OCLModuleInfo::getKernelFunctions()
 	    return kernels;
 
 	  openCLMetadata->dump();
+	  llvm::MDNode * kernelListNode = openCLMetadata->getOperand(0);
 
-	  for(unsigned K = 0, E = openCLMetadata->getNumOperands(); K != E; ++K) {
-	    llvm::MDNode * kernelMD = openCLMetadata->getOperand(K);
-	    if (kernelMD != 0 && kernelMD->getNumOperands() > 0) {
-	    	llvm::Value * op = kernelMD->getOperand(0);
-
-	    	if(op != 0 && llvm::isa<llvm::Function>(op))
-	    		kernels.push_back(llvm::cast<llvm::Function>(kernelMD->getOperand(0)));
-	    }
+	  for(unsigned K = 0, E = kernelListNode->getNumOperands(); K != E; ++K) {
+	    llvm::ValueAsMetadata * kernelMD = cast<ValueAsMetadata>(kernelListNode->getOperand(K));
+    	kernels.push_back(llvm::cast<llvm::Function>(kernelMD->getValue()));
 	  }
 	return kernels;
 }
@@ -177,13 +137,9 @@ IdentifierScope OCLModuleInfo::createGlobalBindings()
 {
 	ConstVariableMap globals;
 
-	for(llvm::Module::const_global_iterator it = mod->global_begin(); it != mod->global_end(); ++it)
-	{
-		if (llvm::isa<llvm::GlobalVariable>(it))
-		{
-			std::string name = it->getName().str();
-			globals[it] = VariableDesc(it, name);
-		}
+	for(GlobalVariable & gv : mod->globals()) {
+		std::string name = gv.getName();
+		globals[&gv] = VariableDesc(&gv, name);
 	}
 
 #ifdef DEBUG
