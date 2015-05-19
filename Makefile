@@ -4,7 +4,7 @@ PREFIX?=$(INSTALL_DIR)
 LIB_AXTOR=$(PREFIX)/lib/libAxtor.so
 LIB_AXTOROCL=$(PREFIX)/lib/libAxtor_OpenCL.so
 
-all: $(LIB_AXTOR) $(LIB_AXTOROCL)
+all::
 
 
 ### configuration
@@ -22,21 +22,14 @@ CXX=g++
 CXXFLAGS=-fno-rtti -c -fPIC -Iinclude $(LLVM_CXXFLAGS) $(WARNLEVEL)
 LDFLAGS=-shared -fPIC -Iinclude $(LLVM_LDFLAGS)
 
-### libAxtor.so
-# source definitions
-AXTOR_SOURCES=$(wildcard lib/axtor/**/*.cpp) $(wildcard lib/axtor/*.cpp)
-AXTOR_OBJECTS=$(patsubst lib/%.cpp,build/%.o,${AXTOR_SOURCES})
+# libraries
+include lib/axtor/libAxtor.mk
+include lib/axtor_ocl/libAxtor_OCL.mk
 
-$(LIB_AXTOR): ${AXTOR_OBJECTS}
-	$(CXX) -o $@ $(LDFLAGS) $(LLVM_LIBS) $(AXTOR_OBJECTS)
 
-### libAxtorOpenCL.so
+# tools
 
-AXTOROCL_SOURCES=$(wildcard lib/axtor_ocl/**/*.cpp) $(wildcard lib/axtor_ocl/*.cpp)
-AXTOROCL_OBJECTS=$(patsubst lib/%.cpp,build/%.o,${AXTOROCL_SOURCES})
-
-$(LIB_AXTOROCL): $(AXTOROCL_OBJECTS)
-	$(CXX) -o $@  $(LDFLAGS) $(LLVM_LIBS) $(AXTOROCL_OBJECTS)
+# TODO
 
 
 ## Generic build rules
