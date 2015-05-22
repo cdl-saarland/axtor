@@ -7,7 +7,7 @@
 
 
 #include <axtor/backend/generic/GenericCWriter.h>
-#include <llvm/Instructions.h>
+#include <llvm/IR/Instructions.h>
 
 #include <axtor/util/llvmShortCuts.h>
 #include <axtor/util/WrappedOperation.h>

@@ -7,7 +7,7 @@
 
 
 #include <axtor/backend/generic/GenericCSerializer.h>
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <axtor/writer/SyntaxWriter.h>
 #include <axtor/metainfo/ModuleInfo.h>
 
@@ -15,47 +15,39 @@
 #include <axtor/util/WrappedOperation.h>
 #include <axtor/console/CompilerLog.h>
 
+#include <llvm/IR/TypeFinder.h>
+#include <llvm/IR/DerivedTypes.h>
+
 #define INDENTATION_STRING "   "
+
+using namespace llvm;
 
 namespace axtor {
 
 	void GenericCSerializer::spillStructTypeDeclarations(ModuleInfo & modInfo, GenericCWriter * stream)
-	{
+	{ // FIXME rewrite type reordering
+		TypeFinder finder;
 		const llvm::Module * mod = modInfo.getModule();
-		StructTypeVector types;
-		mod->findUsedStructTypes(types);
+		finder.run(*mod, false);
 
-		//### print type declarations ###
-		{
-			//### sort dependent types for forward declaration ###
-			{
-				TypeSet undeclaredTypes;
+		TypeSet undeclaredStructTypes;
 
-				for (StructTypeVector::iterator itType = types.begin(); itType != types.end(); ++itType) {
-					if ((*itType)->getStructNumElements() > 0) //opqaue types don't need to be declared
-					undeclaredTypes.insert(*itType);
+		for (Type * type : finder) {
+			if (StructType * structTy = dyn_cast<StructType>(type)) {
+				if (! structTy->isOpaque()) {
+					undeclaredStructTypes.insert(type);
 				}
+			}
+		}
 
-				for (StructTypeVector::iterator itType = types.begin(); itType != types.end();) {
-
-					const llvm::StructType * type = *itType;
-					const std::string name = modInfo.getTypeName(*itType);
-
-					if (
-							(type->getStructNumElements() == 0) || // don't declare opaque types
-							undeclaredTypes.find(type) == undeclaredTypes.end() || //already declared
-							containsType(type, undeclaredTypes))
-					{
-						++itType;
-					} else {
-
-						//write declaration
-						std::string structStr = getStructTypeDeclaration(name, llvm::cast<const llvm::StructType>(type));
-						stream->put( structStr );
-
-						undeclaredTypes.erase(type);
-						itType = types.begin();
-					}
+		while (!undeclaredStructTypes.empty()) {
+			for (Type * type : finder) {
+				// print type declaration, if all prerequesites are made
+				if (! containsType(type, undeclaredStructTypes)) {
+					const std::string name = modInfo.getTypeName(type);
+					std::string structStr = getStructTypeDeclaration(name, llvm::cast<const llvm::StructType>(type));
+					stream->put( structStr );
+					undeclaredStructTypes.erase(type);
 				}
 			}
 		}

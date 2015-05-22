@@ -21,8 +21,7 @@
  *      Author: Simon Moll
  */
 
-#include <llvm/PassManagers.h>
-#include <llvm/Target/TargetData.h>
+#include <llvm/IR/LegacyPassManagers.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -176,7 +175,7 @@ static void dump_GLSL()
 #ifdef ENABLE_OPENCL
 static int run_OpenCL(ArgumentReader args)
 {
-	std::ostream * outStream = NULL;
+	std::ostream * outStream = nullptr;
 
 	if (args.getNumArgs() > 0) {
 		std::string inputFile = args.get(0);
@@ -195,20 +194,22 @@ static int run_OpenCL(ArgumentReader args)
 
 		axtor::OCLBackend backend;
 
+		FunctionVector kernelVec;
+		if (auto * kernelFunc= mod->getFunction("compute")) {
+			kernelVec.push_back(kernelFunc);
+		}
+
 		if (outStream) {
-			axtor::OCLModuleInfo modInfo = axtor::OCLModuleInfo::createTestInfo(mod, *outStream);
+
+			axtor::OCLModuleInfo modInfo(mod, kernelVec, *outStream);
 			axtor::translateModule(backend, modInfo);
 			delete outStream;
 
 		} else {
-#ifdef EVAL_DECOMPILE_TIME
-			std::stringstream stream;
-			axtor::OCLModuleInfo modInfo = axtor::OCLModuleInfo::createTestInfo(mod, stream);
-#else
-			axtor::OCLModuleInfo modInfo = axtor::OCLModuleInfo::createTestInfo(mod, std::cout);
-#endif
+			axtor::OCLModuleInfo modInfo(mod, kernelVec, std::cout);
 			axtor::translateModule(backend, modInfo);
 		}
+
 		return 0;
 	}
 
@@ -242,10 +243,6 @@ static void dumpHelp()
 
 int main(int argc, char ** argv)
 {
-#ifdef EVAL_DECOMPILE_TIME
-	std::cerr << "(!!!) EVALUATION BUILD (!!!)\n";
-#endif
-
 	axtor::initialize(true);
 
 	ArgumentReader args(argc, argv);

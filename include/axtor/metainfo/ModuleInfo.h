@@ -31,10 +31,9 @@
 //#include <llvm/TypeSymbolTable.h>
 
 #include <axtor/CommonTypes.h>
+#include <llvm/IR/Type.h>
 
 #include <string>
-
-class StructType;
 
 namespace axtor {
 

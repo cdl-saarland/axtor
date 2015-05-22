@@ -60,6 +60,7 @@ namespace axtor {
 
 	typedef std::set<const llvm::StructType*> StructTypeSet;
 	typedef std::set<const llvm::Type*> TypeSet;
+	typedef std::set<const llvm::StructType*> StructTypeSet;
 	typedef std::map<const llvm::Type*, std::string> TypeNames;
 	typedef std::vector<llvm::StructType*> StructTypeVector;
 	typedef std::vector<llvm::Function*> FunctionVector;
