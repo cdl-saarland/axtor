@@ -74,7 +74,7 @@ void OCLModuleInfo::encodeKernelsAsMetadata(Module * mod, const ValueVector & ke
 		mdVec.push_back(kernelEntryMD);
 	}
 
-	kernelMD->setOperand(0, MDNode::get(context, mdVec));
+	kernelMD->addOperand(MDNode::get(context, mdVec));
 }
 
 std::ostream & OCLModuleInfo::getStream()
@@ -108,6 +108,9 @@ FunctionVector OCLModuleInfo::getKernelFunctions()
 	    return kernels;
 
 	  openCLMetadata->dump();
+	  if (openCLMetadata->getNumOperands() < 1)
+		  return kernels;
+
 	  llvm::MDNode * kernelListNode = openCLMetadata->getOperand(0);
 
 	  for(unsigned K = 0, E = kernelListNode->getNumOperands(); K != E; ++K) {

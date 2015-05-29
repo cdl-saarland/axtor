@@ -30,6 +30,10 @@ namespace axtor {
 	{
 		SMDiagnostic smDiag;
 		std::unique_ptr<Module> modPtr = parseIRFile(fileName, smDiag, context);
+		if (!modPtr) {
+			smDiag.print("axtor", llvm::errs(), true);
+
+		}
 		return modPtr.release();
 	}
 

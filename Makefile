@@ -1,11 +1,13 @@
 PREFIX?=$(INSTALL_DIR)
 
 # product definitions
-LIB_AXTOR=$(PREFIX)/lib/libAxtor.so
-LIB_AXTOROCL=$(PREFIX)/lib/libAxtor_OpenCL.so
+LIB_AXTOR=build/lib/libAxtor.so
+LIB_AXTORC=build/lib/libAxtor_C.so
+LIB_AXTOROCL=build/lib/libAxtor_OpenCL.so
 
 all::
 
+install::
 
 ### configuration
 
@@ -27,12 +29,13 @@ LDFLAGS=-fPIC -Iinclude $(LLVM_LDFLAGS) $(LLVM_LIBS)
 # Feature support
 
 # LIBS += -lAxtor_OCL -lAxtor
-CXXFLAGS += -DENABLE_OPENCL
+# CXXFLAGS += -DENABLE_OPENCL
 
 
 # libraries
 include lib/axtor/libAxtor.mk
 include lib/axtor_ocl/libAxtor_OCL.mk
+include lib/axtor_c/libAxtor_C.mk
 
 
 # tools
@@ -50,3 +53,5 @@ build/%.o: %.cpp
 .PHONY: clean
 clean:
 	rm -rf build/
+
+
