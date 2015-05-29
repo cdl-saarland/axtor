@@ -264,10 +264,15 @@ int main(int argc, char ** argv)
 		else if (backendStr == "OCL")
 			return run_OpenCL(args);
 #endif
+		else if (backendStr != "C") {
+			std::cerr << "Unknown backend " << backendStr << "!\n";
+			return -1;
+		}
 	} else {
-		std::cerr << "defaulting to C Backend\n";
-		return run_C(args);
+		std::cerr << "Defaulting to C Backend\n";
 	}
+
+	return run_C(args);
 
 	dumpHelp();
 	return -1;
