@@ -9,4 +9,3 @@ all:: $(LIB_AXTOROCL)
 
 install:: $(LIB_AXTOROCL)
 	cp -r include/axtor_ocl $(PREFIX)/include
-	cp $(LIB_AXTOROCL) $(PREFIX)/lib

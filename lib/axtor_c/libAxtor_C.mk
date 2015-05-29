@@ -9,4 +9,3 @@ all:: $(LIB_AXTORC)
 
 install:: $(LIB_AXTORC)
 	cp -r include/axtor_c $(PREFIX)/include
-	cp $(LIB_AXTORC) $(PREFIX)/lib

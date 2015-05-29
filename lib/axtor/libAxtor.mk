@@ -7,6 +7,5 @@ $(LIB_AXTOR): ${AXTOR_OBJECTS}
 
 install:: $(LIB_AXTOR)
 	cp -r include/axtor $(PREFIX)/include
-	cp $(LIB_AXTOR) $(PREFIX)/lib
 
 all:: $(LIB_AXTOR)

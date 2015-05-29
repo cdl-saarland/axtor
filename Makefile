@@ -1,9 +1,9 @@
 PREFIX?=$(INSTALL_DIR)
 
 # product definitions
-LIB_AXTOR=build/lib/libAxtor.so
-LIB_AXTORC=build/lib/libAxtor_C.so
-LIB_AXTOROCL=build/lib/libAxtor_OpenCL.so
+LIB_AXTOR=$(PREFIX)/lib/libAxtor.so
+LIB_AXTORC=$(PREFIX)/lib/libAxtor_C.so
+LIB_AXTOROCL=$(PREFIX)/lib/libAxtor_OpenCL.so
 
 all::
 
