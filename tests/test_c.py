@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from os import walk
 import shlex, subprocess  
 
@@ -6,6 +8,7 @@ testfiles = [filenames for (dirpath, dirnames, filenames) in walk("src/")][0]
 testTimeout = 1000
 
 def shellCmd(cmdText, logPrefix):
+    # print(cmdText)
     cmd = shlex.split(cmdText)
     with open(logPrefix + ".out", "w") as fOut:
         with open(logPrefix + ".err", "w") as fErr:   
@@ -44,7 +47,7 @@ for file in testfiles:
         continue
     
     print("..axtor {0}".format(file))
-    if not axtor_run(llvmFilePath, generatedFilePath, "OCL", suffix):
+    if not axtor_run(llvmFilePath, generatedFilePath, "C", suffix):
         print("failed!")
         continue
     
