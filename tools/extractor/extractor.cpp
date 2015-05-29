@@ -42,6 +42,10 @@
 #include <axtor_ocl/OCLBackend.h>
 #endif
 
+
+#include <axtor_c/CModuleInfo.h>
+#include <axtor_c/CBackend.h>
+
 #include <axtor/util/llvmTools.h>
 #include <axtor/console/CompilerLog.h>
 #include <axtor/Axtor.h>
@@ -172,13 +176,17 @@ static void dump_GLSL()
 
 
 
-#ifdef ENABLE_OPENCL
-static int run_OpenCL(ArgumentReader args)
+static int run_C(ArgumentReader args)
 {
 	std::ostream * outStream = nullptr;
 
 	if (args.getNumArgs() > 0) {
-		std::string inputFile = args.get(0);
+
+		std::string inputFile;
+		if (!args.readOption("-i", inputFile)) {
+			std::cerr << "no input file specified!\n";
+			return -1;
+		}
 		llvm::Module * mod = axtor::createModuleFromFile(inputFile);
 
 		if (!mod) {
@@ -192,21 +200,15 @@ static int run_OpenCL(ArgumentReader args)
 			outStream = new std::ofstream(outFile.c_str(), std::ios::out);
 		}
 
-		axtor::OCLBackend backend;
-
-		FunctionVector kernelVec;
-		if (auto * kernelFunc= mod->getFunction("compute")) {
-			kernelVec.push_back(kernelFunc);
-		}
+		axtor::CBackend backend;
 
 		if (outStream) {
-
-			axtor::OCLModuleInfo modInfo(mod, kernelVec, *outStream);
+			axtor::CModuleInfo modInfo(mod, *outStream);
 			axtor::translateModule(backend, modInfo);
 			delete outStream;
 
 		} else {
-			axtor::OCLModuleInfo modInfo(mod, kernelVec, std::cout);
+			axtor::CModuleInfo modInfo(mod, std::cout);
 			axtor::translateModule(backend, modInfo);
 		}
 
@@ -218,13 +220,15 @@ static int run_OpenCL(ArgumentReader args)
 	return -1;
 }
 
+#ifdef ENABLE_OPENCL
 static void dump_OpenCL()
 {
 	std::cerr << "Options for the OpenCL Backend (-m OCL)"
 			  << "\n"
-			  << "<infile> -o <outputFile>"
+			  << "-i <infile> -o <outputFile>"
 			  << "\n"
-			  << "-o <FILE>  output file"
+			  << "-i <FILE>  input file .ll/.bc"
+			  << "-o <FILE>  output file .cl"
 			  << std::endl;
 }
 #endif
@@ -260,9 +264,11 @@ int main(int argc, char ** argv)
 		else if (backendStr == "OCL")
 			return run_OpenCL(args);
 #endif
+	} else {
+		std::cerr << "defaulting to C Backend\n";
+		return run_C(args);
 	}
 
-	std::cerr << "no backend specified\n";
 	dumpHelp();
 	return -1;
 }
