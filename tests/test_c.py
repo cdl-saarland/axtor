@@ -21,7 +21,7 @@ def compile_to_LLVM(srcFile, destFile, suffix):
     return shellCmd("clang -S -emit-llvm " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
     
 def compile_to_obj(srcFile, destFile, suffix):
-    return shellCmd("gcc -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
+    return shellCmd("g++ -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
 
 def axtor_run(srcFile, destFile, backend, suffix):
     return shellCmd("axtor -i " + srcFile + " -o " + destFile + " -m " + backend, "logs/axtor_" + suffix) == 0

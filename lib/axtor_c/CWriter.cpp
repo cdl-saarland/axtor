@@ -1572,9 +1572,6 @@ void CWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierSco
 }
 
 
-/*
-* dumps a generic vertex shader and all type&argument defs for the frag shader
-*/
 CWriter::CWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 		modInfo(reinterpret_cast<CModuleInfo&>(_modInfo)),
 		platform(_platform)
@@ -1583,6 +1580,8 @@ CWriter::CWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 
 		spillStructTypeDeclarations(modInfo, this);
 		putLine( "" );
+
+                putLine("extern \"C\" {");
 
 		//## spill globals
 		for (llvm::Module::global_iterator global = mod->global_begin(); global != mod->global_end(); ++global)
@@ -1631,7 +1630,7 @@ CWriter::CWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 				putLine(getFunctionHeader(func) + ";");
 		}
 
-		putLine( "" );
+		putLine( "}" ); /* extern C */
 
 #ifdef DEBUG
 		std::cerr << "completed CWriter ctor\n";
