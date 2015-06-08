@@ -212,7 +212,7 @@ std::string CWriter::buildDeclaration(std::string root, const llvm::Type * type)
 			} else
 #endif
 			{
-				return buildDeclaration("* " + root, elementType);
+				return buildDeclaration("(*" + root + ")", elementType);
 			}
 		}
 
@@ -265,7 +265,7 @@ inline bool checkImageAccess(llvm::Value * imageVal, bool & oReadOnly)
 	return hasRead != hasWrite; //do not allow specialization if no uses occur
 }
 
-	/*
+/*
 * writes a generic function header and declares the arguments as mapped by @locals
 */
 std::string CWriter::getFunctionHeader(llvm::Function * func, IdentifierScope * locals)
@@ -319,24 +319,11 @@ std::string CWriter::getFunctionHeader(llvm::Function * func, IdentifierScope * 
 		}
 
 		//std::string modifierStr = inferModifiers(arg);
-		std::string typeStr = getType(argType);
 
-		// TODO this is a hack
-		if (typeStr == "image2d_t") {
-			bool readOnly;
-			if (checkImageAccess(arg,readOnly)) {
-				if (readOnly)
-					typeStr = "__read_only image2d_t";
-				else
-					typeStr = "__write_only image2d_t";
-			}
-		}
-
-		std::string argName = typeStr;
-
+		std::string argName;
 		if (locals) {
 			const VariableDesc * desc = locals->lookUp(arg);
-			argName += ' ' + desc->name;
+			argName = desc->name;
 		}
 
 		 if (arg == argList.begin()) {
@@ -345,7 +332,7 @@ std::string CWriter::getFunctionHeader(llvm::Function * func, IdentifierScope * 
 			 builder << ", ";
 		 }
 
-		 builder << argName;
+		 builder << buildDeclaration(argName, argType);
 	}
 
 	builder << ')';
@@ -393,7 +380,7 @@ std::string CWriter::getOperation(const WrappedOperation & op, StringVector oper
      } else {
     	 const llvm::Type * operandType = op.getOperand(0)->getType();
     	 std::string opTypeStr = getType(operandType);
-    	 std::string convUnsignedStr = "as_u" + opTypeStr;
+    	 std::string convUnsignedStr = "(unsigned " + opTypeStr + ")";
 
     	 return  "(" +
     			 	convUnsignedStr + "(" + operands[0] + ") " + token + " " +
@@ -414,12 +401,12 @@ std::string CWriter::getOperation(const WrappedOperation & op, StringVector oper
 
      } else {
     	 std::string typeStr = getType(destType);
-
+/*
     	 if (srcType->isPointerTy() && destType->isPointerTy()) {
     		 return "(" + typeStr + ")(" + operands[0] + ")";
-    	 } else {
-    		 return "as_" + typeStr + "(" + operands[0] + ")";
-    	 }
+    	 } else { */
+    		 return "(" + typeStr + ")(" + operands[0] + ")";
+//    	 }
      }
 
   //# reinterpreting cast
@@ -428,8 +415,8 @@ std::string CWriter::getOperation(const WrappedOperation & op, StringVector oper
 	  const llvm::Type * targetType = op.getType();
 
 	  if (op.isa(llvm::Instruction::UIToFP)) { //integers are declared signed
-		  std::string intCast = "u" + getType(sourceType);
-		  return "convert_" + getType(targetType) + "(as_" + intCast + "(" + operands[0] + "))";
+		  std::string intCast = "(unsigned " + getType(sourceType) + ")";
+		  return "(" + getType(targetType) + ")" + intCast + "(" + operands[0] + ")";
 
 	  // truncation: mask out bits and cast to smaller type
 	  } else if (op.isa(llvm::Instruction::Trunc)) {
@@ -438,10 +425,10 @@ std::string CWriter::getOperation(const WrappedOperation & op, StringVector oper
 
 		  uint64_t maskInt = generateTruncMask(destWidth);
 
-		  std::string fittedStr = operands[0] + " & 0x" + convertToHex(maskInt, std::max<int>(1, destWidth / 4));
+		  std::string fittedStr = "(" + operands[0] + ") & 0x" + convertToHex(maskInt, std::max<int>(1, destWidth / 4));
 
 		  //convert_bool is not supported
-		  return (destWidth == 1 ? "(bool)" : "convert_" + getType(targetType)) + "(" + fittedStr + ")";
+		  return (destWidth == 1 ? "(bool)" : "(" + getType(targetType) + ")") + "(" + fittedStr + ")";
 
 	  } else if (! targetType->isIntegerTy(1)){ //use ints for bools
 		  bool isUnsigned = op.isa(llvm::Instruction::ZExt);
@@ -453,7 +440,7 @@ std::string CWriter::getOperation(const WrappedOperation & op, StringVector oper
 			  std::string targetCastStr;
 			  std::string suffixStr;
 			  if (isUnsigned) {
-				  targetCastStr =  "as_" + targetTypeStr + "((u" + targetTypeStr + ")("; suffixStr += "))";
+				  targetCastStr =  "(" + targetTypeStr + ")((unsigned " + targetTypeStr + ")("; suffixStr += "))";
 			  } else {
 				  targetCastStr =  "(" + targetTypeStr + ")(" ; suffixStr += ")";
 			  }
@@ -462,13 +449,13 @@ std::string CWriter::getOperation(const WrappedOperation & op, StringVector oper
 
 		  // we need to operate on unsigned data types to get a zero extension
 		  if (isUnsigned) {
-			  std::string srcCastStr = "(as_u" + srcTypeStr;
-			  std::string targetCastStr =  "as_" + targetTypeStr + "(convert_u" + targetTypeStr;
-			  return targetCastStr + srcCastStr + "(" + operands[0] + ")))";
+			  std::string srcCastStr = "(unsigned " + srcTypeStr;
+			  std::string targetCastStr =  "(" + targetTypeStr + ")";
+			  return targetCastStr + srcCastStr + "(" + operands[0] + "))";
 
 		 // bool conversions and sign/float extension will do without casts (hopefully)
 		  } else {
-		  	  return "convert_" + getType(targetType) + "(" + operands[0] + ")";
+		  	  return "(" + getType(targetType) + ")(" + operands[0] + ")";
 		  }
 	  }
 
@@ -568,6 +555,7 @@ std::string CWriter::dereferenceContainer(std::string root, const llvm::Type * t
 		if (true) {
 #endif
 			// address = address->getNext();
+			oElementType = type->getPointerElementType();
 			return buildArraySubscript(root, address, locals);
 		}
 	// cast to pointer and dereference from there (slightly hacky)
@@ -1576,12 +1564,15 @@ CWriter::CWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 		modInfo(reinterpret_cast<CModuleInfo&>(_modInfo)),
 		platform(_platform)
 	{
+		putLine( "#include <cmath>" );
+
+        putLine("extern \"C\" {");
+
 		llvm::Module * mod = modInfo.getModule();
 
 		spillStructTypeDeclarations(modInfo, this);
 		putLine( "" );
 
-                putLine("extern \"C\" {");
 
 		//## spill globals
 		for (llvm::Module::global_iterator global = mod->global_begin(); global != mod->global_end(); ++global)

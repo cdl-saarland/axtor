@@ -90,9 +90,9 @@ void CBackend::init()
 #define CONST_COMPLEX COMPLEX
 
 
-#if 0
+#if 1
 #define __AXTOR_INTERNAL
-#include <axtor_ocl/C_Intrinsics.def>
+#include <axtor_c/C_Intrinsics.def>
 #undef __AXTOR_INTERNAL
 #endif
 
@@ -111,12 +111,6 @@ void CBackend::init()
 
 bool CBackend::requiresDesignator(llvm::Instruction * inst)
 {
-	if (llvm::isa<llvm::CallInst>(inst)) {
-		llvm::CallInst * call = llvm::cast<llvm::CallInst>(inst);
-		if (call->getCalledFunction()->getName() == "fake_global_sampler")	{
-			return false;
-		}
-	}
 	return true;
 }
 
