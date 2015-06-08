@@ -8,14 +8,14 @@ testfiles = [filenames for (dirpath, dirnames, filenames) in walk("src/")][0]
 testTimeout = 1000
 
 def shellCmd(cmdText, logPrefix):
-    # print(cmdText)
     cmd = shlex.split(cmdText)
     with open(logPrefix + ".out", "w") as fOut:
         with open(logPrefix + ".err", "w") as fErr:   
             proc = subprocess.Popen(cmd, stdout=fOut, stderr=fErr)
-            return proc.wait(timeout = testTimeout)
-                            
-    return proc.returncode
+            retCode=proc.wait(timeout = testTimeout)
+            if retCode != 0:
+                print(cmdText)
+            return retCode
 
 def compile_to_LLVM(srcFile, destFile, suffix):
     return shellCmd("clang -S -emit-llvm " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
@@ -25,9 +25,6 @@ def compile_to_obj(srcFile, destFile, suffix):
 
 def axtor_run(srcFile, destFile, backend, suffix):
     return shellCmd("axtor -i " + srcFile + " -o " + destFile + " -m " + backend, "logs/axtor_" + suffix) == 0
-    
-    
-    
 
 for file in testfiles:
     print("Test {0}".format(file))
@@ -35,16 +32,24 @@ for file in testfiles:
     # TODO
     baseName = file
     suffix = "test"
-    
-    testFilePath = "src/" + file
-    llvmFilePath = "build/" + baseName + ".ll"            
-    generatedFilePath = "build/" + baseName + "_axtor.c"
+
+    generatedFilePath = "build/" + baseName + "_axtor.cpp"
     compiledFilePath = "build/" + file + "_axtor.o"
+
+    print (file[:-2])
+
+    if file[-2:]==".c":
+        testFilePath = "src/" + file
+        llvmFilePath = "build/" + baseName + ".ll"            
     
-    print("..clang {0}".format(file))
-    if not compile_to_LLVM(testFilePath, llvmFilePath, suffix):
-        print("failed!")
-        continue
+        print("..clang {0}".format(file))
+        if not compile_to_LLVM(testFilePath, llvmFilePath, suffix):
+            print("failed!")
+            continue
+
+    elif file [-3:]==".ll" or file[-3:] == ".bc":
+        llvmFilePath = "src/" + file
+        testFilePath = llvmFilePath
     
     print("..axtor {0}".format(file))
     if not axtor_run(llvmFilePath, generatedFilePath, "C", suffix):
