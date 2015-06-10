@@ -35,7 +35,11 @@ namespace ast {
 	{
 		return new LoopNode(body);
 	}
-
+#if 0
+	ControlNode * ASTFactory::createForLoop(llvm::PHINode * ivPHI, ControlNode * body) {
+		return new ForLoopNode(ivPHI, body);
+	}
+#endif
 	ControlNode * ASTFactory::createBreak(llvm::BasicBlock * block)
 	{
 		return new BreakNode(block);

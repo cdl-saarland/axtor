@@ -43,10 +43,13 @@ class CompilerLog
 {
 private:
 	static llvm::raw_ostream * msgStream;
+	static uint numWarnings;
 
 	static void assertStream();
 
 	static void terminate() ANNOT_NORETURN;
+
+	static void warning();
 
 public:
 

@@ -31,11 +31,17 @@
 #include "ASTNode.h"
 #include <axtor/CommonTypes.h>
 
+namespace llvm {
+	class SCEVAddRecExpr;
+}
 /*
  * the extractor exclusively uses nodes described in this file to rebuild the AST. More sophisticated control flow elements are created by enhancing a pre-existing AST
  */
 namespace axtor
 {
+
+	class ForLoopInfo;
+
 	namespace ast
 	{
 
@@ -97,6 +103,27 @@ namespace axtor
 
 			LoopNode(ControlNode * _body);
 			virtual std::string getTypeStr() const;
+		};
+
+
+		/*
+		 * for-loop with an induction variable
+		 */
+		class ForLoopNode : public ControlNode
+		{
+			ForLoopInfo * forInfo;
+
+		public:
+			enum ChildIndex
+			{
+				BODY = 0
+			};
+
+			ForLoopNode(ForLoopInfo * _forInfo, ControlNode * _body);
+			~ForLoopNode();
+
+			virtual std::string getTypeStr() const;
+			ForLoopInfo * getForLoopInfo() const { return forInfo; };
 		};
 
 		/*

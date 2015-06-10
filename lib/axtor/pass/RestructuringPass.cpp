@@ -10,8 +10,12 @@
 
 #include <axtor/solvers/RestructuringProcedure.h>
 #include <axtor/console/CompilerLog.h>
-
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <axtor/util/llvmDebug.h>
+
+#include <llvm/Analysis/ScalarEvolution.h>
+
+using namespace llvm;
 
 namespace axtor {
 
@@ -67,7 +71,8 @@ namespace axtor {
 		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
 		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
 		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTree>(func);
-		analysis = AnalysisStruct(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree);
+		llvm::ScalarEvolution & SE = getAnalysis<llvm::ScalarEvolution>(func);
+		analysis = AnalysisStruct(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree, SE);
 	}
 
 
@@ -233,10 +238,8 @@ namespace axtor {
 
 	ast::FunctionNode * RestructuringPass::runOnFunction(llvm::Function & func)
 	{
-		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
-		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
-		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTree>(func);
-		AnalysisStruct analysis(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree);
+		AnalysisStruct A;
+		rebuildAnalysisStruct(func, A);
 
 		BlockSet visited;
 
@@ -250,11 +253,11 @@ namespace axtor {
 		func.dump();
 		llvm::errs() << "Restruct: end dump\n";
 		llvm::errs() << "### LoopInfo ###\n";
-		funcLoopInfo.print(llvm::errs());
+		A.getLoopInfo().print(llvm::errs());
 		llvm::errs() << "### DomTree ###\n";
-		funcDomTree.print(llvm::errs());
+		A.getDomTree().print(llvm::errs());
 		llvm::errs() << "### PostDomTree ###\n";
-		funcPostDomTree.dump();
+		A.getPostDomTree().dump();
 		// func.viewCFGOnly();
 #endif
 
@@ -263,7 +266,7 @@ namespace axtor {
 		ExtractorContext context;
 
 		ExtractorRegion bodyRegion(bb, context);
-		ast::ControlNode * body = processRegion(false, bodyRegion, analysis, visited);
+		ast::ControlNode * body = processRegion(false, bodyRegion, A, visited);
 		return ast::ASTFactory::createFunction(&func, body);
 	}
 
@@ -272,6 +275,7 @@ namespace axtor {
 		usage.addRequired<llvm::PostDominatorTree>();
 		usage.addRequired<llvm::DominatorTreeWrapperPass>();
 		usage.addRequired<llvm::LoopInfoWrapperPass>();
+		usage.addRequired<ScalarEvolution>();
 	}
 
 	bool RestructuringPass::runOnModule(llvm::Module & M)

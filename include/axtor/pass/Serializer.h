@@ -34,6 +34,9 @@
 
 #include <axtor/pass/RestructuringPass.h>
 
+namespace llvm {
+	class ScalarEvolution;
+}
 /*
  * This pass gets an AST from the ASTExtractor pass and serializes it using the backend specified by the TargetProvider pass
  */
@@ -42,6 +45,7 @@ namespace axtor
 	class Serializer : public llvm::ModulePass
 	{
 	private:
+		llvm::ScalarEvolution * SE;
 		void runOnFunction(AxtorBackend & backend, SyntaxWriter * modWriter, IdentifierScope & globals, ast::FunctionNode * funcNode);
 
 	public:

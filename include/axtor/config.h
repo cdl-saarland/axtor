@@ -24,11 +24,6 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
-// trigger the axtor debug mode with the LLVM debug build flag
-#ifdef _DEBUG
-#define DEBUG
-#endif
-
 /*
  * Enables CNS for node splitting
  */
@@ -74,10 +69,8 @@
  */
 #define AXTOR_EXPENSIVE_CHECKS
 
-#define DEBUG
-
 //Debug flags
-#ifdef DEBUG
+#ifdef _DEBUG
 /*
  * makes each axtor pass place a notification when its invoked
  */
@@ -108,13 +101,13 @@
 	#define EXPENSIVE_TEST if (false)
 #endif
 
-#ifdef DEBUG
+#ifdef _DEBUG
 	#define DEBUG_STREAM llvm::errs()
-	#define DEBUG_IF(X) if (X)
+	#define IF_DEBUG if (true)
 
 #else
 	#define DEBUG_STREAM std::stringstream __dummy; __dummy
-	#define DEBUG_IF(X) if (false)
+	#define IF_DEBUG if (false)
 #endif
 
 #endif /* CONFIG_HPP_ */

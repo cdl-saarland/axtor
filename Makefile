@@ -18,11 +18,13 @@ LLVM_LIBS:=`llvm-config --libs`
 
 # compiler customization
 WARNLEVEL=-Wall -Werror
-OPTLEVEL=-O0 -g
+OPTLEVEL=-O1 -g
+
+BUILDFLAGS=-D_DEBUG
 
 # compiler
 CXX=g++ -std=c++11
-CXXFLAGS=-fno-rtti -c -fPIC -Iinclude $(LLVM_CXXFLAGS) $(WARNLEVEL) $(OPTLEVEL)
+CXXFLAGS=-fno-rtti -c -fPIC -Iinclude $(LLVM_CXXFLAGS) $(WARNLEVEL) $(OPTLEVEL) $(BUILDFLAGS)
 LDFLAGS=-fPIC -Iinclude $(LLVM_LDFLAGS) $(LLVM_LIBS)
 
 
@@ -34,7 +36,7 @@ LDFLAGS=-fPIC -Iinclude $(LLVM_LDFLAGS) $(LLVM_LIBS)
 
 # libraries
 include lib/axtor/libAxtor.mk
-include lib/axtor_ocl/libAxtor_OCL.mk
+# include lib/axtor_ocl/libAxtor_OCL.mk
 include lib/axtor_c/libAxtor_C.mk
 
 

@@ -6,11 +6,17 @@
 #include <axtor/util/stringutil.h>
 #include <axtor/util/llvmShortCuts.h>
 
+#include <axtor/util/llvmLoop.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
+
+using namespace llvm;
+
 namespace axtor {
 	LoopParser LoopParser::instance;
 
-	LoopParser::LoopBuilderSession::LoopBuilderSession(RegionVector regions, llvm::BasicBlock * entry, llvm::BasicBlock * requiredExit) :
-		BuilderSession(regions, entry, requiredExit)
+	LoopParser::LoopBuilderSession::LoopBuilderSession(RegionVector regions, llvm::BasicBlock * entry, llvm::BasicBlock * requiredExit, ForLoopInfo * _forInfo)
+	: BuilderSession(regions, entry, requiredExit)
+	, forInfo(_forInfo)
 	{}
 
 	std::string LoopParser::LoopBuilderSession::getName() const
@@ -27,12 +33,16 @@ namespace axtor {
 	{
 		assert(children.size() == 1 && "expected a single loop body");
 
-		return new ast::LoopNode(children[getEntryBlock()]);
+		ast::ControlNode * bodyNode = children[getEntryBlock()];
+
+		if (forInfo) {
+			return new ast::ForLoopNode(forInfo, bodyNode);
+		} else {
+			return new ast::LoopNode(bodyNode);
+		}
 	}
 
 	void LoopParser::LoopBuilderSession::dump() {}
-
-
 
 	PrimitiveParser::BuilderSession * LoopParser::tryParse(llvm::BasicBlock * entry, ExtractorContext context, AnalysisStruct & analysis)
 	{
@@ -54,6 +64,17 @@ namespace axtor {
 			Log::fail(entry, "(loop exits == " + str<int>(exits.size()) + " > 1) Use the loop exit enumeration pass to normalize inner loops");
 		}
 
+		ForLoopInfo * forInfo = new ForLoopInfo;
+
+		BasicBlock * bodyBlock = nullptr;
+		if (inferForLoop(loop, *forInfo)) {
+			bodyBlock = forInfo->bodyBlock; // default to a while loop
+		} else {
+			delete forInfo;
+			forInfo = nullptr;
+			bodyBlock = entry; // default to a while loop
+		}
+
 		// move all destinations of a outer-most loop into its body
 		llvm::BasicBlock * breakTarget = exits.size() == 1 ? *exits.begin() : 0;
 
@@ -64,9 +85,9 @@ namespace axtor {
 		bodyContext.breakBlock = breakTarget;
 
 		RegionVector regions;
-		regions.push_back(ExtractorRegion(entry, bodyContext));
+		regions.push_back(ExtractorRegion(bodyBlock, bodyContext));
 
-		return new LoopBuilderSession(regions, entry, breakTarget);
+		return new LoopBuilderSession(regions, bodyBlock, breakTarget, forInfo);
 	}
 
 	LoopParser * LoopParser::getInstance()

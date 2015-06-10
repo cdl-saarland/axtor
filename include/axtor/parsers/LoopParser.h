@@ -27,7 +27,12 @@
 #include <axtor/parsers/PrimitiveParser.h>
 #include <axtor/console/CompilerLog.h>
 
+namespace llvm {
+	class SCEVAddRecExpr;
+}
+
 namespace axtor {
+	class ForLoopInfo;
 
 	/*
 	 * Infinite Loop Parser - will abort when applied to multi-exit loops (does not return a solver procedure)
@@ -41,8 +46,9 @@ namespace axtor {
 	public:
 		class LoopBuilderSession : public PrimitiveParser::BuilderSession
 		{
-public:
-			LoopBuilderSession(RegionVector regions, llvm::BasicBlock * entry, llvm::BasicBlock * requiredExit);
+			ForLoopInfo * forInfo;
+		public:
+			LoopBuilderSession(RegionVector regions, llvm::BasicBlock * entry, llvm::BasicBlock * requiredExit, ForLoopInfo * forInfo);
 
 			virtual RestructuringProcedure * getSolver() const;
 

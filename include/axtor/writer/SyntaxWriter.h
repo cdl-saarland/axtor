@@ -27,7 +27,11 @@
 #include <axtor/CommonTypes.h>
 #include <axtor/metainfo/ModuleInfo.h>
 
+#include <llvm/Analysis/ScalarEvolution.h>
+
 namespace axtor {
+
+class ForLoopInfo; // util/llvmLoop.h
 
 /*
  * SyntaxWriter - interface (used by the AST-extraction core during translation)
@@ -56,10 +60,15 @@ struct SyntaxWriter
 	virtual void writeDo()=0;
 
 
-	//### Loops ###
+	//### InfiniteLoop ###
 	virtual void writeInfiniteLoopBegin()=0;
 	virtual void writeInfiniteLoopEnd()=0;
 
+	// For loop
+	virtual void writeForLoopBegin(ForLoopInfo & forLoopInfo, IdentifierScope & locals) = 0;
+#if 0
+	virtual void writeForLoopEnd() = 0;
+#endif
 	virtual void writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierScope & locals, bool negate)=0;
 
 	virtual void writePrecheckedWhile(llvm::BranchInst * branchInst, IdentifierScope & locals, bool negate, InstructionSet * oExpressionInsts)=0;

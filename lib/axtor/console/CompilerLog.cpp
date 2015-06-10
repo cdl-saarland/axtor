@@ -5,6 +5,7 @@
  *      Author: gnarf
  */
 #include <axtor/console/CompilerLog.h>
+#include <axtor/config.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -14,6 +15,7 @@
 
 namespace axtor {
 	llvm::raw_ostream * CompilerLog::msgStream = NULL;
+	unsigned CompilerLog::numWarnings = 0;
 
 	void CompilerLog::assertStream()
 	{
@@ -29,9 +31,17 @@ namespace axtor {
 		abort();
 	}
 
+	void CompilerLog::warning() {
+		++numWarnings;
+#ifdef AXTOR_WARN_ERROR
+		terminate();
+#endif
+	}
+
 	void CompilerLog::init(llvm::raw_ostream & _msgStream)
 	{
 		msgStream = &_msgStream;
+		numWarnings = 0;
 	}
 
 	/*
@@ -42,8 +52,9 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		value->print(*msgStream);
+		if (value) value->print(*msgStream);
 		(*msgStream) << "\n\twarning: " << msg << '\n';
+		warning();
 	}
 
 	void CompilerLog::warn(const llvm::Type * type, const std::string & msg)
@@ -51,8 +62,9 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		type->print(*msgStream);
+		if (type) type->print(*msgStream);
 		(*msgStream) << "\n\twarning: " << msg << '\n';
+		warning();
 	}
 
 	void CompilerLog::warn(const std::string & msg)
@@ -61,6 +73,7 @@ namespace axtor {
 
 		(*msgStream) << "\n----\n";
 		(*msgStream) << "\n\twarning: " << msg << '\n';
+		warning();
 	}
 
 	/*
@@ -71,7 +84,7 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		value->print(*msgStream);
+		if (value) value->print(*msgStream);
 		(*msgStream) << "\n\terror: " << msg << '\n';
 		terminate();
 	}
@@ -81,7 +94,7 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		func->dump();
+		if (func) func->dump();
 		(*msgStream) << "\n\terror: " << msg << '\n';
 		terminate();
 	}
@@ -92,7 +105,7 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		type->print(*msgStream);
+		if (type) type->print(*msgStream);
 		(*msgStream) << "\n\terror: " << msg << '\n';
 		terminate();
 	}

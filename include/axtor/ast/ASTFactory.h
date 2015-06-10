@@ -37,6 +37,7 @@ struct ASTFactory
 	static ControlNode * createBlock(llvm::BasicBlock * block);
 	static ControlNode * createList(const NodeVector & nodes);
 
+	// static ControlNode * createForLoop(llvm::PHINode * ivPHI, ControlNode * body);
 	static ControlNode * createInfiniteLoop(ControlNode * child);
 	static ControlNode * createBreak(llvm::BasicBlock * block);
 	static ControlNode * createBreak();

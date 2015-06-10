@@ -225,9 +225,15 @@ public:
    virtual void writeReturnInst(llvm::ReturnInst * retInst, IdentifierScope & locals);
 
 
+   // For loop
+   virtual void writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals);
+
    virtual void writeFunctionPrologue(llvm::Function * func, IdentifierScope & locals);
 
    CWriter(ModuleInfo & _modInfo, PlatformInfo & _platform);
+
+   // serializer representation of a SCEV
+   std::string getSCEV(const llvm::SCEV * scev, IdentifierScope & locals);
 
 protected:
    /*

@@ -48,6 +48,7 @@ namespace axtor
 			{
 				IF,          //if or if..else
 				LOOP,        //infinite loop
+				FOR,		 //for loop with induction variable
 				BREAK,       //break
 				CONTINUE,    //continue
 				RETURN,      //return

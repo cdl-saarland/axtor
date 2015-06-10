@@ -12,6 +12,10 @@
 #include <axtor/util/llvmDebug.h>
 #include <axtor/util/ResourceGuard.h>
 #include <axtor/util/llvmTools.h>
+#include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
+
+using namespace llvm;
 
 namespace axtor
 {
@@ -176,6 +180,18 @@ namespace axtor
 					return 0;
 				}
 
+				case ast::ControlNode::FOR: {
+					auto * forNode = static_cast<ast::ForLoopNode*>(node);
+					ForLoopInfo * forInfo = forNode->getForLoopInfo();
+					writer->writeForLoopBegin(*forInfo, locals);
+
+						SyntaxWriter * bodyWriter = backend.createBlockWriter(writer);
+						writeNode(backend, bodyWriter, previousBlock, node->getEntryBlock(), node->getNode(ast::LoopNode::BODY), locals, node->getEntryBlock(), exitBlock);
+						delete bodyWriter;
+					// writer->writeForLoopEnd();
+					return 0;
+				}
+
 				case ast::ControlNode::LOOP: {
 					writer->writeInfiniteLoopBegin();
 						SyntaxWriter * bodyWriter = backend.createBlockWriter(writer);
@@ -285,9 +301,11 @@ namespace axtor
 	void Serializer::runOnFunction(AxtorBackend & backend, SyntaxWriter * modWriter, IdentifierScope & globals, ast::FunctionNode * funcNode)
 	{
 		ValueSet parameters;
-
 		IdentifierScope locals(&globals);
 		llvm::Function * func = funcNode->getFunction();
+
+		SE = &getAnalysis<ScalarEvolution>(*func);
+
 
 		//### bind function parameters ###
 		createArgumentDeclarations(func, locals.identifiers, parameters);
@@ -386,6 +404,7 @@ namespace axtor
 
 	void Serializer::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
+		usage.addRequired<ScalarEvolution>();
 		//usage.addRequired<OpaqueTypeRenamer>();
 		usage.addRequired<RestructuringPass>();
 		usage.addRequired<TargetProvider>();

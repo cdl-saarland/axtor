@@ -29,6 +29,11 @@
 #include <llvm/Analysis/LoopInfo.h>
 #include <axtor/CommonTypes.h>
 
+#include <llvm/IR/Instructions.h>
+namespace llvm {
+	class Loop;
+}
+
 namespace axtor {
 
 	/*
@@ -37,6 +42,23 @@ namespace axtor {
 	 * returns NULL if no such loop exists
 	 */
 	llvm::Loop * getNestedLoop(llvm::LoopInfo & loopInfo, llvm::Loop * parent, llvm::BasicBlock * block);
+
+
+	struct ForLoopInfo {
+		llvm::PHINode * phi;
+		llvm::BasicBlock * bodyBlock;
+		llvm::Value * beginValue;
+		llvm::CmpInst * exitCond;
+		llvm::Value * ivIncrement;
+		bool exitOnFalse;
+		bool ivParallelLoop;
+	};
+
+	/*
+	 * Checks whether this is a for loop with an induction variable
+	 * If so, it extracts various details about the loop structure/ exit condition, etc
+	 */
+	bool inferForLoop(llvm::Loop * l, ForLoopInfo & info);
 
 }
 

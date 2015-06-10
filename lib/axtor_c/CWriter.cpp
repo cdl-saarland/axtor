@@ -11,6 +11,13 @@
 #include <axtor/util/WrappedLiteral.h>
 #include <vector>
 
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
+
+// def ForLoopInfo
+#include <axtor/util/llvmLoop.h>
+
+using namespace llvm;
+
 namespace axtor {
 
 
@@ -364,6 +371,102 @@ std::string CWriter::getInstruction(llvm::Instruction * inst, std::vector<std::s
 {
 	return getOperation(WrappedInstruction(inst), operands);
 }
+
+// serializer representation of a SCEV
+std::string CWriter::getSCEV(const llvm::SCEV * scev, IdentifierScope & locals) {
+	std::string opToken;
+	bool infix = true;
+	bool signedOp = true;
+
+	switch (static_cast<SCEVTypes>(scev->getSCEVType())) {
+	case scConstant: {
+		auto * scevConst = dyn_cast<SCEVConstant>(scev);
+		return getConstant(scevConst->getValue(), locals);
+	}
+
+	case scAddExpr: opToken = "+"; break;
+	case scMulExpr: opToken = "*"; break;
+	case scUDivExpr: opToken = "/"; signedOp = false; break;
+
+	case scUMaxExpr: opToken = "max"; infix = false; signedOp = false; break;
+	case scSMaxExpr: opToken = "max"; infix = false; break;
+	case scAddRecExpr: {
+		assert(false && "implement");
+	}
+
+	case scTruncate:
+	case scZeroExtend:
+	case scSignExtend:
+		assert(false && "implement");
+
+// use variable references
+	case scUnknown: {
+		auto * scevUnknown = dyn_cast<SCEVUnknown>(scev);
+		scevUnknown->getValue();
+	}
+	case scCouldNotCompute:
+	default:
+		abort();
+	}
+
+	std::vector<std::string> operands;
+	auto *narySCEV = dyn_cast<SCEVNAryExpr>(scev);
+	for (uint i = 0; i < narySCEV->getNumOperands(); ++i) {
+		const SCEV * opSCEV = narySCEV->getOperand(i);
+		std::string scevText = getSCEV( opSCEV, locals);
+		if (! signedOp) {
+			auto * scevType = opSCEV->getType();
+			std::string castStr = "(unsigned " + getType(scevType) + ")";
+			operands.push_back(castStr + "(" + scevText + ")");
+		} else {
+			operands.push_back(scevText);
+		}
+	}
+
+	// infix operators
+	assert(! infix || operands.size() == 2);
+	if (infix) {
+		return "(" + operands[0] + opToken + operands[1] + ")";
+	}
+
+	// function call operators
+	std::stringstream ss;
+	ss << opToken << "(";
+	for (uint i = 0; i < operands.size(); ++i) {
+		if (i > 0) ss << ", ";
+		ss << operands[i];
+	}
+	ss << ")";
+
+	return ss.str();
+}
+
+void
+CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
+
+	std::string ivStr = locals.lookUp(forInfo.phi)->name;
+	std::string beginStr = getValueToken(forInfo.beginValue, locals);
+	std::string exitConditionStr = getInstructionAsExpression(forInfo.exitCond, locals);
+
+	Instruction * incInst = cast<Instruction>(forInfo.ivIncrement);
+	std::string ivIncrementStr = getInstructionAsExpression(incInst, locals);
+
+	if (! forInfo.exitOnFalse) {
+		exitConditionStr = "!(" + exitConditionStr + ")";
+	}
+
+	if (forInfo.ivParallelLoop) {
+		putLine("#pragma vector always");
+	}
+
+	putLine(
+			"for (" +
+				ivStr + "=" + beginStr + ";" +
+				exitConditionStr + ";" +
+				ivStr + "=" + ivIncrementStr +
+			")");
+}
+
 
 std::string CWriter::getOperation(const WrappedOperation & op, StringVector operands)
 {

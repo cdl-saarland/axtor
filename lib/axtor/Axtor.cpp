@@ -99,6 +99,11 @@ namespace axtor {
 
 		// ## REQUIRED TRANSFORMATIONS ##
 
+		//recover registers
+		llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
+		pm.add(memRegPass);
+
+
 		//LLVM transformations
 		//pm.add(loopUnswitch);
 		pm.add(loopSimplify);
@@ -122,8 +127,8 @@ namespace axtor {
 
 
 		//Required by restruct pass
-		llvm::Pass * regMemPass = llvm::createDemoteRegisterToMemoryPass();
-		pm.add(regMemPass);
+		// llvm::Pass * regMemPass = llvm::createDemoteRegisterToMemoryPass();
+		// pm.add(regMemPass);
 
 		//axtor transformations building on LLVM analysis
 		pm.add(loopExitEnum);
@@ -134,10 +139,6 @@ namespace axtor {
 		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
 		pm.add(restruct);
 		
-		//recover registers
-		llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
-		pm.add(memRegPass);
-
 		//opaque type renamer
 		//pm.add(renamer);
 

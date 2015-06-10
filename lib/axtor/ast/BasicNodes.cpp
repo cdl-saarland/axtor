@@ -6,6 +6,13 @@
  */
 
 #include <axtor/ast/BasicNodes.h>
+#include <llvm/IR/Instructions.h>
+// #include <llvm/Analysis/ScalarEvolutionExpressions.h>
+
+
+#include <axtor/util/llvmLoop.h>
+
+using namespace llvm;
 
 /*
  * the extractor exclusively uses nodes described in this file to rebuild the AST. More sophisticated control flow elements are created by enhancing a pre-existing AST
@@ -90,6 +97,26 @@ namespace axtor
 		{
 			return "LOOP";
 		}
+
+
+		ForLoopNode::ForLoopNode(ForLoopInfo * _forInfo, ControlNode * _body)
+		: ControlNode(FOR, NULL, 1)
+		, forInfo(_forInfo)
+		{
+			assert(forInfo);
+			setNode(BODY, _body);
+		}
+
+		ForLoopNode::~ForLoopNode() {
+			delete forInfo;
+			forInfo = nullptr;
+		}
+
+		std::string ForLoopNode::getTypeStr() const
+		{
+			return "FOR";
+		}
+
 
 		BreakNode::BreakNode(llvm::BasicBlock * _block) :
 			ControlNode(BREAK, _block, 0)

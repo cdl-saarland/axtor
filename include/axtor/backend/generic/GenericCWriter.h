@@ -15,6 +15,8 @@
 #include <axtor/util/WrappedOperation.h>
 #include <sstream>
 
+#include <llvm/Analysis/ScalarEvolution.h>
+
 namespace axtor {
 
 /*
@@ -46,7 +48,6 @@ public:
 	std::string getPointerTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
 	std::string getReferenceTo(llvm::Value * val, IdentifierScope & locals, const std::string * rootName = 0);
 	std::string getConstant(llvm::Constant * constant, IdentifierScope & locals);
-
 
 	// needs to be implemented
  	virtual std::string unwindPointer(llvm::Value * val, IdentifierScope & locals, bool & oIsDereffed, const std::string * rootName) = 0;
