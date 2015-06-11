@@ -441,11 +441,32 @@ std::string CWriter::getSCEV(const llvm::SCEV * scev, IdentifierScope & locals) 
 	return ss.str();
 }
 
+
+void
+CWriter::writePHIAssign(llvm::PHINode & phi, llvm::BasicBlock * incomingBlock, IdentifierScope & locals) {
+	Value * inValue = phi.getIncomingValueForBlock(incomingBlock);
+
+	std::string valueStr;
+	if (Constant * literal = dyn_cast<Constant>(inValue)) {
+		valueStr = getLiteral(literal);
+	} else if (const VariableDesc * desc = locals.lookUp(inValue)){
+		valueStr = desc->name;
+	}
+
+	assert(! valueStr.empty());
+
+	std::string phiName = locals.lookUp(&phi)->name;
+
+	putLine( phiName + "_in"  + " = " + valueStr + ";");
+}
+
+// TODO move increment/initialization here and suppress all consumed instructions
 void
 CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
 
 	std::string ivStr = locals.lookUp(forInfo.phi)->name;
-	std::string beginStr = getValueToken(forInfo.beginValue, locals);
+	// std::string beginStr = getValueToken(forInfo.beginValue, locals);
+	std::string beginStr = locals.lookUp(forInfo.phi)->name + "_in";
 	std::string exitConditionStr = getInstructionAsExpression(forInfo.exitCond, locals);
 
 	Instruction * incInst = cast<Instruction>(forInfo.ivIncrement);
@@ -456,14 +477,14 @@ CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
 	}
 
 	if (forInfo.ivParallelLoop) {
-		putLine("#pragma vector always");
+		putLine("#pragma simd");
 	}
 
 	putLine(
 			"for (" +
 				ivStr + "=" + beginStr + ";" +
 				exitConditionStr + ";" +
-				ivStr + "=" + ivIncrementStr +
+				/* ivStr + "=" + ivIncrementStr + */
 			")");
 }
 
@@ -1493,7 +1514,7 @@ if (llvm::isa<llvm::Instruction>(root) &&
 	//### assigning instruction
 	} else if (desc) {
 		std::string instStr = getInstructionAsExpression(inst, locals);
-		if (instStr.size() > 0)
+		if (! instStr.empty() )
 			writeAssignRaw(desc->name, instStr);
 
 	//### void/discarded result instruction

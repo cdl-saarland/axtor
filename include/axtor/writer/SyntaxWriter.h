@@ -79,6 +79,8 @@ struct SyntaxWriter
 	}
 
 	//### Instructions ###
+	virtual void writePHIAssign(llvm::PHINode & phi, llvm::BasicBlock * incomingBlock, IdentifierScope & locals) = 0;
+
 	virtual void writeAssignRaw(const std::string & destName, llvm::Value * val, IdentifierScope & locals)=0;
 	virtual void writeAssign(const VariableDesc & dest, const VariableDesc & src)=0;
 	virtual void writeAssignRaw(const std::string & dest, const std::string & src)=0;

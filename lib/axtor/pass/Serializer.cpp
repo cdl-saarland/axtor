@@ -9,6 +9,7 @@
 
 #include <axtor/pass/TargetProvider.h>
 
+#include <axtor/config.h>
 #include <axtor/util/llvmDebug.h>
 #include <axtor/util/ResourceGuard.h>
 #include <axtor/util/llvmTools.h>
@@ -60,19 +61,12 @@ namespace axtor
 
 	void Serializer::processBranch(SyntaxWriter * writer, llvm::BasicBlock * source, llvm::BasicBlock * target, IdentifierScope & locals)
 	{
-#ifdef DEBUG
-		std::cerr << "### processing branches from " << source->getName().str() << " to " << target->getName().str() << "\n";
-#endif
+		IF_DEBUG std::cerr << "### processing branches from " << source->getName().str() << " to " << target->getName().str() << "\n";
+
 		for(llvm::BasicBlock::iterator inst = target->begin(); llvm::isa<llvm::PHINode>(inst); ++inst)
 		{
-			llvm::PHINode * phi = llvm::cast<llvm::PHINode>(inst);
-			llvm::Value * val = phi->getIncomingValueForBlock(source);
-
-			const VariableDesc * destVal = locals.lookUp(phi);
-
-			assert(destVal && "does not have a designator");
-			std::string destVar = destVal->name + "_in";
-			writer->writeAssignRaw(destVar, val, locals);
+			llvm::PHINode * phi = cast<llvm::PHINode>(inst);
+			writer->writePHIAssign(*phi, source, locals);
 		}
 	}
 
@@ -108,10 +102,7 @@ namespace axtor
 		typedef ast::ControlNode::NodeVector NodeVector;
 
 		llvm::BasicBlock * block = node->getBlock();
-#ifdef DEBUG
-		llvm::errs() << "processing " << (block ? block->getName() : "none") << " exit : " << (exitBlock ? exitBlock->getName() : "null") << "\n";
-#endif
-
+		IF_DEBUG llvm::errs() << "processing " << (block ? block->getName() : "none") << " exit : " << (exitBlock ? exitBlock->getName() : "null") << "\n";
 
 
 		{
@@ -183,8 +174,8 @@ namespace axtor
 				case ast::ControlNode::FOR: {
 					auto * forNode = static_cast<ast::ForLoopNode*>(node);
 					ForLoopInfo * forInfo = forNode->getForLoopInfo();
-					writer->writeForLoopBegin(*forInfo, locals);
 
+					writer->writeForLoopBegin(*forInfo, locals);
 						SyntaxWriter * bodyWriter = backend.createBlockWriter(writer);
 						writeNode(backend, bodyWriter, previousBlock, node->getEntryBlock(), node->getNode(ast::LoopNode::BODY), locals, node->getEntryBlock(), exitBlock);
 						delete bodyWriter;

@@ -100,7 +100,7 @@ namespace axtor
 
 
 		ForLoopNode::ForLoopNode(ForLoopInfo * _forInfo, ControlNode * _body)
-		: ControlNode(FOR, NULL, 1)
+		: ControlNode(FOR, _forInfo->headerBlock, 1)
 		, forInfo(_forInfo)
 		{
 			assert(forInfo);

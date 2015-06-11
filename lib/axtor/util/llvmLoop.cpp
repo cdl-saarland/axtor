@@ -42,14 +42,76 @@ namespace axtor {
 		}
 	}
 
+	bool
+	Isomorph(Value * A, Value * B, ValueToValueMapTy & mapping) {
+		ValueSet seen;
+		return Isomorph(A, B, mapping, seen);
+	}
+
+	// checks whether two expression are structurally isomorphic modulo @mapping
+	// mapping implicitely contains all pairs (v,v)
+	bool
+	Isomorph(Value * A, Value * B, ValueToValueMapTy & mapping, ValueSet& seen) {
+		assert(A && B);
+
+		if (! seen.insert(A).second)
+			return true;
+
+		llvm::errs() << "[ISO] " << *A << " ~~" << *B << "\n";
+
+		if (A == B) return true;
+		if (mapping[A] == B) return true;
+
+		Instruction * aInst = dyn_cast<Instruction>(A);
+		Instruction * bInst = dyn_cast<Instruction>(B);
+		if (aInst && bInst) {
+			if (aInst->getOpcode() != bInst->getOpcode()) {
+				return false;
+			}
+		} else if (aInst || bInst) return false;
+
+		User * aUser = cast<User>(A);
+		User * bUser = cast<User>(B);
+
+		assert(aUser->getNumOperands() == bUser->getNumOperands());
+		for (unsigned i = 0; i < aUser->getNumOperands(); ++i) {
+			if (! Isomorph(aUser->getOperand(i), bUser->getOperand(i), mapping, seen))
+				return false;
+		}
+
+		// at least, we could not refute equivalence..
+		return true;
+	}
+
+	static PHINode *
+	FindInductionVariable(Loop * l) {
+		PHINode * phi = l->getCanonicalInductionVariable();
+		if (phi) return phi;
+
+		BasicBlock * header = l->getHeader();
+		PHINode * lastPHI = nullptr;
+		for (Instruction & inst : *header) {
+			PHINode * phi = dyn_cast<PHINode>(&inst);
+			if (!phi) break;
+			if (phi && lastPHI) return nullptr; // multiple PHIs in loop
+			lastPHI = phi;
+		}
+
+		return lastPHI;
+	}
+
 
 	bool inferForLoop(Loop * l, ForLoopInfo & I) {
 		// there is an unique induction variable
-		I.phi = l->getCanonicalInductionVariable();
+		I.phi = FindInductionVariable(l);
 		if (!I.phi) {
+			IF_DEBUG l->getHeader()->dump();
 			IF_DEBUG Log::warn("Could not find canonical induction variable");
 			return false;
 		}
+
+		I.ivParallelLoop =
+					(I.phi->getMetadata("pollocl.vectorize") != nullptr);
 
 		// there is an unique pre-header
 		BasicBlock * preHeader = l->getLoopPreheader();
@@ -64,7 +126,8 @@ namespace axtor {
 
 		I.beginValue = I.phi->getIncomingValueForBlock(preHeader);
 		I.ivIncrement = I.phi->getIncomingValueForBlock(latch);
-		bool headerControlsLoop = l->getExitingBlock() == l->getHeader();
+		I.headerBlock = l->getHeader();
+		bool headerControlsLoop = l->getExitingBlock() == I.headerBlock;
 		if (!headerControlsLoop) {
 			IF_DEBUG Log::warn("Exit branch is not in the loop header");
 			return false;
@@ -116,8 +179,7 @@ namespace axtor {
 		}
 
 		// Check if this loop is annotated as induction-variable-parallel
-		I.ivParallelLoop =
-				(I.phi->getMetadata("pollocl.vectorize") != nullptr);
+		IF_DEBUG I.phi->dump();
 
 		return true;
 	}

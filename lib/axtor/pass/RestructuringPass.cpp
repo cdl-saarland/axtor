@@ -15,6 +15,8 @@
 
 #include <llvm/Analysis/ScalarEvolution.h>
 
+#include <axtor/config.h>
+
 using namespace llvm;
 
 namespace axtor {
@@ -31,10 +33,10 @@ namespace axtor {
 		ast::NodeVector nodes;
 		const ExtractorContext & context = region.context;
 
-	#ifdef DEBUG
-		llvm::errs() << "processRegion : " << region.getHeader()->getName().str() << " until " << (context.exitBlock ? context.exitBlock->getName().str()  : "NULL") << "\n";
-		llvm::errs() << "{\n";
-	#endif
+		IF_DEBUG {
+			llvm::errs() << "processRegion : " << region.getHeader()->getName().str() << " until " << (context.exitBlock ? context.exitBlock->getName().str()  : "NULL") << "\n";
+			llvm::errs() << "{\n";
+		}
 		//llvm::BasicBlock * exitBlock = region.context.exitBlock;
 
 
@@ -55,9 +57,7 @@ namespace axtor {
 				break;
 		}
 
-	#ifdef DEBUG
-		llvm::errs() << "}\n";
-	#endif
+		IF_DEBUG llvm::errs() << "}\n";
 
 		if (nodes.size() == 1) {
 			return childNode;
@@ -81,9 +81,7 @@ namespace axtor {
 
 		assert(bb);
 		assert(!llvm::isa<llvm::SwitchInst>(bb->getTerminator()) && "does not support switches!");
-#ifdef DEBUG
-		llvm::errs() << "\tprocessBlock : " << bb->getName() << "\n";
-#endif
+		IF_DEBUG llvm::errs() << "\tprocessBlock : " << bb->getName() << "\n";
 
 		/*
 		 * check special branch cases (zero payload nodes)
@@ -91,15 +89,11 @@ namespace axtor {
 
 		if (!enteredLoop) {
 			if (bb == context.continueBlock) {
-	#ifdef DEBUG
-				llvm::errs() << "\t\t(continue)" << "\n";
-	#endif
+				IF_DEBUG llvm::errs() << "\t\t(continue)" << "\n";
 				oNode = new ast::ContinueNode(NULL); //preserve AST semantics
 				return NULL;
 			} else if (bb == context.breakBlock) {
-	#ifdef DEBUG
-				llvm::errs() << "\t\t(break)" << "\n";
-	#endif
+				IF_DEBUG llvm::errs() << "\t\t(break)" << "\n";
 				oNode = new ast::BreakNode(NULL); //preserve AST-semantics
 				return NULL;
 			}
@@ -112,16 +106,12 @@ namespace axtor {
 		llvm::TerminatorInst * termInst = bb->getTerminator();
 		if (termInst->getNumSuccessors() == 0) {
 			if (llvm::isa<llvm::ReturnInst>(termInst)) {
-#ifdef DEBUG
-				llvm::errs() << "\t\t(return)" << "\n";
-#endif
+				IF_DEBUG llvm::errs() << "\t\t(return)" << "\n";
 				oNode = new ast::ReturnNode(bb);
 				return NULL;
 
 			} else if (llvm::isa<llvm::UnreachableInst>(termInst)) {
-#ifdef DEBUG
-				llvm::errs() << "\t\t(unreachable)" << "\n";
-#endif
+				IF_DEBUG llvm::errs() << "\t\t(unreachable)" << "\n";
 				oNode = new ast::UnreachableNode(bb);
 				return NULL;
 			}
@@ -135,17 +125,15 @@ namespace axtor {
 		PrimitiveParser::BuilderSession * loopBuilder = parsers.loopParser->tryParse(bb, context, analysis);
 		if (loopBuilder)
 		{
-#ifdef DEBUG
-			llvm::errs() << "\t\t(loop)" << "\n";
-#endif
+			IF_DEBUG llvm::errs() << "\t\t(loop)" << "\n";
 			ast::NodeMap children;
 			const ExtractorRegion & region = loopBuilder->getRegion(0);
 			assert(region.verify(analysis.getDomTree()) && "loop body uses non-anticipated exits");
 
-#ifdef DEBUG
-			llvm::errs() << "\tloop body";
-			region.dump("\t\t");
-#endif
+			IF_DEBUG {
+				llvm::errs() << "\tloop body";
+				region.dump("\t\t");
+			}
 
 			children[region.getHeader()] = processRegion(true, region, analysis, visited);
 			oNode = loopBuilder->build(children, NULL);
@@ -165,9 +153,7 @@ namespace axtor {
 		{
 			llvm::BasicBlock * next = termInst->getSuccessor(0);
 
-#ifdef DEBUG
-			llvm::errs() << "\t\t(sequence)" << "\n";
-#endif
+			IF_DEBUG llvm::errs() << "\t\t(sequence)" << "\n";
 			oNode = new ast::BlockNode(bb);
 			return next;
 
@@ -180,9 +166,7 @@ namespace axtor {
 		PrimitiveParser::BuilderSession * ifBuilder = parsers.ifParser->tryParse(bb, context, analysis);
 		if (ifBuilder)
 		{
-	#ifdef DEBUG
-		llvm::errs() << "\t\tis acyclic primitive (builder = " << ifBuilder->getName() << ")\n";
-	#endif
+			IF_DEBUG llvm::errs() << "\t\tis acyclic primitive (builder = " << ifBuilder->getName() << ")\n";
 			ast::NodeMap children;
 			RestructuringProcedure * solver = ifBuilder->getSolver();
 			assert(solver && "solvers mandatory for acyclic primitives");
@@ -219,10 +203,10 @@ namespace axtor {
 				children[region.getHeader()] = childNode;
 			}
 
-#ifdef DEBUG
-			llvm::errs() << "checking on the session . . \n";
-			ifBuilder->dump();
-#endif
+			IF_DEBUG {
+				llvm::errs() << "checking on the session . . \n";
+				ifBuilder->dump();
+			}
 
 			// build node
 			oNode = ifBuilder->build(children, exitBlock);
@@ -248,18 +232,18 @@ namespace axtor {
 		func.viewCFGOnly();
 #endif
 
-#ifdef DEBUG
-		llvm::errs() << "Restruct: begin dump \n";
-		func.dump();
-		llvm::errs() << "Restruct: end dump\n";
-		llvm::errs() << "### LoopInfo ###\n";
-		A.getLoopInfo().print(llvm::errs());
-		llvm::errs() << "### DomTree ###\n";
-		A.getDomTree().print(llvm::errs());
-		llvm::errs() << "### PostDomTree ###\n";
-		A.getPostDomTree().dump();
-		// func.viewCFGOnly();
-#endif
+		IF_DEBUG {
+				llvm::errs() << "Restruct: begin dump \n";
+				func.dump();
+				llvm::errs() << "Restruct: end dump\n";
+				llvm::errs() << "### LoopInfo ###\n";
+				A.getLoopInfo().print(llvm::errs());
+				llvm::errs() << "### DomTree ###\n";
+				A.getDomTree().print(llvm::errs());
+				llvm::errs() << "### PostDomTree ###\n";
+				A.getPostDomTree().dump();
+				// func.viewCFGOnly();
+		}
 
 
 		llvm::BasicBlock * bb = &( func.getEntryBlock() );
@@ -287,7 +271,12 @@ namespace axtor {
 		for (llvm::Module::iterator func = M.begin(); func != M.end(); ++func)
 		{
 			if (!func->isDeclaration()) {
-				astMap[(llvm::Function*) func] = runOnFunction(*func);
+				ast::FunctionNode * funcNode = runOnFunction(*func);
+				IF_DEBUG {
+					errs() << "Restructured CFG of function " << func->getName() << "\n";
+					funcNode->dump();
+				}
+				astMap[(llvm::Function*) func] = funcNode;
 			}
 		}
 

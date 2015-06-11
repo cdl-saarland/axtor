@@ -262,7 +262,7 @@ void GenericCWriter::writeDo()
 	 {
 	 	bool isDereffed;
 	 	std::string core = unwindPointer(val, locals, isDereffed, rootName);
-	 	std::cerr << "[DEREF] getRet core " << core << " isDereffed " << isDereffed << "\n";
+	 	IF_DEBUG std::cerr << "[DEREF] getRefTo core=" << core << " isDereffed=" << isDereffed << "\n";
 	 	if (isDereffed) {
 	 		return core;
 	 	} else {

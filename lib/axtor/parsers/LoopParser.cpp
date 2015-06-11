@@ -33,7 +33,8 @@ namespace axtor {
 	{
 		assert(children.size() == 1 && "expected a single loop body");
 
-		ast::ControlNode * bodyNode = children[getEntryBlock()];
+		ast::ControlNode * bodyNode = children.begin()->second;
+		assert(bodyNode);
 
 		if (forInfo) {
 			return new ast::ForLoopNode(forInfo, bodyNode);
@@ -70,13 +71,14 @@ namespace axtor {
 		if (inferForLoop(loop, *forInfo)) {
 			bodyBlock = forInfo->bodyBlock; // default to a while loop
 		} else {
+			assert(!forInfo->ivParallelLoop);
 			delete forInfo;
 			forInfo = nullptr;
 			bodyBlock = entry; // default to a while loop
 		}
 
 		// move all destinations of a outer-most loop into its body
-		llvm::BasicBlock * breakTarget = exits.size() == 1 ? *exits.begin() : 0;
+		llvm::BasicBlock * breakTarget = exits.size() == 1 ? *exits.begin() : nullptr;
 
 		ExtractorContext bodyContext(context);
 		bodyContext.parentLoop = loop;
@@ -87,7 +89,7 @@ namespace axtor {
 		RegionVector regions;
 		regions.push_back(ExtractorRegion(bodyBlock, bodyContext));
 
-		return new LoopBuilderSession(regions, bodyBlock, breakTarget, forInfo);
+		return new LoopBuilderSession(regions, entry, breakTarget, forInfo);
 	}
 
 	LoopParser * LoopParser::getInstance()

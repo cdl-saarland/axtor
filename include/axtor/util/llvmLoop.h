@@ -30,9 +30,16 @@
 #include <axtor/CommonTypes.h>
 
 #include <llvm/IR/Instructions.h>
+#include <set>
+
+
 namespace llvm {
 	class Loop;
+	class Value;
 }
+
+
+typedef std::set<llvm::Value*> ValueSet;
 
 namespace axtor {
 
@@ -46,12 +53,24 @@ namespace axtor {
 
 	struct ForLoopInfo {
 		llvm::PHINode * phi;
+		llvm::BasicBlock * headerBlock;
 		llvm::BasicBlock * bodyBlock;
 		llvm::Value * beginValue;
 		llvm::CmpInst * exitCond;
 		llvm::Value * ivIncrement;
 		bool exitOnFalse;
 		bool ivParallelLoop;
+
+		ForLoopInfo()
+		: phi(nullptr)
+		, headerBlock(nullptr)
+		, bodyBlock(nullptr)
+		, beginValue(nullptr)
+		, exitCond(nullptr)
+		, ivIncrement(nullptr)
+		, exitOnFalse(false)
+		, ivParallelLoop(false)
+		{}
 	};
 
 	/*
@@ -59,6 +78,11 @@ namespace axtor {
 	 * If so, it extracts various details about the loop structure/ exit condition, etc
 	 */
 	bool inferForLoop(llvm::Loop * l, ForLoopInfo & info);
+
+
+	// expression isomorphism
+	bool Isomorph(llvm::Value * A, llvm::Value * B, llvm::ValueToValueMapTy & mapping);
+	bool Isomorph(llvm::Value * A, llvm::Value * B, llvm::ValueToValueMapTy & mapping, ValueSet&);
 
 }
 

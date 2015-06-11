@@ -33,21 +33,33 @@
 #include <axtor/util/llvmInit.h>
 #include <axtor/pass/CGIPass.h>
 
+#include <axtor/pass/ReForPass.h>
+
 
 namespace axtor {
+	static bool axtorInitialized = false;
+
 	void initialize(bool alsoLLVM)
 	{
+		if (axtorInitialized) return;
+
 		CompilerLog::init(llvm::errs());
 		if (alsoLLVM) {
 			initLLVM();
 		}
+
+		axtorInitialized = true;
 	}
 
 	void translateModule(AxtorBackend & backend, ModuleInfo & modInfo)
 	{
+		initialize(false);
+
 #ifdef DEBUG
 		modInfo.verifyModule();
 #endif
+
+		modInfo.dumpModule();
 
 		llvm::PassManager pm;
 
@@ -71,6 +83,7 @@ namespace axtor {
 
 	void addBackendPasses(AxtorBackend & backend, ModuleInfo & modInfo, llvm::PassManager & pm)
 	{
+		initialize(false);
 
 		llvm::Pass * loopSimplify = llvm::createLoopSimplifyPass();
 
@@ -107,7 +120,7 @@ namespace axtor {
 		//LLVM transformations
 		//pm.add(loopUnswitch);
 		pm.add(loopSimplify);
-		//pm.add(indVarPass); (DON'T)
+		// pm.add(llvm::createIndVarSimplifyPass()); // (DON'T)
 
 		pm.add(returnSplitter);
 
@@ -135,6 +148,8 @@ namespace axtor {
 
 		//get rid of switches early on
     	pm.add(simpleUnswitch);
+
+    	pm.add(new ReForPass);
 
 		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
 		pm.add(restruct);
