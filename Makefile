@@ -18,7 +18,7 @@ LLVM_LIBS:=`llvm-config --libs`
 
 # compiler customization
 WARNLEVEL=-Wall -Werror
-OPTLEVEL=-O1 -g
+OPTLEVEL=-O0 -g
 
 BUILDFLAGS=-D_DEBUG
 
