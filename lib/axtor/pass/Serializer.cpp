@@ -13,6 +13,8 @@
 #include <axtor/util/llvmDebug.h>
 #include <axtor/util/ResourceGuard.h>
 #include <axtor/util/llvmTools.h>
+#include <axtor/util/llvmLoop.h>
+
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 
@@ -59,13 +61,16 @@ namespace axtor
 		};
 	}
 
-	void Serializer::processBranch(SyntaxWriter * writer, llvm::BasicBlock * source, llvm::BasicBlock * target, IdentifierScope & locals)
+	void Serializer::processBranch(SyntaxWriter * writer, llvm::BasicBlock * source, llvm::BasicBlock * target, IdentifierScope & locals, const LoopContext & LC)
 	{
 		IF_DEBUG std::cerr << "### processing branches from " << source->getName().str() << " to " << target->getName().str() << "\n";
 
 		for(llvm::BasicBlock::iterator inst = target->begin(); llvm::isa<llvm::PHINode>(inst); ++inst)
 		{
 			llvm::PHINode * phi = cast<llvm::PHINode>(inst);
+			if (phi == LC.phi)
+				continue;
+
 			writer->writePHIAssign(*phi, source, locals);
 		}
 	}
@@ -97,9 +102,12 @@ namespace axtor
 		}
 	}
 
-	llvm::BasicBlock * Serializer::writeNode(AxtorBackend & backend, SyntaxWriter * writer, llvm::BasicBlock * previousBlock, llvm::BasicBlock * exitBlock, ast::ControlNode * node, IdentifierScope & locals, llvm::BasicBlock * loopHeader, llvm::BasicBlock * loopExit)
+	llvm::BasicBlock * Serializer::writeNode(AxtorBackend & backend, SyntaxWriter * writer, llvm::BasicBlock * previousBlock, llvm::BasicBlock * exitBlock, ast::ControlNode * node, IdentifierScope & locals, const LoopContext & LC)
 	{
 		typedef ast::ControlNode::NodeVector NodeVector;
+
+		BasicBlock * loopHeader = LC.header;
+		BasicBlock * loopExit = LC.loopExit;
 
 		llvm::BasicBlock * block = node->getBlock();
 		IF_DEBUG llvm::errs() << "processing " << (block ? block->getName() : "none") << " exit : " << (exitBlock ? exitBlock->getName() : "null") << "\n";
@@ -140,8 +148,8 @@ namespace axtor
 					writer->writeIf(condition, negateCondition, locals);
 
 					SyntaxWriter * consWriter = backend.createBlockWriter(writer);
-						processBranch(consWriter, block, consBlock, locals);
-						writeNode(backend, consWriter, block, exitBlock, consNode, locals, loopHeader, loopExit);
+						processBranch(consWriter, block, consBlock, locals, LC);
+						writeNode(backend, consWriter, block, exitBlock, consNode, locals, LC);
 					delete consWriter;
 
 					//## alternative ##
@@ -149,12 +157,12 @@ namespace axtor
 						writer->writeElse();
 						SyntaxWriter * altWriter = backend.createBlockWriter(writer);
 
-						processBranch(altWriter, block, altBlock, locals);
+						processBranch(altWriter, block, altBlock, locals, LC);
 
-						llvm::BasicBlock * unprocessed = writeNode(backend, altWriter, block, exitBlock, altNode, locals, loopHeader, loopExit);
+						llvm::BasicBlock * unprocessed = writeNode(backend, altWriter, block, exitBlock, altNode, locals, LC);
 						if (unprocessed)
 						{
-							processBranch(altWriter, unprocessed, exitBlock, locals);
+							processBranch(altWriter, unprocessed, exitBlock, locals, LC);
 						}
 
 						delete altWriter;
@@ -163,7 +171,7 @@ namespace axtor
 						writer->writeElse();
 						SyntaxWriter * altWriter = backend.createBlockWriter(writer);
 
-						processBranch(altWriter, block, exitBlock, locals);
+						processBranch(altWriter, block, exitBlock, locals, LC);
 
 						delete altWriter;
 					}
@@ -177,7 +185,12 @@ namespace axtor
 
 					writer->writeForLoopBegin(*forInfo, locals);
 						SyntaxWriter * bodyWriter = backend.createBlockWriter(writer);
-						writeNode(backend, bodyWriter, previousBlock, node->getEntryBlock(), node->getNode(ast::LoopNode::BODY), locals, node->getEntryBlock(), exitBlock);
+						LoopContext nestedLC(LC);
+						nestedLC.header = node->getEntryBlock();
+						nestedLC.loopExit = exitBlock;
+						nestedLC.phi = forInfo->phi;
+
+						writeNode(backend, bodyWriter, previousBlock, node->getEntryBlock(), node->getNode(ast::LoopNode::BODY), locals, nestedLC);
 						delete bodyWriter;
 					// writer->writeForLoopEnd();
 					return 0;
@@ -186,7 +199,13 @@ namespace axtor
 				case ast::ControlNode::LOOP: {
 					writer->writeInfiniteLoopBegin();
 						SyntaxWriter * bodyWriter = backend.createBlockWriter(writer);
-						writeNode(backend, bodyWriter, previousBlock, node->getEntryBlock(), node->getNode(ast::LoopNode::BODY), locals, node->getEntryBlock(), exitBlock);
+
+						LoopContext nestedLC(LC);
+						nestedLC.header = node->getEntryBlock();
+						nestedLC.loopExit = exitBlock;
+						nestedLC.phi = nullptr;
+
+						writeNode(backend, bodyWriter, previousBlock, node->getEntryBlock(), node->getNode(ast::LoopNode::BODY), locals, nestedLC);
 						delete bodyWriter;
 					writer->writeInfiniteLoopEnd();
 					return 0;
@@ -195,9 +214,9 @@ namespace axtor
 				case ast::ControlNode::BREAK: {
 					if (block) {
 						writeBlockInstructions(writer, block, locals);
-						processBranch(writer, block, loopExit, locals);
+						processBranch(writer, block, loopExit, locals, LC);
 					} else {
-						processBranch(writer, previousBlock, loopExit, locals);
+						processBranch(writer, previousBlock, loopExit, locals, LC);
 					}
 					writer->writeLoopBreak();
 
@@ -209,9 +228,9 @@ namespace axtor
 
 					if (block) {
 						writeBlockInstructions(writer, block, locals);
-						processBranch(writer, block, loopHeader, locals);
+						processBranch(writer, block, loopHeader, locals, LC);
 					} else {
-						processBranch(writer, previousBlock, loopHeader, locals);
+						processBranch(writer, previousBlock, loopHeader, locals, LC);
 					}
 					writer->writeLoopContinue();
 
@@ -257,7 +276,7 @@ namespace axtor
 							nextExitBlock =  (*(itNode + 1))->getEntryBlock();
 						}
 
-						childPrevBlock = writeNode(backend, writer, childPrevBlock, nextExitBlock, child, locals, loopHeader, loopExit);
+						childPrevBlock = writeNode(backend, writer, childPrevBlock, nextExitBlock, child, locals, LC);
 					}
 
 					return childPrevBlock;
@@ -265,7 +284,7 @@ namespace axtor
 
 				case ast::ControlNode::BLOCK: {
 					writeBlockInstructions(writer, block, locals);
-					processBranch(writer, block, exitBlock, locals);
+					processBranch(writer, block, exitBlock, locals, LC);
 
 					return block;
 				}
@@ -341,7 +360,8 @@ namespace axtor
 #endif
 
 				ast::ControlNode * body = funcNode->getEntry();
-				writeNode(backend, bodyWriter,0, 0, body, locals, 0, 0);
+				LoopContext LC;
+				writeNode(backend, bodyWriter,0, 0, body, locals, LC);
 			}
 		}
 	}

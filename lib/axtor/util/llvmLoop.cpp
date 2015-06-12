@@ -178,6 +178,11 @@ namespace axtor {
 			I.bodyBlock = exitBranch->getSuccessor(1);
 		}
 
+		if (I.bodyBlock == l->getHeader()) {
+			IF_DEBUG Log::warn("Single block loops are never for loops");
+			return false;
+		}
+
 		// Check if this loop is annotated as induction-variable-parallel
 		IF_DEBUG I.phi->dump();
 

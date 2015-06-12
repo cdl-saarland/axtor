@@ -466,7 +466,7 @@ CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
 
 	std::string ivStr = locals.lookUp(forInfo.phi)->name;
 	// std::string beginStr = getValueToken(forInfo.beginValue, locals);
-	std::string beginStr = locals.lookUp(forInfo.phi)->name + "_in";
+	std::string beginStr = getValueToken(forInfo.beginValue, locals); //locals.lookUp(forInfo.phi)->name + "_in";
 	std::string exitConditionStr = getInstructionAsExpression(forInfo.exitCond, locals);
 
 	Instruction * incInst = cast<Instruction>(forInfo.ivIncrement);
@@ -475,16 +475,17 @@ CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
 	if (! forInfo.exitOnFalse) {
 		exitConditionStr = "!(" + exitConditionStr + ")";
 	}
-
+#if 1
 	if (forInfo.ivParallelLoop) {
 		putLine("#pragma simd");
 	}
+#endif
 
 	putLine(
 			"for (" +
 				ivStr + "=" + beginStr + ";" +
 				exitConditionStr + ";" +
-				/* ivStr + "=" + ivIncrementStr + */
+				ivStr + "=" + ivIncrementStr +
 			")");
 }
 

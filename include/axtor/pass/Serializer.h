@@ -36,12 +36,25 @@
 
 namespace llvm {
 	class ScalarEvolution;
+	class PHINode;
 }
 /*
  * This pass gets an AST from the ASTExtractor pass and serializes it using the backend specified by the TargetProvider pass
  */
 namespace axtor
 {
+
+	struct LoopContext {
+		llvm::BasicBlock * header;
+		llvm::BasicBlock * loopExit;
+		llvm::PHINode * phi;
+		LoopContext()
+		: header(nullptr)
+		, loopExit(nullptr)
+		, phi(nullptr)
+		{}
+	};
+
 	class Serializer : public llvm::ModulePass
 	{
 	private:
@@ -56,9 +69,9 @@ namespace axtor
 
 
 		/*
-		 * replace all resolved PHI-nodes by assignments
+		 * replace all resolved PHI-nodes by assignments except loopPHI
 		 */
-		void processBranch(SyntaxWriter * writer, llvm::BasicBlock * source, llvm::BasicBlock * target, IdentifierScope & locals);
+		void processBranch(SyntaxWriter * writer, llvm::BasicBlock * source, llvm::BasicBlock * target, IdentifierScope & locals, const LoopContext & LC);
 
 		/*
 		 * writes all instructions of a @bb except the terminator except those contained in @supresssedInsts
@@ -79,7 +92,7 @@ namespace axtor
 		 * writes a node using the given backend and writer.
 		 * @return unique exiting block (if any)
 		 */
-		llvm::BasicBlock * writeNode(AxtorBackend & backend, SyntaxWriter * writer, llvm::BasicBlock * previousBlock, llvm::BasicBlock * exitBlock, ast::ControlNode * node, IdentifierScope & locals, llvm::BasicBlock * loopHeader, llvm::BasicBlock * loopExit);
+		llvm::BasicBlock * writeNode(AxtorBackend & backend, SyntaxWriter * writer, llvm::BasicBlock * previousBlock, llvm::BasicBlock * exitBlock, ast::ControlNode * node, IdentifierScope & locals, const LoopContext & LC);
 	};
 }
 
