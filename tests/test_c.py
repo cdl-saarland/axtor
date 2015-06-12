@@ -21,20 +21,18 @@ def compile_to_LLVM(srcFile, destFile, suffix):
     return shellCmd("clang -S -emit-llvm " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
     
 def compile_to_obj(srcFile, destFile, suffix):
-    return shellCmd("g++ -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
+    return shellCmd("icc -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
 
 def axtor_run(srcFile, destFile, backend, suffix):
     return shellCmd("axtor -i " + srcFile + " -o " + destFile + " -m " + backend, "logs/axtor_" + suffix) == 0
 
-for file in testfiles:
-    print("Test {0}".format(file))
-    
+def runTest(file):
     # TODO
     baseName = file
-    suffix = "test"
+    suffix = baseName
 
     generatedFilePath = "build/" + baseName + "_axtor.cpp"
-    compiledFilePath = "build/" + file + "_axtor.o"
+    compiledFilePath = "build/" + baseName + "_axtor.o"
 
     print (file[:-2])
 
@@ -44,8 +42,7 @@ for file in testfiles:
     
         print("..clang {0}".format(file))
         if not compile_to_LLVM(testFilePath, llvmFilePath, suffix):
-            print("failed!")
-            continue
+            return False
 
     elif file [-3:]==".ll" or file[-3:] == ".bc":
         llvmFilePath = "src/" + file
@@ -53,17 +50,22 @@ for file in testfiles:
     
     print("..axtor {0}".format(file))
     if not axtor_run(llvmFilePath, generatedFilePath, "C", suffix):
-        print("failed!")
-        continue
+        return False
     
     print("..gcc {0}".format(file))
     if not compile_to_obj(generatedFilePath, compiledFilePath, suffix):
-        print("failed!")
-        continue
+        return False
     
     
     # TODO compare against directly compiled version!
+    return True
+
+for file in testfiles:
+    print("Test {0}".format(file))
+    if runTest(file):
+        print("passed!")
+    else:
+        print("failed!")
     
-    print("passed!")
     
 
