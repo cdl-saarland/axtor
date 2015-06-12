@@ -136,6 +136,7 @@ ReForPass::recoverForLoop(Loop * l) {
 
 	ValueToValueMapTy remap;
 
+	CmpInst * condInst = cast<CmpInst>(exitCond);
 	bool isoWithIncrement = false;
 	{
 		ValueToValueMapTy isoMap;
@@ -148,11 +149,16 @@ ReForPass::recoverForLoop(Loop * l) {
 	if (isoWithIncrement) {
 		remap[loopPHI] = latchValue; // FIXME ugly hack to mend InstCombine bugs
 	} else {
-		Log::warn(preCond, "could now show isomorphism! Forcing for conversion..");
+		Log::warn(preCond, "could now show isomorphism! Forcing for conversion.. (hack for Pollocl)");
 		ValueToValueMapTy isoMap;
 		isoMap[beginValue] = loopPHI;
 		errs() << "Map: " << *beginValue << " ~> " << *latchValue << "\n";
 		isoWithoutIncrement = Isomorph(preCond, exitCond, isoMap);
+
+		// modify the predicate to include equivalence
+		CmpInst::Predicate cmpPred = condInst->getPredicate();
+		assert(! CmpInst::isTrueWhenEqual(cmpPred) && "otw this hack will not work");
+		condInst->setPredicate((CmpInst::Predicate) (cmpPred | CmpInst::FCMP_OEQ)); // EQ bit
 	}
 
 	assert(isoWithIncrement || isoWithoutIncrement);
@@ -179,7 +185,6 @@ ReForPass::recoverForLoop(Loop * l) {
 
 	// Remap f(I) to I in exit condition
 	// FIXME: this is too simplistic (loop-carried stuff)
-	Instruction * condInst = cast<Instruction>(exitCond);
 	RemapInstruction(condInst, remap, RF_IgnoreMissingEntries);
 	condInst->removeFromParent();
 	condInst->insertBefore(exitingBranch);
@@ -192,7 +197,9 @@ ReForPass::visit(Loop * l) {
 	for (Loop * subLoop : *l) visit(subLoop);
 
 	ForLoopInfo forInfo;
-	if (inferForLoop(l, forInfo)) return;
+	if (inferForLoop(l, forInfo)) {
+		return;
+	}
 
 	if (recoverForLoop(l)) {
 		func->dump();
