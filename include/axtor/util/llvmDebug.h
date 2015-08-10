@@ -33,6 +33,11 @@
 
 #include <axtor/CommonTypes.h>
 
+#ifdef _DEBUG
+#	include <signal.h>
+#	include <sys/types.h>
+#	include <unistd.h>
+#endif
 
 namespace axtor {
 
@@ -46,6 +51,14 @@ namespace axtor {
 	void verifyModule(llvm::Module & mod);
 
 	void dumpUses(llvm::Value * val);
+
+#ifdef _DEBUG
+	inline void debugBreak() {
+		kill(getpid(), SIGINT);
+	}
+#else
+	inline void debugBreak() {}
+#endif
 
 }
 

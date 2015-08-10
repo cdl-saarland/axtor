@@ -60,6 +60,8 @@ OCLModuleInfo::OCLModuleInfo(llvm::Module * mod,
 	encodeKernelsAsMetadata(mod, kernelValues);
 }
 
+OCLModuleInfo::~OCLModuleInfo() {}
+
 void OCLModuleInfo::encodeKernelsAsMetadata(Module * mod, const ValueVector & kernels)
 {
 	assert(mod && "no module specified");

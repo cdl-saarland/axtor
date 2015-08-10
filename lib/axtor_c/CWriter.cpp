@@ -441,25 +441,6 @@ std::string CWriter::getSCEV(const llvm::SCEV * scev, IdentifierScope & locals) 
 	return ss.str();
 }
 
-
-void
-CWriter::writePHIAssign(llvm::PHINode & phi, llvm::BasicBlock * incomingBlock, IdentifierScope & locals) {
-	Value * inValue = phi.getIncomingValueForBlock(incomingBlock);
-
-	std::string valueStr;
-	if (Constant * literal = dyn_cast<Constant>(inValue)) {
-		valueStr = getLiteral(literal);
-	} else if (const VariableDesc * desc = locals.lookUp(inValue)){
-		valueStr = desc->name;
-	}
-
-	assert(! valueStr.empty());
-
-	std::string phiName = locals.lookUp(&phi)->name;
-
-	putLine( phiName + "_in"  + " = " + valueStr + ";");
-}
-
 // TODO move increment/initialization here and suppress all consumed instructions
 void
 CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
@@ -467,7 +448,8 @@ CWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
 	std::string ivStr = locals.lookUp(forInfo.phi)->name;
 	// std::string beginStr = getValueToken(forInfo.beginValue, locals);
 	std::string beginStr = getValueToken(forInfo.beginValue, locals); //locals.lookUp(forInfo.phi)->name + "_in";
-	std::string exitConditionStr = getInstructionAsExpression(forInfo.exitCond, locals);
+
+	std::string exitConditionStr = getComplexExpression(forInfo.headerBlock, forInfo.exitCond, locals);
 
 	Instruction * incInst = cast<Instruction>(forInfo.ivIncrement);
 	std::string ivIncrementStr = getInstructionAsExpression(incInst, locals);
@@ -630,6 +612,8 @@ typedef std::vector<llvm::Value*> ValueVector;
 
 std::string CWriter::getReferer(llvm::Value * value, IdentifierScope & locals)
 {
+	return getValueToken(value, locals);
+#if 0
 	const VariableDesc * desc = locals.lookUp(value);
 
 	if (desc) {
@@ -638,6 +622,7 @@ std::string CWriter::getReferer(llvm::Value * value, IdentifierScope & locals)
 
 	//not a instruction -> obtain a referer by other means
 	return getNonInstruction(value, locals);
+#endif
 }
 
 /*
@@ -1344,7 +1329,7 @@ std::string CWriter::getInstructionAsExpression(llvm::Instruction * inst, Identi
 				if (llvm::isa<llvm::Instruction>(op))
 					operandStr = getInstructionAsExpression(llvm::cast<llvm::Instruction>(op), locals);
 				else //### non-runtime dependent value
-					operandStr = getNonInstruction(op, locals);
+					operandStr = getValueToken(op, locals);
 
 				operands.push_back(operandStr);
 			 }
@@ -1399,7 +1384,7 @@ std::string CWriter::getInstructionAsExpression(llvm::Instruction * inst, Identi
 		if (llvm::isa<llvm::Instruction>(op))
 			operandStr = getInstructionAsExpression(llvm::cast<llvm::Instruction>(op), locals);
 		else //### non-runtime dependent value
-			operandStr = getNonInstruction(op, locals);
+			operandStr = getValueToken(op, locals);
 
 		operands.push_back(operandStr);
      }
@@ -1413,33 +1398,30 @@ std::string CWriter::getInstructionAsExpression(llvm::Instruction * inst, Identi
 */
 std::string CWriter::getComplexExpression(llvm::BasicBlock * valueBlock, llvm::Value * root, IdentifierScope & locals, InstructionSet * oExpressionInsts)
 {
- // PHI-Nodes cant be part of a single expression
-if (llvm::isa<llvm::Instruction>(root) &&
-        ! llvm::isa<llvm::PHINode>(root) &&
-        ! llvm::isa<llvm::GetElementPtrInst>(root))
-  {
-     llvm::Instruction * inst = llvm::cast<llvm::Instruction>(root);
-     if (inst->getParent() == valueBlock) { //recursively decompose into operator queries
+	// PHI-Nodes cant be part of a single expression
+	if (
+			llvm::isa<llvm::Instruction>(root) &&
+			! llvm::isa<llvm::PHINode>(root) &&
+			! llvm::isa<llvm::GetElementPtrInst>(root))
+	{
+		llvm::Instruction * inst = llvm::cast<llvm::Instruction>(root);
+		if (inst->getParent() == valueBlock) { //recursively decompose into operator queries
 
-    	 if (oExpressionInsts)
-    		 oExpressionInsts->insert(inst);
+			if (oExpressionInsts)
+				oExpressionInsts->insert(inst);
 
-        std::vector<std::string> operands;
-        for(uint opIdx = 0; opIdx < inst->getNumOperands(); ++opIdx)
-        {
-           llvm::Value * op = inst->getOperand(opIdx);
+			std::vector<std::string> operands;
+			for(uint opIdx = 0; opIdx < inst->getNumOperands(); ++opIdx) {
+				llvm::Value * op = inst->getOperand(opIdx);
 
-           operands.push_back(getComplexExpression(valueBlock, op, locals, oExpressionInsts));
-        }
+				operands.push_back(getComplexExpression(valueBlock, op, locals, oExpressionInsts));
+			}
 
-        return getInstruction(inst, operands);
-     } else {
-        const VariableDesc * desc = locals.lookUp(inst);
-        return desc->name;
-     }
-  } else { //non-instruction value
-	 return getNonInstruction(root, locals);
-  }
+			return getInstruction(inst, operands);
+		}
+	}
+
+	return getValueToken(root, locals);
 }
 
 
@@ -1611,7 +1593,7 @@ void CWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierSco
 
 			if (! llvm::isa<llvm::UndefValue>(retVal))
 			{
-				putLine( "return " + getNonInstruction(retInst->getReturnValue(), locals) + ";" );
+				putLine( "return " + getValueToken(retInst->getReturnValue(), locals) + ";" );
 			} else {
 				Log::warn(retInst, "skipping return for the returned value is undefined!");
 			}

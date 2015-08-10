@@ -16,6 +16,9 @@
 
 #include <axtor/console/CompilerLog.h>
 
+#include <llvm/IR/IRBuilder.h>
+#include <axtor/util/llvmDebug.h>
+
 using namespace llvm;
 
 namespace axtor {
@@ -123,6 +126,9 @@ ReForPass::recoverForLoop(Loop * l) {
 	BranchInst * preBranch = FindLastConditionalBranch(enteringBlock, loopHeader, preOnTrue);
 	assert(preBranch);
 
+	// pre-condition must exit on loopExit
+	// assert(preBranch->getSuccessor(preOnTrue ? 1 : 0) == exitBlock);
+
 	// extract beginValue of the loop
 	Value * beginValue = loopPHI->getIncomingValueForBlock(enteringBlock);
 
@@ -134,7 +140,7 @@ ReForPass::recoverForLoop(Loop * l) {
 
 	// the preCond and exitCond are isomorph modulo the induction variable
 
-	ValueToValueMapTy remap;
+	ValueToValueMapTy condRemap;
 
 	CmpInst * condInst = cast<CmpInst>(exitCond);
 	bool isoWithIncrement = false;
@@ -145,21 +151,28 @@ ReForPass::recoverForLoop(Loop * l) {
 		isoWithIncrement = Isomorph(preCond, exitCond, isoMap);
 	}
 
+	CmpInst::Predicate cmpPred = condInst->getPredicate();
 	bool isoWithoutIncrement = false;
+
 	if (isoWithIncrement) {
-		remap[loopPHI] = latchValue; // FIXME ugly hack to mend InstCombine bugs
+		Log::warn(exitCond, "has exit condition with increment");
+		condRemap[latchValue] = loopPHI; // fold back the outer loop guard into the loop's exit branch
 	} else {
 		Log::warn(preCond, "could now show isomorphism! Forcing for conversion.. (hack for Pollocl)");
 		ValueToValueMapTy isoMap;
 		isoMap[beginValue] = loopPHI;
-		errs() << "Map: " << *beginValue << " ~> " << *latchValue << "\n";
+		errs() << "Map: " << *beginValue << " ~> " << *loopPHI << "\n";
 		isoWithoutIncrement = Isomorph(preCond, exitCond, isoMap);
 
-		// modify the predicate to include equivalence
-		CmpInst::Predicate cmpPred = condInst->getPredicate();
-		assert(! CmpInst::isTrueWhenEqual(cmpPred) && "otw this hack will not work");
-		condInst->setPredicate((CmpInst::Predicate) (cmpPred | CmpInst::FCMP_OEQ)); // EQ bit
+		if (isoWithoutIncrement) {
+			Log::warn(exitCond, "has exit condition without increment");
+			// modify the predicate to include equivalence
+			assert(! CmpInst::isTrueWhenEqual(cmpPred) && "otw this hack will not work");
+			cmpPred = (CmpInst::Predicate) (cmpPred | CmpInst::FCMP_OEQ);
+		}
 	}
+
+	condInst->setPredicate(cmpPred); // EQ bit
 
 	assert(isoWithIncrement || isoWithoutIncrement);
 
@@ -185,10 +198,26 @@ ReForPass::recoverForLoop(Loop * l) {
 
 	// Remap f(I) to I in exit condition
 	// FIXME: this is too simplistic (loop-carried stuff)
-	RemapInstruction(condInst, remap, RF_IgnoreMissingEntries);
+	RemapInstruction(condInst, condRemap, RF_IgnoreMissingEntries);
 	condInst->removeFromParent();
 	condInst->insertBefore(exitingBranch);
 
+	// assure that the increment goes before the condition (if it is used in the condition)
+	if (isoWithIncrement) {
+		Instruction * latchIncrement = cast<Instruction>(latchValue);
+		latchIncrement->removeFromParent();
+		latchIncrement->insertBefore(condInst);
+	}
+
+// Re-pair PHI nodes in exit block
+	// FIXME this implicitly assumes that is is safe to make PHI-Nodes insensitive to @preCond
+	// TODO use isomorphism to prove this in most cases
+	for (Instruction & inst : *exitBlock) {
+		PHINode * phi = dyn_cast<PHINode>(&inst);
+		if (!phi) break;
+
+		phi->removeIncomingValue(preBranch->getParent(), true);
+	}
 	return true;
 }
 

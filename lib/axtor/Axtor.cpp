@@ -104,12 +104,6 @@ namespace axtor {
 		//target info
 				pm.add(provider);
 
-
-		// ## BUILTIN TRANSFORMATION ##
-		//remove optimization artifacts
-		pm.add(new CGIPass());
-
-
 		// ## REQUIRED TRANSFORMATIONS ##
 
 		//recover registers
@@ -149,7 +143,8 @@ namespace axtor {
 		//get rid of switches early on
     	pm.add(simpleUnswitch);
 
-    	pm.add(new ReForPass);
+    	if (! getenv("AXTOR_NO_FOR"))
+    		pm.add(new ReForPass);
 
 		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
 		pm.add(restruct);
@@ -162,6 +157,13 @@ namespace axtor {
 		
 		// sanitize variable names
 		pm.add(preperator);
+
+		// ## BUILTIN TRANSFORMATION ##
+		//remove optimization artifacts
+		pm.add(new CGIPass());
+
+		// clear out artifacts
+		pm.add(llvm::createDeadCodeEliminationPass());
 
 		//read-only serialization pass
 		pm.add(serializer);

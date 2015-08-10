@@ -30,13 +30,13 @@ LDFLAGS=-fPIC -Iinclude $(LLVM_LDFLAGS) $(LLVM_LIBS)
 
 # Feature support
 
+# TODO add tool support for OpenCL backend
 # LIBS += -lAxtor_OCL -lAxtor
-# CXXFLAGS += -DENABLE_OPENCL
-
+# CXXFLAGS += -DENABLE_OPENCL 
 
 # libraries
 include lib/axtor/libAxtor.mk
-# include lib/axtor_ocl/libAxtor_OCL.mk
+include lib/axtor_ocl/libAxtor_OCL.mk
 include lib/axtor_c/libAxtor_C.mk
 
 

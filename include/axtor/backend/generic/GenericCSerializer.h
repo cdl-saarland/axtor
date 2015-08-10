@@ -34,7 +34,9 @@ namespace axtor {
 
 
 	   // custom function for serialization of declarations
-		virtual std::string buildDeclaration(std::string root, const llvm::Type * type)=0;
+		virtual std::string buildDeclaration(std::string root, const llvm::Type * type) = 0;
+
+		virtual std::string getLiteral(llvm::Constant * val) = 0;
 	};
 }
 

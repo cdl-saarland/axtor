@@ -60,7 +60,7 @@ public:
 	/*
 	 * returns whether this the module info object for that module
 	 */
-	virtual bool isTargetModule(llvm::Module*) const=0;
+	virtual bool isTargetModule(llvm::Module*) const = 0;
 
 	/*
 	 * create global scope identifier bindings

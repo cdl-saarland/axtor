@@ -13,6 +13,8 @@
 #include <axtor/util/WrappedOperation.h>
 #include <axtor/console/CompilerLog.h>
 
+using namespace llvm;
+
 namespace axtor {
 
 void GenericCWriter::writeElse()
@@ -197,6 +199,24 @@ void GenericCWriter::writeDo()
 
 	 	return root + "[" + out.str() + "]";
 	 }
+
+	 void GenericCWriter::writePHIAssign(llvm::PHINode & phi, llvm::BasicBlock * incomingBlock, IdentifierScope & locals) {
+	 	Value * inValue = phi.getIncomingValueForBlock(incomingBlock);
+
+	 	std::string valueStr;
+	 	if (Constant * literal = dyn_cast<Constant>(inValue)) {
+	 		valueStr = getLiteral(literal);
+	 	} else if (const VariableDesc * desc = locals.lookUp(inValue)){
+	 		valueStr = desc->name;
+	 	}
+
+	 	assert(! valueStr.empty());
+
+	 	std::string phiName = locals.lookUp(&phi)->name;
+
+	 	putLine( phiName + "_in"  + " = " + valueStr + ";");
+	 }
+
 
 	 void GenericCWriter::writeAssignRaw(const std::string & dest, const std::string & src)
 	 {

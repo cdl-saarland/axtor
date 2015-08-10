@@ -44,17 +44,16 @@ namespace axtor {
 		llvm::Value * switchValue = switchInst->getCondition();
 
 		llvm::BasicBlock * defaultDest = switchInst->getDefaultDest();
-		llvm::BasicBlock * exitBlock = switchInst->getDefaultDest();
+		llvm::BasicBlock * exitBlock = defaultDest;
 
 		//create IF-cascade (skip the default case)
 		typedef llvm::SwitchInst::CaseIt CaseIt;
 		CaseIt caseBegin = switchInst->case_begin();
-		CaseIt secondCase = caseBegin; secondCase++;
 		CaseIt caseEnd = switchInst->case_end();
 
-		for (CaseIt itCase = secondCase; itCase != caseEnd; ++itCase)
+		for (CaseIt itCase = caseBegin; itCase != caseEnd; ++itCase)
 		{
-			uint i =itCase.getCaseIndex();
+			uint i = itCase.getCaseIndex();
 			llvm::Value * succVal = itCase.getCaseValue();
 			llvm::BasicBlock * succBlock = itCase.getCaseSuccessor();
 
@@ -63,7 +62,7 @@ namespace axtor {
 				llvm::CmpInst * testInst = llvm::CmpInst::Create(llvm::Instruction::ICmp, llvm::CmpInst::ICMP_EQ, switchValue, succVal, "caseCompare", caseBlock);
 				llvm::BranchInst::Create(succBlock, exitBlock, testInst, caseBlock);
 
-				//the last IF takes over the default branch of the switchBlock (replace in PHI-nodes)
+				// replace incoming from @switchBlock with incoming from cascade in default block
 				if (exitBlock == defaultDest) {
 					for (llvm::BasicBlock::iterator itPhi = exitBlock->begin(); llvm::isa<llvm::PHINode>(itPhi); ++itPhi)
 					{

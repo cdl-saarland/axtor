@@ -232,6 +232,9 @@ public:
 
    virtual void writeInfiniteLoopEnd();
 
+   // FOR-loops
+   void writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals);
+
    virtual void writeReturnInst(llvm::ReturnInst * retInst, IdentifierScope & locals);
 
 

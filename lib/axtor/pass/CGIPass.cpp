@@ -10,6 +10,8 @@
 #include <axtor/pass/CGIPass.h>
 #include <axtor/util/llvmBuiltins.h>
 
+#include <axtor/config.h>
+
 // #include <llvm/Analysis/CallGraph.h>
 
 #include <iostream>
@@ -34,17 +36,17 @@ namespace axtor {
 		//session set-up
 		Session session(M);
 
-#ifdef DEBUG
-		llvm::errs() << " ### module before Pass : \"" << getPassName() << "\"\n";
-		M.dump();
-		llvm::errs() << "[EOF]\n";
-#endif
+		IF_DEBUG {
+			llvm::errs() << " ### module before Pass : \"" << getPassName() << "\"\n";
+			M.dump();
+			llvm::errs() << "[EOF]\n";
+		}
 		bool retVal = session.run();
-#ifdef DEBUG
-		llvm::errs() << " ### module after Pass : \"" << getPassName() << "\"\n";
-		M.dump();
-		llvm::errs() << "[EOF]\n";
-#endif
+		IF_DEBUG {
+			llvm::errs() << " ### module after Pass : \"" << getPassName() << "\"\n";
+			M.dump();
+			llvm::errs() << "[EOF]\n";
+		}
 		return retVal;
 	}
 
@@ -70,24 +72,18 @@ namespace axtor {
 		llvm::Function * llvmFunc = M.getFunction(funcName);
 
 		if (llvmFunc) {
-#ifdef DEBUG
-			llvm::errs() << "uses function " << funcName << "\n";
-#endif
+			IF_DEBUG llvm::errs() << "uses function " << funcName << "\n";
 			for (llvm::Function::use_iterator itCall = llvmFunc->use_begin(); itCall != llvmFunc->use_end(); itCall = llvmFunc->use_begin())
 			{
 				llvm::User* user = itCall->getUser();
 				llvm::Instruction * call = llvm::cast<llvm::Instruction>(user);
-#ifdef DEBUG
-				llvm::errs() << "removing user " << call->getName().str() << "\n";
-#endif
+				IF_DEBUG llvm::errs() << "removing user " << call->getName().str() << "\n";
 				call->eraseFromParent();
 			}
 			assert(llvmFunc->getNumUses() == 0);
-			//llvmFunc->eraseFromParent();
+			llvmFunc->eraseFromParent();
 		} else {
-#ifdef DEBUG
-			llvm::errs() << "does not exist: " << funcName << "\n";
-#endif
+			IF_DEBUG llvm::errs() << "does not exist: " << funcName << "\n";
 		}
 		return llvmFunc;
 	}
@@ -112,9 +108,7 @@ namespace axtor {
 			llvm::PointerType * destPtrType = llvm::cast<llvm::PointerType>(destPtrArg->getType());
 			llvm::PointerType *  srcPtrType = llvm::cast<llvm::PointerType>( srcPtrArg->getType());
 
-#ifdef DEBUG
-			llvm::errs() << "supplementing memcpy: " << memCpyFunc->getName() << "\n";
-#endif
+			IF_DEBUG llvm::errs() << "supplementing memcpy: " << memCpyFunc->getName() << "\n";
 			llvm::Function * definedMemCpy =
 					create_memcpy(M, memCpyName, destPtrType->getAddressSpace(), srcPtrType->getAddressSpace());
 			definedMemCpy->setLinkage(llvm::Function::InternalLinkage); // hide internally

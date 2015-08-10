@@ -143,17 +143,18 @@ namespace axtor {
 		// exit condition is a CmpInst
 		Value * condition = exitBranch->getCondition();
 		I.exitCond = dyn_cast<CmpInst>(condition);
+		I.exitOnFalse = l->contains(exitBranch->getSuccessor(0));
 		if (!I.exitCond) {
 			IF_DEBUG Log::warn("No CmpInst-based exit condition");
 			return false;
 		}
 
+#if 0
 		// the compare operates on the induction variable and a bound value
 		Value * cmpLeft = I.exitCond->getOperand(0);
 		Value * cmpRight = I.exitCond->getOperand(1);
 		// Value * endValue = nullptr;
 		CmpInst::Predicate exitPred;
-
 		if (cmpRight == I.phi) {
 			// endValue = cmpLeft;
 			exitPred = I.exitCond->getSwappedPredicate();
@@ -166,11 +167,10 @@ namespace axtor {
 			return false;
 		}
 
-
 		// modify the predicate to match exit-on-false
-		I.exitOnFalse = l->contains(exitBranch->getSuccessor(0));
 		if (! I.exitOnFalse)
 			exitPred = CmpInst::getInversePredicate(exitPred);
+#endif
 
 		if (I.exitOnFalse) {
 			I.bodyBlock = exitBranch->getSuccessor(0);

@@ -12,6 +12,10 @@
 #include <axtor/util/WrappedLiteral.h>
 #include <vector>
 
+#include <axtor/util/llvmLoop.h>
+
+using namespace llvm;
+
 namespace axtor {
 
 
@@ -1473,12 +1477,37 @@ void OCLWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierS
   }
 }
 
- void OCLWriter::writeInfiniteLoopBegin()
+ // TODO move increment/initialization here and suppress all consumed instructions
+ void
+OCLWriter::writeForLoopBegin(ForLoopInfo & forInfo, IdentifierScope & locals) {
+
+ 	std::string ivStr = locals.lookUp(forInfo.phi)->name;
+ 	// std::string beginStr = getValueToken(forInfo.beginValue, locals);
+ 	std::string beginStr = getValueToken(forInfo.beginValue, locals); //locals.lookUp(forInfo.phi)->name + "_in";
+
+ 	std::string exitConditionStr = getComplexExpression(forInfo.headerBlock, forInfo.exitCond, locals);
+
+ 	Instruction * incInst = cast<Instruction>(forInfo.ivIncrement);
+ 	std::string ivIncrementStr = getInstructionAsExpression(incInst, locals);
+
+ 	if (! forInfo.exitOnFalse) {
+ 		exitConditionStr = "!(" + exitConditionStr + ")";
+ 	}
+
+ 	putLine(
+ 			"for (" +
+ 				ivStr + "=" + beginStr + ";" +
+ 				exitConditionStr + ";" +
+ 				ivStr + "=" + ivIncrementStr +
+ 			")");
+ }
+
+void OCLWriter::writeInfiniteLoopBegin()
 {
    putLine ( "while(true)" );
 }
 
- void OCLWriter::writeInfiniteLoopEnd()
+void OCLWriter::writeInfiniteLoopEnd()
 {
    putLine( "" );
 }

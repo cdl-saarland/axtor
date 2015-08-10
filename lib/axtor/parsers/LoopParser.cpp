@@ -68,10 +68,10 @@ namespace axtor {
 		ForLoopInfo * forInfo = new ForLoopInfo;
 
 		BasicBlock * bodyBlock = nullptr;
-		if (inferForLoop(loop, *forInfo)) {
+		if (! getenv("AXTOR_NO_FOR") && inferForLoop(loop, *forInfo) && forInfo->ivParallelLoop) { // FIXME
 			bodyBlock = forInfo->bodyBlock; // default to a while loop
 		} else {
-			assert(!forInfo->ivParallelLoop);
+			// assert(!forInfo->ivParallelLoop); // disengaged for testing
 			delete forInfo;
 			forInfo = nullptr;
 			bodyBlock = entry; // default to a while loop

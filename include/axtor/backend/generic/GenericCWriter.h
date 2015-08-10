@@ -55,8 +55,7 @@ public:
 	virtual std::string getOperation(const WrappedOperation & op, StringVector operands) = 0;
 	virtual std::string getLiteral(llvm::Constant * const) = 0;
 
-
-
+	void writePHIAssign(llvm::PHINode & phi, llvm::BasicBlock * incomingBlock, IdentifierScope & locals);
 
 	inline void writeAssign(const VariableDesc & dest, const VariableDesc & src)
 	{

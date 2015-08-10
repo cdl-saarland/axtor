@@ -74,6 +74,7 @@ public:
 
 	// Overrides the opencl.kernel metadata with @kernels
 	OCLModuleInfo(llvm::Module *mod, FunctionVector kernels, std::ostream &out);
+	~OCLModuleInfo();
 
 	std::ostream & getStream();
 

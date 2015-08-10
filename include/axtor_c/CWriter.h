@@ -236,8 +236,6 @@ public:
    // FIXME unused
    std::string getSCEV(const llvm::SCEV * scev, IdentifierScope & locals);
 
-   void writePHIAssign(llvm::PHINode & phi, llvm::BasicBlock * incomingBlock, IdentifierScope & locals);
-
 protected:
    /*
     * used for nested writer creation
