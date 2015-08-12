@@ -95,6 +95,17 @@ MUTE(NAME) [only used for particular intrinsics]
 @NAME
 */
 
+
+/*
+ * Native LLVM intrinsics
+ */
+CONST_FUNC(llvm.exp.f32,float,exp,(float),1)
+CONST_FUNC(llvm.fabs.f32,float,fabs,(float),1)
+CONST_FUNC(llvm.log2.f32,float,log2,(float),1)
+CONST_FUNC(llvm.sqrt.f32,float,sqrt,(float),1)
+
+
+
 /*
  * NATIVE TYPES
  */

@@ -26,9 +26,9 @@
 
 //### supported address spaces
 // PTX-compatible address spaces (do not work)
-#define SPACE_GLOBAL   1
+#define SPACE_CONSTANT 1
 #define SPACE_LOCAL    2
-#define SPACE_CONSTANT 3
+#define SPACE_GLOBAL   3
 
 // other address spaces
 #define SPACE_PRIVATE  4
