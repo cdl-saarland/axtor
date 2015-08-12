@@ -206,8 +206,8 @@ namespace axtor {
 						next = new AddressIterator(next, call->getOperand(idx), false);
 					}
 					rootValue = call->getOperand(1);
+					continue;
 				}
-				continue;
 			}
 
 			break;
