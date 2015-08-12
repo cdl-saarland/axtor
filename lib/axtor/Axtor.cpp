@@ -102,7 +102,7 @@ namespace axtor {
 		axtor::TargetProvider * provider = new axtor::TargetProvider(backend, modInfo);
 
 		//target info
-				pm.add(provider);
+		pm.add(provider);
 
 		// ## REQUIRED TRANSFORMATIONS ##
 
