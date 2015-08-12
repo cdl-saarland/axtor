@@ -68,6 +68,11 @@ void OCLModuleInfo::encodeKernelsAsMetadata(Module * mod, const ValueVector & ke
 	usesDoubleType = scanForDoubleType();
 
 	llvm::LLVMContext & context = mod->getContext();
+	auto * oldMD = mod->getNamedMetadata("opencl.kernels");
+	if (oldMD) {
+		mod->eraseNamedMetadata(oldMD);
+	}
+
 	NamedMDNode * kernelMD = mod->getOrInsertNamedMetadata("opencl.kernels");
 	std::vector<Metadata*> mdVec;
 	for (ValueVector::const_iterator itKernel = kernels.begin(); itKernel != kernels.end(); ++itKernel) {
