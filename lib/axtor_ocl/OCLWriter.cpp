@@ -73,10 +73,12 @@ std::string OCLWriter::getScalarType(const llvm::Type * type, bool asVectorEleme
            return "short";
         else if (width <= 32)
            return "int";
-        else if (width <= 64) {
+        else if (width <= 64)
            return "long";
+        else if (width <= 128) {
+           return "long long";
         } else
-           Log::fail(type, "(width > 64) over-sized integer type");
+           Log::fail(type, "(width > 128) over-sized integer type");
      }
 
   //FIXME
@@ -783,7 +785,7 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
     		  } else {
     			  return "true";
     		  }
-    	  } else if (intType->getBitWidth() <= 64) {
+    	  } else if (intType->getBitWidth() <= 128) {
     		  llvm::ConstantInt * constInt = llvm::cast<llvm::ConstantInt>(val);
 			  uint64_t data = constInt->getLimitedValue();
 			  std::string hexStr = convertToHex(data, intType->getBitWidth() / 4);
@@ -791,7 +793,7 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 
 			  return "(" + typeStr + ")(0x" + hexStr + ")";
     	  } else {
-                 Log::fail(val, "value exceeds size limit, expected bit size <= 64, was " + str<int>(intType->getBitWidth()));
+                 Log::fail(val, "value exceeds size limit, expected bit size <= 128, was " + str<int>(intType->getBitWidth()));
     	  }
 
       //## Constant Float
