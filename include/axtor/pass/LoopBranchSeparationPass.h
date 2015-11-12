@@ -51,7 +51,7 @@ class LoopBranchSeparationPass : public llvm::ModulePass
 	/*
 	 * breaks the edge and inserts adapts the PHI-nodes
 	 */
-	llvm::BasicBlock * breakSpecialEdge(llvm::Function * func, llvm::BasicBlock * srcBlock, llvm::BasicBlock * targetBlock, llvm::Function::iterator insertBefore);
+	llvm::BasicBlock * breakSpecialEdge(llvm::Function * func, llvm::BasicBlock * srcBlock, llvm::BasicBlock * targetBlock, llvm::BasicBlock * insertBefore);
 
 	bool runOnFunction(llvm::Function & func);
 public:

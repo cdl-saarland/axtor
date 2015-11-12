@@ -6,6 +6,7 @@
  */
 
 #include <axtor_c/CModuleInfo.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include <llvm/IR/Module.h>
 #include <axtor/util/llvmDebug.h>
@@ -88,7 +89,7 @@ llvm::Module * CModuleInfo::getModule()
 	return mod;
 }
 
-void CModuleInfo::runPassManager(llvm::PassManager & pm)
+void CModuleInfo::runPassManager(llvm::legacy::PassManager & pm)
 {
 	pm.run(*getModule());
 }

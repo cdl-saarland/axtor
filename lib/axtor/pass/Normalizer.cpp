@@ -10,8 +10,6 @@
 #include <iostream>
 
 #include <llvm/Pass.h>
-#include <llvm/PassManager.h>
-#include <llvm/IR/LegacyPassManagers.h>
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -21,6 +19,8 @@
 #include <axtor/pass/CNSPass.h>
 #include <axtor/util/llvmLoop.h>
 #include <axtor/util/llvmShortCuts.h>
+
+#include <llvm/IR/LegacyPassManagers.h>
 
 #include <utility>
 #include <vector>
@@ -184,7 +184,6 @@ namespace axtor
 					changed = true;
 
 					if (childLoop) {
-						llvm::LPPassManager lpm;
             //FIXME
 						//cloneLoopForBranch(tracker, lpm, this, loopInfo, childLoop, pred);
 						normalizeNode(func, child, entryPostDom, loopScope);

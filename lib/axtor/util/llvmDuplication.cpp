@@ -6,15 +6,17 @@
  */
 
 #include <axtor/util/llvmDuplication.h>
-#include <llvm/IR/LegacyPassManagers.h>
 //#include <llvm/Transforms/Utils/ValueMapper.h>
 #include <axtor/util/llvmDebug.h>
+#include <llvm/Transforms/Utils/Cloning.h>
 
 #include <axtor/util/llvmDomination.h>
 #include <llvm/IR/ValueMap.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/BasicBlock.h>
+
+using namespace llvm;
 
 namespace axtor {
 
@@ -108,7 +110,6 @@ LoopSet splitLoop(llvm::LoopInfo & loopInfo, llvm::Loop * loop, llvm::Pass * pas
 	{
 		//llvm::BasicBlock * predBlock = *itPred;
 
-		llvm::LPPassManager lpm;
     //FIXME
 		//llvm::Loop * clonedLoop = cloneLoopForBranch(lpm, pass, loopInfo, loop, predBlock, domTree);
 		//clones.insert(clonedLoop);
@@ -121,8 +122,7 @@ llvm::BasicBlock * cloneBlockAndMapInstructions(llvm::BasicBlock * block, ValueM
 {
 	llvm::BasicBlock * clonedBlock = llvm::CloneBasicBlock(block, cloneMap, "", block->getParent());
 
-	for(llvm::BasicBlock::iterator inst = clonedBlock->begin(); inst != clonedBlock->end(); ++inst)
-	{
+	for (Instruction & inst : *clonedBlock) {
 	//	llvm::errs() << "remapping inst=" << inst->getName().str() << "\n";
 		LazyRemapInstruction(inst, cloneMap);
 	}
@@ -231,7 +231,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 #ifdef DEBUG
 			llvm::errs() << "unpatched:"; termInst->dump();
 #endif
-			LazyRemapInstruction(termInst, cloneMap);
+			LazyRemapInstruction(*termInst, cloneMap);
 #ifdef DEBUG
 			llvm::errs() << "patched:"; termInst->dump();
 #endif
@@ -241,14 +241,13 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 		llvm::errs() << "## Patching cloned block\n";
 #endif
 		// Fix all instructions in the block itself
-		for (llvm::BasicBlock::iterator itInst = clonedBlock->begin(); itInst != clonedBlock->end(); ++itInst)
-		{
+		for (Instruction & inst : *clonedBlock) {
 #ifdef DEBUG
-			llvm::errs() << "unpatched:"; itInst->dump();
+			llvm::errs() << "unpatched:"; inst.dump();
 #endif
-			LazyRemapInstruction(itInst, cloneMap);
+			LazyRemapInstruction(inst, cloneMap);
 #ifdef DEBUG
-			llvm::errs() << "patched:"; itInst->dump();
+			llvm::errs() << "patched:"; inst.dump();
 #endif
 		}
 
@@ -285,7 +284,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 				if (llvm::isa<llvm::Instruction>(srcVal) && ! set_contains(handledSrcValues, srcVal)) {
 					llvm::Instruction * srcInst = llvm::cast<llvm::Instruction>(srcVal);
 					if (srcInst->isUsedInBasicBlock(succBlock)) {
-						llvm::PHINode * resolvePHI = llvm::PHINode::Create(srcVal->getType(), 2, "intro", itAfterPHI);
+						llvm::PHINode * resolvePHI = llvm::PHINode::Create(srcVal->getType(), 2, "intro", cast<Instruction>(itAfterPHI));
 						resolvePHI->addIncoming(srcVal, srcBlock);
 						resolvePHI->addIncoming(cloneVal, clonedBlock);
 						cloneMap[srcVal] = resolvePHI;
@@ -295,7 +294,7 @@ void patchClonedBlocksForBranches(ValueMap & cloneMap, const BlockVector & origi
 
 			// remap the rest of the block
 			for (;itAfterPHI != succBlock->end(); ++itAfterPHI)
-				LazyRemapInstruction(itAfterPHI, cloneMap);
+				LazyRemapInstruction(*cast<Instruction>(itAfterPHI), cloneMap);
 		}
 	}
 }

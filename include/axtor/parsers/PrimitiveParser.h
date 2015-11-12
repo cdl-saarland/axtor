@@ -60,6 +60,8 @@ namespace axtor {
 			BuilderSession(RegionVector _regions, llvm::BasicBlock * _entryBlock, llvm::BasicBlock * _requiredExit) :
 				regions(_regions), entryBlock(_entryBlock), requiredExit(_requiredExit) {}
 
+			virtual ~BuilderSession() {}
+
 			/*
 			 * returns the solver procedure for the restructuring child regions
 			 */
@@ -80,6 +82,8 @@ namespace axtor {
 			 */
 			virtual void dump() = 0 ;
 		};
+
+		virtual ~PrimitiveParser() {}
 
 		/*
 		 * match the control-flow pattern at entry with this primitive type. If is matches, set up a BuilderSession for this primitive

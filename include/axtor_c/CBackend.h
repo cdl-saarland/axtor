@@ -14,6 +14,11 @@
 #include "CWriter.h"
 #include "CModuleInfo.h"
 
+namespace llvm {
+	namespace legacy {
+		class PassManager;
+	}
+}
 
 namespace axtor {
 
@@ -49,7 +54,7 @@ public:
 
 	//interface for specifying passes specific to this backend
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
-	virtual void addRequiredPasses(llvm::PassManager & pm) const;
+	virtual void addRequiredPasses(llvm::legacy::PassManager & pm) const;
 };
 
 }

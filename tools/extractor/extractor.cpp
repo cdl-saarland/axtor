@@ -21,7 +21,7 @@
  *      Author: Simon Moll
  */
 
-#include <llvm/IR/LegacyPassManagers.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include <iostream>
 #include <stdio.h>

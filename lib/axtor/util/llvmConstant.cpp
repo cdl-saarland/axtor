@@ -48,7 +48,7 @@ llvm::Constant * axtor::get_stringGEP(llvm::Module * module, std::string content
 	llvm::Constant * zeroConst = llvm::Constant::getNullValue(llvm::Type::getInt32Ty(context));
 	llvm::Constant* arr[2];
 	arr[0] = zeroConst; arr[1] = zeroConst;
-	llvm::Constant * stringGep = llvm::ConstantExpr::getInBoundsGetElementPtr(strGlobal, arr);
+	llvm::Constant * stringGep = llvm::ConstantExpr::getInBoundsGetElementPtr(charArray->getType(), strGlobal, arr);
 	return stringGep;
 }
 

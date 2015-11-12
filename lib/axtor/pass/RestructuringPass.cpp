@@ -71,7 +71,7 @@ namespace axtor {
 		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
 		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
 		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTree>(func);
-		llvm::ScalarEvolution & SE = getAnalysis<llvm::ScalarEvolution>(func);
+		llvm::ScalarEvolution & SE = getAnalysis<llvm::ScalarEvolutionWrapperPass>(func).getSE();
 		analysis = AnalysisStruct(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree, SE);
 	}
 
@@ -259,7 +259,7 @@ namespace axtor {
 		usage.addRequired<llvm::PostDominatorTree>();
 		usage.addRequired<llvm::DominatorTreeWrapperPass>();
 		usage.addRequired<llvm::LoopInfoWrapperPass>();
-		usage.addRequired<ScalarEvolution>();
+		usage.addRequired<ScalarEvolutionWrapperPass>();
 	}
 
 	bool RestructuringPass::runOnModule(llvm::Module & M)

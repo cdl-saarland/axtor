@@ -27,13 +27,18 @@
 #include <llvm/IR/Module.h>
 
 #include <llvm/Support/FormattedStream.h>
-#include <llvm/PassManager.h>
 //#include <llvm/TypeSymbolTable.h>
 
 #include <axtor/CommonTypes.h>
 #include <llvm/IR/Type.h>
 
 #include <string>
+
+namespace llvm {
+	namespace legacy {
+		class PassManager;
+	}
+}
 
 namespace axtor {
 
@@ -82,7 +87,7 @@ public:
 	 */
 	virtual void dumpModule()=0;
 
-	virtual void runPassManager(llvm::PassManager & pm)=0;
+	virtual void runPassManager(llvm::legacy::PassManager & pm)=0;
 
 	/*
 	 * returns the type bound to that name

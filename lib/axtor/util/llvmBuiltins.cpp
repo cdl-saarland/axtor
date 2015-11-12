@@ -85,15 +85,15 @@ namespace axtor {
 
 	// function body
 	llvm::Function::arg_iterator args = func->arg_begin();
-	llvm::Value* ptr_ptr = args++;
+	llvm::Value* ptr_ptr = cast<Argument>(args++);
 	ptr_ptr->setName("ptr");
-	llvm::Value* int8_p = args++;
+	llvm::Value* int8_p = cast<Argument>(args++);
 	int8_p->setName("p");
-	llvm::Value* int32_len_39 = args++;
+	llvm::Value* int32_len_39 = cast<Argument>(args++);
 	int32_len_39->setName("len");
-	llvm::Value* int32_align_40 = args++;
+	llvm::Value* int32_align_40 = cast<Argument>(args++);
 	int32_align_40->setName("align");
-	llvm:: Value* int1_isVolatile_41 = args++;
+	llvm:: Value* int1_isVolatile_41 = cast<Argument>(args++);
 	int1_isVolatile_41->setName("isVolatile");
 
 	llvm::BasicBlock* label_entry_42 = llvm::BasicBlock::Create(mod->getContext(), "entry",func,0);
@@ -110,7 +110,7 @@ namespace axtor {
 	int32_i_02->addIncoming(fwdref_46, label_for_body_43);
 	int32_i_02->addIncoming(const_int32_5, label_entry_42);
 
-	llvm::GetElementPtrInst* ptr_arrayidx = llvm::GetElementPtrInst::Create(ptr_ptr, int32_i_02, "arrayidx", label_for_body_43);
+	llvm::GetElementPtrInst* ptr_arrayidx = llvm::GetElementPtrInst::Create(nullptr, ptr_ptr, int32_i_02, "arrayidx", label_for_body_43);
 	llvm::StoreInst* void_47 = new llvm::StoreInst(int8_p, ptr_arrayidx, false, label_for_body_43);
 	void_47->setAlignment(1);
 	llvm::BinaryOperator* int32_inc = llvm::BinaryOperator::Create(llvm::Instruction::Add, int32_i_02, const_int32_6, "inc", label_for_body_43);
@@ -167,15 +167,15 @@ namespace axtor {
 
 		// function body
 		llvm::Function::arg_iterator args = func->arg_begin();
-		llvm::Value* ptr_dest = args++;
+		llvm::Value* ptr_dest = cast<Argument>(args++);
 		ptr_dest->setName("dest");
-		llvm::Value* ptr_src = args++;
+		llvm::Value* ptr_src = cast<Argument>(args++);
 		ptr_src->setName("src");
-		llvm::Value* int32_len = args++;
+		llvm::Value* int32_len = cast<Argument>(args++);
 		int32_len->setName("len");
-		llvm::Value* int32_align = args++;
+		llvm::Value* int32_align = cast<Argument>(args++);
 		int32_align->setName("align");
-		llvm::Value* int1_isVolatile = args++;
+		llvm::Value* int1_isVolatile = cast<Argument>(args++);
 		int1_isVolatile->setName("isVolatile");
 
 		llvm::BasicBlock* label_entry = llvm::BasicBlock::Create(mod->getContext(), "entry",func,0);
@@ -188,7 +188,7 @@ namespace axtor {
 		llvm::BranchInst::Create(label_for_body_lr_ph, label_for_end, int1_cmp2, label_entry);
 
 		// Block for.body.lr.ph (label_for_body_lr_ph)
-		llvm::GetElementPtrInst* ptr_lftr_limit = llvm::GetElementPtrInst::Create(ptr_dest, int32_len, "lftr.limit", label_for_body_lr_ph);
+		llvm::GetElementPtrInst* ptr_lftr_limit = llvm::GetElementPtrInst::Create(nullptr, ptr_dest, int32_len, "lftr.limit", label_for_body_lr_ph);
 		llvm::BranchInst::Create(label_for_body, label_for_body_lr_ph);
 
 		// Block for.body (label_for_body)
@@ -202,10 +202,10 @@ namespace axtor {
 		ptr_src_addr_04->addIncoming(ptr_src, label_for_body_lr_ph);
 		ptr_src_addr_04->addIncoming(fwdref_9, label_for_body);
 
-		llvm::GetElementPtrInst* ptr_incdec_ptr = llvm::GetElementPtrInst::Create(ptr_src_addr_04, const_int32_5, "incdec.ptr", label_for_body);
+		llvm::GetElementPtrInst* ptr_incdec_ptr = llvm::GetElementPtrInst::Create(nullptr, ptr_src_addr_04, const_int32_5, "incdec.ptr", label_for_body);
 		llvm::LoadInst* int8_10 = new llvm::LoadInst(ptr_src_addr_04, "", false, label_for_body);
 		int8_10->setAlignment(1);
-		llvm::GetElementPtrInst* ptr_incdec_ptr1 = llvm::GetElementPtrInst::Create(ptr_dest_addr_05, const_int32_5, "incdec.ptr1", label_for_body);
+		llvm::GetElementPtrInst* ptr_incdec_ptr1 = llvm::GetElementPtrInst::Create(nullptr, ptr_dest_addr_05, const_int32_5, "incdec.ptr1", label_for_body);
 		llvm::StoreInst* void_11 = new llvm::StoreInst(int8_10, ptr_dest_addr_05, false, label_for_body);
 		void_11->setAlignment(1);
 		llvm::ICmpInst* int1_exitcond = new llvm::ICmpInst(*label_for_body, llvm::ICmpInst::ICMP_EQ, ptr_incdec_ptr1, ptr_lftr_limit, "exitcond");

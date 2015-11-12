@@ -329,7 +329,7 @@ std::string CWriter::getFunctionHeader(llvm::Function * func, IdentifierScope * 
 
 		std::string argName;
 		if (locals) {
-			const VariableDesc * desc = locals->lookUp(arg);
+			const VariableDesc * desc = locals->lookUp(cast<Argument>(arg));
 			argName = desc->name;
 		}
 
@@ -1612,7 +1612,7 @@ void CWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierSco
    ConstValueSet arguments;
    for(ArgList::const_iterator arg = argList.begin(); arg != argList.end(); ++arg)
    {
-	   arguments.insert(arg);
+	   arguments.insert(cast<Argument>(arg));
    }
 
    for(ConstVariableMap::iterator itVar = locals.identifiers.begin();
@@ -1722,10 +1722,9 @@ CWriter::CWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 		putLine( "" );
 
 		//## spill function declarations
-		for (llvm::Module::iterator func = mod->begin(); func != mod->end(); ++func)
-		{
-			if (! platform.implements(func))
-				putLine(getFunctionHeader(func) + ";");
+		for (Function & func : *mod) {
+			if (! platform.implements(&func))
+				putLine(getFunctionHeader(&func) + ";");
 		}
 
 		putLine( "}" ); /* extern C */

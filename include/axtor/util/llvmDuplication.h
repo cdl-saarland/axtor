@@ -25,7 +25,6 @@
 #define LLVMDUPLICATION_HPP_
 
 #include <axtor/config.h>
-#include <llvm/Transforms/Utils/Cloning.h>
 #include <llvm/Analysis/LoopPass.h>
 
 #include <axtor/CommonTypes.h>

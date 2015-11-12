@@ -13,6 +13,7 @@
 #include <axtor/config.h>
 
 // #include <llvm/Analysis/CallGraph.h>
+using namespace llvm;
 
 #include <iostream>
 
@@ -123,7 +124,7 @@ namespace axtor {
 		{
 			llvm::Function * memSetFunc = *itMemSet;
 			std::string memSetName = memSetFunc->getName();
-			llvm::Function::arg_iterator ptrArg = *(memSetFunc->arg_begin());
+			Argument * ptrArg = &*(memSetFunc->arg_begin());
 
 			if (!llvm::isa<llvm::PointerType>(ptrArg->getType()))
 			{

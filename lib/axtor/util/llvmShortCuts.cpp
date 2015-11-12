@@ -12,6 +12,8 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 
+using namespace llvm;
+
 namespace axtor {
 
 
@@ -19,10 +21,9 @@ FunctionVector findFunctionsPrefixed(llvm::Module & M, std::string prefix)
 {
 	FunctionVector funcs;
 
-	for (llvm::Module::iterator itFunc = M.begin(); itFunc != M.end(); ++itFunc)
-	{
-		if (itFunc->getName().substr(0, prefix.length()) == prefix)
-			funcs.push_back(itFunc);
+	for (Function & func : M) {
+		if (func.getName().substr(0, prefix.length()) == prefix)
+			funcs.push_back(&func);
 	}
 
 	return funcs;
@@ -383,19 +384,19 @@ uint getOpcode(const llvm::Value * value)
 
 
 
-  void LazyRemapBlock(llvm::BasicBlock *BB,
+  void LazyRemapBlock(llvm::BasicBlock  & BB,
                                         ValueMap &ValueMap) {
-	  for (llvm::BasicBlock::iterator itInst = BB->begin(); itInst != BB->end(); ++itInst)
-		  LazyRemapInstruction(itInst, ValueMap);
+	  for (Instruction & inst : BB)
+		  LazyRemapInstruction(inst, ValueMap);
 
   }
-  void LazyRemapInstruction(llvm::Instruction *I,
+  void LazyRemapInstruction(llvm::Instruction & I,
                                       ValueMap &ValueMap) {
-    for (unsigned op = 0, E = I->getNumOperands(); op != E; ++op) {
-      llvm::Value *Op = I->getOperand(op);
+    for (unsigned op = 0, E = I.getNumOperands(); op != E; ++op) {
+      llvm::Value *Op = I.getOperand(op);
       ValueMap::iterator It = ValueMap.find(Op);
       if (It != ValueMap.end()) Op = It->second;
-      I->setOperand(op, Op);
+      I.setOperand(op, Op);
     }
   }
 

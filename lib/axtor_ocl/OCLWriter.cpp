@@ -334,7 +334,7 @@ std::string OCLWriter::getFunctionHeader(llvm::Function * func, IdentifierScope 
 		// TODO this is a hack
 		if (typeStr == "image2d_t") {
 			bool readOnly;
-			if (checkImageAccess(arg,readOnly)) {
+			if (checkImageAccess(cast<Argument>(arg),readOnly)) {
 				if (readOnly)
 					typeStr = "__read_only image2d_t";
 				else
@@ -345,7 +345,7 @@ std::string OCLWriter::getFunctionHeader(llvm::Function * func, IdentifierScope 
 		std::string argName = typeStr;
 
 		if (locals) {
-			const VariableDesc * desc = locals->lookUp(arg);
+			const VariableDesc * desc = locals->lookUp(cast<Argument>(arg));
 			argName += ' ' + desc->name;
 		}
 
@@ -1546,7 +1546,7 @@ void OCLWriter::writeInfiniteLoopEnd()
    ConstValueSet arguments;
    for(ArgList::const_iterator arg = argList.begin(); arg != argList.end(); ++arg)
    {
-	   arguments.insert(arg);
+	   arguments.insert(cast<Argument>(arg));
    }
 
    for(ConstVariableMap::iterator itVar = locals.identifiers.begin();
@@ -1699,10 +1699,9 @@ OCLWriter::OCLWriter(ModuleInfo & _modInfo, PlatformInfo & _platform) :
 		putLine( "" );
 
 		//## spill function declarations
-		for (llvm::Module::iterator func = mod->begin(); func != mod->end(); ++func)
-		{
-			if (! platform.implements(func))
-				putLine(getFunctionHeader(func) + ";");
+		for (Function & func : *mod) {
+			if (! platform.implements(&func))
+				putLine(getFunctionHeader(&func) + ";");
 		}
 
 		putLine( "" );

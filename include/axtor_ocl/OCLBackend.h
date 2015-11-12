@@ -64,7 +64,7 @@ public:
 
 	//interface for specifying passes specific to this backend
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
-	virtual void addRequiredPasses(llvm::PassManager & pm) const;
+	virtual void addRequiredPasses(llvm::legacy::PassManager & pm) const;
 };
 
 }

@@ -20,7 +20,6 @@ initLLVM() {
 	llvm::initializeScalarOpts(Registry);
 	llvm::initializeIPO(Registry);
 	llvm::initializeAnalysis(Registry);
-	llvm::initializeIPA(Registry);
 	llvm::initializeTransformUtils(Registry);
 	llvm::initializeInstCombine(Registry);
 	llvm::initializeInstrumentation(Registry);

@@ -6,6 +6,7 @@
  */
 
 #include <axtor_ocl/OCLModuleInfo.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include <llvm/IR/Module.h>
 #include <axtor/util/llvmDebug.h>
@@ -193,7 +194,7 @@ llvm::Module * OCLModuleInfo::getModule()
 	return mod;
 }
 
-void OCLModuleInfo::runPassManager(llvm::PassManager & pm)
+void OCLModuleInfo::runPassManager(llvm::legacy::PassManager & pm)
 {
 	pm.run(*getModule());
 }

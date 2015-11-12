@@ -35,8 +35,6 @@
 #include <llvm/ADT/APFloat.h>
 
 #include <llvm/Pass.h>
-#include <llvm/PassManager.h>
-#include <llvm/IR/LegacyPassManagers.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Instructions.h>
@@ -76,7 +74,6 @@ namespace axtor {
 	typedef std::vector<llvm::BasicBlock*> BlockVector;
 	typedef std::set<llvm::BasicBlock*> BlockSet;
 	typedef std::vector<BlockSet> BlockSetVector;
-	typedef std::pair<BlockSet, BlockSet> BlockSetPair;
 
 	typedef std::vector<std::string> StringVector;
 	typedef std::set<std::string> StringSet;

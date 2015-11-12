@@ -270,7 +270,7 @@ GLSLModuleInfo * GLSLModuleInfo::createTestInfo(llvm::Module * mod, std::ostream
 	return new GLSLModuleInfo(mod, vertFunc, fragFunc, &vertOut, &fragOut);
 }
 
-void GLSLModuleInfo::runPassManager(llvm::PassManager & pm)
+void GLSLModuleInfo::runPassManager(llvm::legacy::PassManager & pm)
 {
 	pm.run(*getModule());
 }

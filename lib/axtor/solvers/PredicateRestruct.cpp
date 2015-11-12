@@ -162,7 +162,7 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 				}
 
 				// rename the blocks as necessary (if a branch was detached to enable different PHI-evaluations for a predecessor block)
-				LazyRemapInstruction(newPHI, fixPHIMap);
+				LazyRemapInstruction(*newPHI, fixPHIMap);
 
 #ifdef DEBUG
 				llvm::errs() << "&&&&& mapped PHIs:\n";

@@ -10,6 +10,8 @@
 
 #include <axtor/util/llvmShortCuts.h>
 
+using namespace llvm;
+
 namespace axtor {
 
 char LoopBranchSeparationPass::ID = 0;
@@ -48,7 +50,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 		return changed;
 	}
 
-	llvm::BasicBlock * LoopBranchSeparationPass::breakSpecialEdge(llvm::Function * func, llvm::BasicBlock * srcBlock, llvm::BasicBlock * targetBlock, llvm::Function::iterator insertBefore)
+	llvm::BasicBlock * LoopBranchSeparationPass::breakSpecialEdge(llvm::Function * func, llvm::BasicBlock * srcBlock, llvm::BasicBlock * targetBlock, BasicBlock * insertBefore)
 	{
 		llvm::LLVMContext & context = SharedContext::get();
 
@@ -85,7 +87,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 
 			// check all branches of n-way terminators (n > 1)
 			llvm::TerminatorInst * termInst = block->getTerminator();
-			llvm::Loop * loop = loopInfo.getLoopFor(block);
+			llvm::Loop * loop = loopInfo.getLoopFor(&*block);
 
 			if (loop && termInst->getNumSuccessors() > 1)
 			{
@@ -109,7 +111,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 						std::string name = block->getName().str();
 						std::cerr << "#\tbreak special loop branch at block :" << name << std::endl;
 #endif
-						llvm::BasicBlock * detachBlock = breakSpecialEdge(&func, block, specialBlock, next);
+						llvm::BasicBlock * detachBlock = breakSpecialEdge(&func, &*block, specialBlock, cast<BasicBlock>(next));
 
 						termInst->setSuccessor(i, detachBlock);
 						changed = true;

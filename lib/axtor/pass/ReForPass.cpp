@@ -39,7 +39,7 @@ ReForPass::ReForPass()
 
 void
 ReForPass::getAnalysisUsage(AnalysisUsage & AU) const {
-	AU.addRequired<ScalarEvolution>();
+	AU.addRequired<ScalarEvolutionWrapperPass>();
 	AU.addRequired<LoopInfoWrapperPass>();
 }
 
@@ -247,7 +247,7 @@ bool
 ReForPass::runOnFunction(Function & F) {
 	func = &F;
 	LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-	SE = &getAnalysis<ScalarEvolution>();
+	SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
 
 	for (Loop * l : *LI) {
 		visit(l);

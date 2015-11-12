@@ -12,7 +12,7 @@
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/Transforms/Scalar.h>
-#include <llvm/PassManager.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 
 #include <axtor/util/stringutil.h>
@@ -20,18 +20,20 @@
 #include <axtor/util/llvmTools.h>
 #include <axtor/util/ResourceGuard.h>
 
-#include <axtor/pass/Preparator.h>
-#include <axtor/pass/ExitUnificationPass.h>
 
-#include <axtor/pass/TargetProvider.h>
-#include <axtor/pass/CNSPass.h>
-#include <axtor/pass/Serializer.h>
-#include <axtor/pass/Normalizer.h>
-#include <axtor/pass/TrivialReturnSplitter.h>
-#include <axtor/pass/LoopBranchSeparationPass.h>
-#include <axtor/pass/SimpleUnswitchPass.h>
-#include <axtor/util/llvmInit.h>
 #include <axtor/pass/CGIPass.h>
+#include <axtor/pass/CNSPass.h>
+#include <axtor/pass/ExitUnificationPass.h>
+#include <axtor/pass/LoopBranchSeparationPass.h>
+#include <axtor/pass/Normalizer.h>
+#include <axtor/pass/Preparator.h>
+#include <axtor/pass/RestructuringPass.h>
+#include <axtor/pass/Serializer.h>
+#include <axtor/pass/SimpleUnswitchPass.h>
+#include <axtor/pass/TargetProvider.h>
+#include <axtor/pass/TrivialReturnSplitter.h>
+
+#include <axtor/util/llvmInit.h>
 
 #include <axtor/pass/ReForPass.h>
 
@@ -61,7 +63,7 @@ namespace axtor {
 
 		modInfo.dumpModule();
 
-		llvm::PassManager pm;
+		llvm::legacy::PassManager pm;
 
 #ifdef EVAL_DECOMPILE_TIME
 		Timer timer;
@@ -81,7 +83,7 @@ namespace axtor {
 
 	}
 
-	void addBackendPasses(AxtorBackend & backend, ModuleInfo & modInfo, llvm::PassManager & pm)
+	void addBackendPasses(AxtorBackend & backend, ModuleInfo & modInfo, llvm::legacy::PassManager & pm)
 	{
 		initialize(false);
 
@@ -99,16 +101,15 @@ namespace axtor {
 		//axtor::OpaqueTypeRenamer * renamer = new axtor::OpaqueTypeRenamer();
 		axtor::Serializer * serializer = new axtor::Serializer();
 
-		axtor::TargetProvider * provider = new axtor::TargetProvider(backend, modInfo);
+
 
 		//target info
-		pm.add(provider);
+		pm.add(new axtor::TargetProvider(backend, modInfo));
 
 		// ## REQUIRED TRANSFORMATIONS ##
 
 		//recover registers
-		llvm::Pass * memRegPass = llvm::createPromoteMemoryToRegisterPass();
-		pm.add(memRegPass);
+		pm.add(llvm::createPromoteMemoryToRegisterPass());
 
 
 		//LLVM transformations

@@ -24,9 +24,6 @@
 #ifndef AXTORBACKEND_HPP_
 #define AXTORBACKEND_HPP_
 
-#include <llvm/IR/LegacyPassManagers.h>
-#include <llvm/PassAnalysisSupport.h>
-#include <llvm/PassManager.h>
 #include <llvm/IR/Function.h>
 
 #include <axtor/metainfo/ModuleInfo.h>
@@ -34,10 +31,17 @@
 #include <axtor/writer/SyntaxWriter.h>
 #include <axtor/CommonTypes.h>
 
+namespace llvm {
+	namespace legacy {
+		class PassManager;
+	}
+}
+
 namespace axtor {
 
 struct AxtorBackend
 {
+	virtual ~AxtorBackend() {}
 	virtual const std::string & getName()=0;
 	virtual const std::string & getLLVMDataLayout()=0;
 
@@ -56,7 +60,7 @@ struct AxtorBackend
 
 	//interface for specifying passes specific to this backend
 	virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const=0;
-	virtual void addRequiredPasses(llvm::PassManager & pm) const=0;
+	virtual void addRequiredPasses(llvm::legacy::PassManager & pm) const=0;
 };
 
 }

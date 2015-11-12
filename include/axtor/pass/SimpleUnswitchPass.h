@@ -27,7 +27,6 @@
 
 #include <axtor/config.h>
 
-#include <llvm/PassManager.h>
 #include <llvm/Pass.h>
 #include <llvm/Analysis/Passes.h>
 

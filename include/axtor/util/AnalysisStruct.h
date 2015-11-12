@@ -25,11 +25,9 @@
 #define ANALYSISSTRUCT_HPP_
 
 
-#include <llvm/PassManager.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/Analysis/PostDominators.h>
-#include <llvm/IR/LegacyPassManagers.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Pass.h>
 #include <llvm/IR/Instructions.h>
@@ -38,6 +36,7 @@
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/ADT/APFloat.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Analysis/ScalarEvolution.h>
 
 #include <axtor/pass/AnalysisProvider.h>
 
@@ -57,7 +56,7 @@ namespace axtor{
 		inline llvm::LoopInfo & getLoopInfo() { return *loopInfo; }
 		inline llvm::Loop * getLoopFor(const llvm::BasicBlock * block) { return loopInfo->getLoopFor(block); }
 
-		inline llvm::ScalarEvolution & getSE() { return *SE; }
+		inline const llvm::ScalarEvolution & getSE() { return *SE; }
 		inline const llvm::SCEV * getSCEV(llvm::Value * val) const { return SE->getSCEV(val); }
 		inline llvm::DominatorTree & getDomTree() { return *domTree; }
 		inline bool dominates(const llvm::BasicBlock * a, const llvm::BasicBlock * b) { return domTree->dominates(a, b); }

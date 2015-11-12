@@ -195,7 +195,7 @@ bool OCLBackend::implementsFunction(llvm::Function * func)
 //interface for specifying passes specific to this backend
 void OCLBackend::getAnalysisUsage(llvm::AnalysisUsage & usage) const {}
 
-void OCLBackend::addRequiredPasses(llvm::PassManager & pm) const
+void OCLBackend::addRequiredPasses(llvm::legacy::PassManager & pm) const
 {
 }
 

@@ -27,6 +27,9 @@
 #include <set>
 #include <stack>
 #include <algorithm>
+#include <map>
+
+#include <axtor/CommonTypes.h>
 
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Function.h>
@@ -35,9 +38,10 @@
 #include <axtor/util/SharedContext.h>
 #include <axtor/util/ExtractorRegion.h>
 
-#include <axtor/CommonTypes.h>
 
 namespace axtor {
+
+typedef std::pair<BlockSet, BlockSet> BlockSetPair;
 
 /*
  * find functions with a certain prefix
@@ -49,6 +53,8 @@ std::string cleanDesignatorName(std::string name);
 uint64_t generateTruncMask(uint width);
 
 bool isType(llvm::Value * value, const llvm::Type::TypeID type);
+
+inline bool isType(llvm::Value & value, const llvm::Type::TypeID type) { return isType(&value, type); }
 
 bool isVoid(llvm::Value * value);
 
@@ -114,11 +120,11 @@ void getUniqueExitBlocks(llvm::Loop & loop, BlockSet & exits);
 /// getExitEdges - Return all pairs of (_inside_block_,_outside_block_).
   void getExitEdges(llvm::Loop & loop, BlockPairVector & ExitEdges);
 
-  void LazyRemapBlock(llvm::BasicBlock *BB,
+  void LazyRemapBlock(llvm::BasicBlock  & BB,
                                           ValueMap &ValueMap);
 
   //remaps instructions' operands if they are stored in the map
-  void LazyRemapInstruction(llvm::Instruction *I,
+  void LazyRemapInstruction(llvm::Instruction  &I,
                                       ValueMap &ValueMap);
 
 llvm::CmpInst * createNegation(llvm::Value * value, llvm::Instruction * before);

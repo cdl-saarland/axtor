@@ -32,7 +32,7 @@
 #include <axtor/backend/AxtorBackend.h>
 #include <axtor/CommonTypes.h>
 
-#include <axtor/pass/RestructuringPass.h>
+#include <axtor/ast/BasicNodes.h>
 
 namespace llvm {
 	class ScalarEvolution;
@@ -58,7 +58,7 @@ namespace axtor
 	class Serializer : public llvm::ModulePass
 	{
 	private:
-		llvm::ScalarEvolution * SE;
+		const llvm::ScalarEvolution * SE;
 		void runOnFunction(AxtorBackend & backend, SyntaxWriter * modWriter, IdentifierScope & globals, ast::FunctionNode * funcNode);
 
 	public:

@@ -219,7 +219,7 @@ bool GLSLBackend::implementsFunction(llvm::Function * func)
 //interface for specifying passes specific to this backend
 void GLSLBackend::getAnalysisUsage(llvm::AnalysisUsage & usage) const {}
 
-void GLSLBackend::addRequiredPasses(llvm::PassManager & pm) const
+void GLSLBackend::addRequiredPasses(llvm::legacy::PassManager & pm) const
 {
 }
 

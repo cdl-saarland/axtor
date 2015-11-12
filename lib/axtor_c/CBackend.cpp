@@ -191,7 +191,7 @@ bool CBackend::implementsFunction(llvm::Function * func)
 //interface for specifying passes specific to this backend
 void CBackend::getAnalysisUsage(llvm::AnalysisUsage & usage) const {}
 
-void CBackend::addRequiredPasses(llvm::PassManager & pm) const
+void CBackend::addRequiredPasses(llvm::legacy::PassManager & pm) const
 {
 }
 

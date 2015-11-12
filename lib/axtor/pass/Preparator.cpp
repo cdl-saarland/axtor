@@ -8,8 +8,9 @@
 #include <axtor/pass/Preparator.h>
 #include <axtor/util/llvmDebug.h>
 #include <axtor/backend/AddressSpaces.h>
-
 #include <llvm/IR/TypeFinder.h>
+
+using namespace llvm;
 
 namespace axtor {
 
@@ -37,28 +38,25 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 			}
 		}
 
-		for(llvm::Function::iterator BB = func->begin(); BB != func->end(); ++BB, ++blockIdx)
-		{
+		for(BasicBlock & block : *func)	{
 			uint instIdx = 0;
 
-			for(llvm::BasicBlock::iterator inst = BB->begin(); inst != BB->end(); ++inst, ++instIdx)
-			{
-				if (/* ! inst->hasName() && */ !isType(inst, llvm::Type::VoidTyID) )
-				{
+			for (Instruction & inst : block) {
+				if (/* ! inst->hasName() && */ !isType(inst, llvm::Type::VoidTyID) ) {
 					std::string bogusName = func->getName().str() + '_' + str<uint>(blockIdx) + '_' + str<uint>(instIdx);
-					inst->setName(bogusName);
+					inst.setName(bogusName);
 				}
+				++instIdx;
 			}
+			++blockIdx;
 		}
 	}
 
 	void Preparator::nameAllInstructions(llvm::Module * mod)
 	{
-		for(llvm::Module::iterator func = mod->begin(); func != mod->end(); ++func)
-			if (! func->empty())
-			{
-				nameAllInstructions(func);
-			}
+		for(Function & func : *mod)
+			if (! func.empty())
+				nameAllInstructions(&func);
 	}
 
 
@@ -185,11 +183,11 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 	 */
 	void Preparator::transformInstArguments(llvm::Module * mod)
 	{
-		for(llvm::Module::iterator func = mod->begin(); func != mod->end() ;++func)
-			for(llvm::Function::iterator bb = func->begin(); bb != func->end(); ++bb)
-				for(llvm::BasicBlock::iterator inst = bb->begin(); inst != bb->end(); ++inst)
+		for(Function & func : *mod)
+			for(auto & block : func)
+				for(auto & inst : block)
 				{
-					transformInstruction(inst);
+					transformInstruction(&inst);
 				}
 	}
 

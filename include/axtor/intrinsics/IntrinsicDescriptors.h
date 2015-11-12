@@ -38,6 +38,7 @@ namespace axtor
 		uint getSize(StringVector::const_iterator start, StringVector::const_iterator end);
 	public:
 		virtual std::string build(StringVector::const_iterator start, StringVector::const_iterator end) = 0;
+		virtual ~IntrinsicDescriptor() {}
 	};
 
 	typedef std::map<std::string, IntrinsicDescriptor*> IntrinsicsMap;

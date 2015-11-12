@@ -27,6 +27,12 @@
 #include <axtor/backend/AxtorBackend.h>
 #include <axtor/metainfo/ModuleInfo.h>
 
+namespace llvm {
+	namespace legacy {
+		class PassManager;
+	}
+}
+
 namespace axtor {
 
 /*
@@ -42,7 +48,7 @@ void translateModule(AxtorBackend & backend, ModuleInfo & modInfo);
 /*
  * adds all required passes to @pm for translating the module
  */
-void addBackendPasses(AxtorBackend & backend, ModuleInfo & modInfo, llvm::PassManager & pm);
+void addBackendPasses(AxtorBackend & backend, ModuleInfo & modInfo, llvm::legacy::PassManager & pm);
 
 }
 

@@ -7,6 +7,8 @@
 
 #include <axtor/util/InstructionIterator.h>
 
+using namespace llvm;
+
 namespace axtor {
 
 InstructionIterator::InstructionIterator(llvm::Module & _mod) :
@@ -58,6 +60,6 @@ InstructionIterator::InstructionIterator(llvm::Module & _mod) :
 
 	llvm::Instruction * InstructionIterator::operator*()
 	{
-		return inst;
+		return cast<Instruction>(inst);
 	}
 }

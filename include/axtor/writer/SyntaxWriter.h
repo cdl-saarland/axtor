@@ -26,8 +26,9 @@
 
 #include <axtor/CommonTypes.h>
 #include <axtor/metainfo/ModuleInfo.h>
-
+#if 0
 #include <llvm/Analysis/ScalarEvolution.h>
+#endif
 
 namespace axtor {
 

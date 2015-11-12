@@ -14,7 +14,7 @@
 #include <axtor/util/ResourceGuard.h>
 #include <axtor/util/llvmTools.h>
 #include <axtor/util/llvmLoop.h>
-
+#include <axtor/pass/RestructuringPass.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 
@@ -41,22 +41,22 @@ namespace axtor
 
 		for(;! llvm::isa<llvm::TerminatorInst>(it);++it)
 		{
-			llvm::Instruction * inst = it;
+			llvm::Instruction & inst = *it;
 
 			if (llvm::isa<llvm::GetElementPtrInst>(inst))
 			{
 				continue;
 			}
 
-			const VariableDesc * desc = identifiers.lookUp(inst);
+			const VariableDesc * desc = identifiers.lookUp(&inst);
 
 			if (! desc) {
 				if (! isType(inst, llvm::Type::VoidTyID)) {
-					Log::warn(inst, "undeclared variable! (may cause problems if instruction result is not ignored)");
+					Log::warn(&inst, "undeclared variable! (may cause problems if instruction result is not ignored)");
 				}
-				writer->writeInstruction(0, inst, identifiers);
+				writer->writeInstruction(0, &inst, identifiers);
 			} else {
-				writer->writeInstruction(desc, inst, identifiers);
+				writer->writeInstruction(desc, &inst, identifiers);
 			}
 		};
 	}
@@ -81,24 +81,14 @@ namespace axtor
 	 */
 	void Serializer::createArgumentDeclarations(llvm::Function * func, ConstVariableMap & declares, std::set<llvm::Value*> & parameters)
 	{
-		const llvm::FunctionType * type = getFunctionType(func);
-		ArgList & argList = func->getArgumentList();
-
-		ArgList::iterator arg;
-		uint i;
-
-		for(i = 0, arg = argList.begin();
-			i < type->getNumParams() && arg != argList.end();
-			++i, ++arg)
+		for (Argument & arg : func->getArgumentList())
 		{
 			//const llvm::Type * argType = type->getParamType(i);
 
-			std::string argName = arg->getName();
+			std::string argName = arg.getName();
 
-			assert(llvm::cast<llvm::Argument>(arg) != 0 && "mapped zero value argument");
-
-			declares[arg] = VariableDesc(arg, argName);
-			parameters.insert(arg);
+			declares[&arg] = VariableDesc(&arg, argName);
+			parameters.insert(&arg);
 		}
 	}
 
@@ -314,28 +304,24 @@ namespace axtor
 		IdentifierScope locals(&globals);
 		llvm::Function * func = funcNode->getFunction();
 
-		SE = &getAnalysis<ScalarEvolution>(*func);
+		SE = &getAnalysis<ScalarEvolutionWrapperPass>(*func).getSE();
 
 
 		//### bind function parameters ###
 		createArgumentDeclarations(func, locals.identifiers, parameters);
 
 		//### create local identifiers ###
-		for(llvm::Function::iterator itBlock = func->begin(); itBlock != func->end(); ++itBlock) {
-			for(llvm::BasicBlock::iterator itInst = itBlock->begin(); itInst != itBlock->end(); ++itInst)
+		for(BasicBlock & block : *func) {
+			for(Instruction & inst : block)
 			{
-				llvm::Instruction * inst = itInst;
-				VariableDesc desc(inst, inst->getName());
+				VariableDesc desc(&inst, inst.getName());
 
 				if (! isType(inst, llvm::Type::VoidTyID) &&
-						! llvm::isa<llvm::GetElementPtrInst>(inst)) //no pointer support: only indirectly required by value useds
+						! llvm::isa<llvm::GetElementPtrInst>(&inst)) //no pointer support: only indirectly required by value useds
 				{
-
-				assert(inst != 0 && "mapped zero value");
-
-				//dont overwrite preceeding mappings by PHI-Nodes
-				if (locals.lookUp(inst) == 0 && backend.requiresDesignator(inst))
-					locals.bind(inst, desc);
+					//dont overwrite preceeding mappings by PHI-Nodes
+					if (locals.lookUp(&inst) == 0 && backend.requiresDesignator(&inst))
+						locals.bind(&inst, desc);
 				}
 			}
 		}
@@ -395,14 +381,14 @@ namespace axtor
 
 		const ast::ASTMap & ASTs = getAnalysis<RestructuringPass>().getASTs();
 
-		for(llvm::Module::iterator func = M.begin(); func != M.end(); ++func)
+		for(Function & func : M)
 		{
-			if (! func->isDeclaration())
+			if (! func.isDeclaration())
 			{
-				ast::FunctionNode * funcNode = ASTs.at(func);
+				ast::FunctionNode * funcNode = ASTs.at(&func);
 #ifdef DEBUG
 				funcNode->dump();
-				func->dump();
+				func.dump();
 #endif
 				runOnFunction(backend, modWriter, globalScope, funcNode);
 			}
@@ -415,7 +401,7 @@ namespace axtor
 
 	void Serializer::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
-		usage.addRequired<ScalarEvolution>();
+		usage.addRequired<ScalarEvolutionWrapperPass>();
 		//usage.addRequired<OpaqueTypeRenamer>();
 		usage.addRequired<RestructuringPass>();
 		usage.addRequired<TargetProvider>();

@@ -68,7 +68,7 @@ public:
 
 	virtual IdentifierScope createGlobalBindings();
 
-	virtual void runPassManager(llvm::PassManager & pm);
+	virtual void runPassManager(llvm::legacy::PassManager & pm);
 
 	/*
 	 * checks whether all types are supported and
