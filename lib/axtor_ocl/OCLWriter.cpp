@@ -687,8 +687,15 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 
 	} else {
 		const VariableDesc * desc = locals.lookUp(rootValue);
-		assert(desc && "root value was not mapped");
-		tmp = desc->name;
+		if (!desc) {
+			errs() << "WARNING!!! unmapped rootValue in unwindPointer (this is a hack to work-around GEP chains)\n";
+			tmp = "(" + getPointerTo(rootValue, locals) + ")";
+		} else {
+			tmp = desc->name;
+			assert(desc && "root value was not mapped");
+		}
+
+
 	}
 
 	  // this is a pointer

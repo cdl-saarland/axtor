@@ -189,7 +189,7 @@ namespace axtor {
 					cumulativeOffset = false;
 				}
 				rootValue = dereffedValue;
-				continue;
+				break; // ugly hack to avoid cascading GEPs...
 
 			/* Deref Call */
 			//op[0] = "function Name"
