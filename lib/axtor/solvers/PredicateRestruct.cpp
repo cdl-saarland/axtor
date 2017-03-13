@@ -12,6 +12,10 @@
 #include <llvm/IR/CFG.h>
 #include <axtor/util/llvmDomination.h>
 
+#include <llvm/IR/Instructions.h>
+
+using namespace llvm;
+
 namespace axtor {
 
 PredicateRestruct PredicateRestruct::instance;
@@ -70,14 +74,16 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 		dumpBlockSet(consideredPredBlocks);
 #endif
 
-		// compute the least common dominator of all common exit blocks
-		llvm::DomTreeNode * criticalEntryNode = findImmediateDominator(domTree, exitSet);
-		llvm::BasicBlock * criticalEntryBlock = criticalEntryNode->getBlock();
 
 		// create a new fused block
 		llvm::BasicBlock * fusedBlock = llvm::BasicBlock::Create(LLVMContext, "fused", analysis.getFunction());
 		llvm::PHINode * indexPHI = llvm::PHINode::Create(llvm::Type::getInt32Ty(LLVMContext), 6, "index", fusedBlock);
+#if 0
+		// compute the least common dominator of all common exit blocks
+		llvm::DomTreeNode * criticalEntryNode = findImmediateDominator(domTree, exitSet);
+		llvm::BasicBlock * criticalEntryBlock = criticalEntryNode->getBlock();
 		domTree.addNewBlock(fusedBlock, criticalEntryBlock);
+#endif
 
 		// index exiting blocks
 		BlockVector indexedExits;
@@ -85,6 +91,8 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 		uint index = 0;
 
 		BlockSet predecessorSet;
+		BlockSet branchBlocks; // aritifical blocks for edge preservation
+		std::map<const BasicBlock*, BasicBlock*> remappedExits;
 
 		for (BlockSet::iterator itExitBlock = exitSet.begin(); itExitBlock != exitSet.end(); ++itExitBlock, ++index) {
 
@@ -119,9 +127,15 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 
 					int blockIdx = indexPHI->getBasicBlockIndex(predBlock);
 
-					// insert an intermediate block
+					// insert an intermediate block to select from this edge later on
 					if (blockIdx > -1) {
 						llvm::BasicBlock * branchBlock = llvm::BasicBlock::Create(LLVMContext, "detachedBranch", analysis.getFunction(),fusedBlock);
+
+						// add new branchBlock to predecessor list of fusedBlock
+						localPredecessorSet.insert(branchBlock);
+						predecessorSet.insert(branchBlock);
+						branchBlocks.insert(branchBlock);
+
 						llvm::BranchInst::Create(fusedBlock, branchBlock);
 						termInst->setSuccessor(succIdx, branchBlock);
 						// Maintain that all PHI-nodes after the fuse block
@@ -138,22 +152,31 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 
 			// TODO : just move the PHIs if no branches remain
 			// Create new receiving PHIs Move all PHIs to the fuseBlock
-			for (llvm::BasicBlock::iterator itPHI = exitBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); itPHI = exitBlock->begin())
-			{
+			for (llvm::BasicBlock::iterator itPHI = exitBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI) {
 				llvm::PHINode * oldPHI = llvm::cast<llvm::PHINode>(itPHI);
 				llvm::PHINode * newPHI = llvm::PHINode::Create(oldPHI->getType(), oldPHI->getNumIncomingValues(), "newPHI", indexPHI);
+
+#ifdef DEBUG
+				llvm::errs() << "&&&&& re-routing oldPHI:\n";
+				oldPHI->dump();
+#endif
+
 
 				// attach the new PHI
 				oldPHI->addIncoming(newPHI, fusedBlock);
 
 				// reconnect all incoming values from this exitBlock's predecessors to new PHI
 				// and remove them from oldPHI
-				for (BlockSet::iterator itMovedPred = localPredecessorSet.begin(); itMovedPred != localPredecessorSet.end(); ++itMovedPred)
-				{
+				for (BlockSet::iterator itMovedPred = localPredecessorSet.begin(); itMovedPred != localPredecessorSet.end(); ++itMovedPred) {
 					llvm::BasicBlock * movedPred = *itMovedPred;
 					int blockIdx = oldPHI->getBasicBlockIndex(movedPred);
 
-					assert(blockIdx > -1 && "analysing former predecessors. Must be included in PHI");
+					assert((branchBlocks.count(movedPred) || blockIdx > -1) && "analysing former predecessors. Must be included in PHI (except branchBlocks on broken exit edges)");
+
+					// ignore artificial branchBlocks (the original exitingBlock that now branches to this branchBlock is also in the localPredecessorList)
+					if (branchBlocks.count(movedPred)) {
+						continue;
+					}
 
 					// move branch to new PHI
 					llvm::Value * inVal = oldPHI->getIncomingValue(blockIdx);
@@ -174,8 +197,7 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 		}
 
 		// Attach UndefValues for all additional predecessors of the PHIs
-		for (llvm::BasicBlock::iterator itPHI = fusedBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI)
-		{
+		for (llvm::BasicBlock::iterator itPHI = fusedBlock->begin(); llvm::isa<llvm::PHINode>(itPHI); ++itPHI) {
 			llvm::PHINode * phi = llvm::cast<llvm::PHINode>(itPHI);
 			llvm::UndefValue * undefVal = llvm::UndefValue::get(phi->getType());
 
@@ -193,8 +215,7 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 		llvm::BasicBlock * altBlock = lowestExitBlock;
 		BlockVector blockCascade(indexedExits.size() - 1);
 
-		for (uint i = 1; i < indexedExits.size(); ++i)
-		{
+		for (uint i = 1; i < indexedExits.size(); ++i) {
 			llvm::BasicBlock * exitBlock = indexedExits[i];
 
 			llvm::BasicBlock * caseBlock = 0;
@@ -207,16 +228,21 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 			}
 			blockCascade[indexedExits.size() - i - 1] = caseBlock;
 
+			// fix PHI-nodes in cascading block (replace @fusedBlock with @caseBlock)
+			for (auto & inst : *exitBlock) {
+				auto * phi = dyn_cast<PHINode>(&inst);
+				if (!phi) break;
+				int blockIdx = phi->getBasicBlockIndex(fusedBlock);
+				assert(blockIdx > -1 && "PHI node not set to fused block!");
+				phi->setIncomingBlock(blockIdx, caseBlock);
+			}
+
+			// branch to nested case (altBlock), exitBlock
 			llvm::CmpInst * testInst = llvm::CmpInst::Create(llvm::Instruction::ICmp, llvm::CmpInst::ICMP_EQ, indexPHI, get_int(i), "caseCompare", caseBlock);
 			llvm::BranchInst::Create(exitBlock, altBlock, testInst, caseBlock);
 
 			// cascade
 			altBlock = caseBlock;
-
-			domTree.changeImmediateDominator(indexedExits[i], caseBlock);
-#ifdef DEBUG
-			llvm::errs() << "DOMTREE: " << caseBlock->getName() << " idoms " << indexedExits[i]->getName() << "\n";
-#endif
 		}
 
 #ifdef DEBUG_VIEW_CFGS
@@ -224,24 +250,30 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 #endif
 
 		// update the dom-tree for the cascade
+#if 0
 		domTree.changeImmediateDominator(lowestExitBlock, blockCascade[0]);
+#endif
 #ifdef DEBUG
 			llvm::errs() << "DOMTREE: " << blockCascade[0]->getName() << " idoms " << lowestExitBlock->getName() << "\n";
 #endif
 
-		for (
-				BlockVector::iterator itBlock = blockCascade.begin();
-				(itBlock != blockCascade.end()) && (itBlock + 1 != blockCascade.end());
-				++itBlock)
-		{
-			llvm::BasicBlock * dominatingBlock = *itBlock;
-			llvm::BasicBlock * dominatedBlock = *(itBlock + 1);
+#if 0
+		for (uint i = 0; i + 1 < blockCascade.size(); ++i) {
+			llvm::BasicBlock * dominatingBlock = blockCascade[i];
+			llvm::BasicBlock * dominatedBlock = blockCascade[i + 1];
 
 #ifdef DEBUG
 			llvm::errs() << "DOMTREE: " << dominatingBlock->getName() << " idoms (new) " << dominatedBlock->getName() << "\n";
 #endif
+			// dominated cascading case
 			domTree.addNewBlock(dominatedBlock, dominatingBlock);
+
+			// dominated exit (depends on outside reachability..) FIXME!
+			uint exitIdx = indexedExits.size() - i - 1;
+			domTree.changeImmediateDominator(indexedExits[exitIdx], dominatingBlock);
+
 		}
+#endif
 
 		// the fused block is the mandatory exit for all cases
 		oExitBlock = fusedBlock;
@@ -261,11 +293,12 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 
 EXPENSIVE_TEST verifyModule(*analysis.getFunction()->getParent());
 
+	if (modifiedCFG) domTree.recalculate(*analysis.getFunction());
+
 	return modifiedCFG;
 }
 
-PredicateRestruct * PredicateRestruct::getInstance()
-{
+PredicateRestruct * PredicateRestruct::getInstance() {
 	return &instance;
 }
 
