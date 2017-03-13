@@ -103,8 +103,11 @@ namespace axtor {
 	RestructuringProcedure * IfParser::IfElseBuilderSession::getSolver() const
 	{
 		// TODO: find a heuristic to decide between the two
-		//return NodeSplittingRestruct::getInstance();
-		return PredicateRestruct::getInstance();
+		if (getenv("AXTOR_CNS_RESTRUCT")) {
+			return NodeSplittingRestruct::getInstance();
+		} else {
+			return PredicateRestruct::getInstance();
+		}
 	}
 
 	void IfParser::IfElseBuilderSession::dump()
