@@ -6,6 +6,7 @@
  */
 
 #include <axtor/solvers/NodeSplittingRestruct.h>
+#include <axtor/util/llvmDuplication.h>
 
 #include <axtor/util/llvmDebug.h>
 #include <llvm/IR/CFG.h>
