@@ -38,7 +38,7 @@ namespace axtor {
 /*
  * initializes the library
  */
-void initialize(bool initLLVM = true);
+void initialize(bool alsoLLVM, llvm::LLVMContext * userContext = nullptr);
 
 /*
  * translates the module described by modinfo using the corresponding backend

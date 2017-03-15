@@ -39,16 +39,19 @@
 
 
 namespace axtor {
-	static bool axtorInitialized = false;
+	bool axtorInitialized = false;
 
-	void initialize(bool alsoLLVM)
+	void initialize(bool alsoLLVM, llvm::LLVMContext * userContext)
 	{
 		if (axtorInitialized) return;
 
 		CompilerLog::init(llvm::errs());
-		if (alsoLLVM) {
-			initLLVM();
-		}
+
+                if (alsoLLVM) {
+                  initLLVM();
+                }
+
+                SharedContext::init(userContext ? *userContext : *(new llvm::LLVMContext));
 
 		axtorInitialized = true;
 	}
