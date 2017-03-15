@@ -198,7 +198,8 @@ ReForPass::recoverForLoop(Loop * l) {
 
 	// Remap f(I) to I in exit condition
 	// FIXME: this is too simplistic (loop-carried stuff)
-	RemapInstruction(condInst, condRemap, RF_IgnoreMissingEntries);
+	RemapInstruction(condInst, condRemap);
+	// RemapInstruction(condInst, condRemap, RF_IgnoreMissingEntries);
 	condInst->removeFromParent();
 	condInst->insertBefore(exitingBranch);
 

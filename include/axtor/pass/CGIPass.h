@@ -61,7 +61,7 @@ class CGIPass : public llvm::ModulePass
 
 		void lowerMemSet();
 
-		static const char * getPassName() { return "CGIPass - OCL Code Generator Intrinsics"; }
+                static llvm::StringRef getPassName() { return "CGIPass - OCL Code Generator Intrinsics"; }
 	};
 
 	public:
@@ -75,7 +75,7 @@ class CGIPass : public llvm::ModulePass
 
 		bool runOnModule(llvm::Module & M);
 
-		virtual const char * getPassName() const
+		virtual llvm::StringRef getPassName() const
 		{
 			return Session::getPassName();
 		}

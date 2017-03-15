@@ -27,7 +27,7 @@ namespace axtor {
 
 	SimpleUnswitchPass::~SimpleUnswitchPass() {}
 
-	const char * SimpleUnswitchPass::getPassName() const
+        llvm::StringRef SimpleUnswitchPass::getPassName() const
 	{
 		return "unswitch";
 	}

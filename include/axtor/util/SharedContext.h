@@ -38,7 +38,7 @@ class SharedContext
 	static llvm::LLVMContext * context;
 
 public:
-	static void init();
+	static void init(llvm::LLVMContext & context);
 
 	static llvm::LLVMContext & get();
 };

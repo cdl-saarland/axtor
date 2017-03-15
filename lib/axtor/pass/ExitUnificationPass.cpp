@@ -69,9 +69,9 @@ char ExitUnificationPass::ID = 0;
 		BlockPairVector edges;
 		getExitEdges(*loop, edges);
 
-		llvm::Type * intType = llvm::IntegerType::get(SharedContext::get(), 32);
+		llvm::Type * intType = llvm::IntegerType::get(func.getContext(), 32);
 
-		llvm::BasicBlock * uniqueExitBlock = llvm::BasicBlock::Create(SharedContext::get(), "exitswitch", &func, edges.begin()->second);
+		llvm::BasicBlock * uniqueExitBlock = llvm::BasicBlock::Create(func.getContext(), "exitswitch", &func, edges.begin()->second);
 		parent->addBlockEntry(uniqueExitBlock);
     // FIXME
 		llvm::PHINode * phi = llvm::PHINode::Create(intType, 0, "exitID", uniqueExitBlock);
@@ -161,7 +161,7 @@ char ExitUnificationPass::ID = 0;
 		return changed;
 	}
 
-	 const char * ExitUnificationPass::getPassName() const	{
+        llvm::StringRef ExitUnificationPass::getPassName() const	{
 		return "axtor - loop exit enumeration";
 	}
 }

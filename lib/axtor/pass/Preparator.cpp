@@ -270,7 +270,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 		}
 	}
 
-		 const char * Preparator::getPassName() const
+		llvm::StringRef Preparator::getPassName() const
 		{
 			return "axtor - preparator pass";
 		}

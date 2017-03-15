@@ -15,48 +15,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 /*
- * SimpleUnswitchPass.h
+ * llvmOptimization.h
  *
- *  Created on: 16.03.2011
+ *  Created on: Aug 25, 2011
  *      Author: Simon Moll
  */
 
+#ifndef LLVMOPTIMIZATION_HPP_
+#define LLVMOPTIMIZATION_HPP_
 
-#ifndef SIMPLEUNSWITCHPASS_HPP_
-#define SIMPLEUNSWITCHPASS_HPP_
-
-#include <axtor/config.h>
-
-#include <llvm/Pass.h>
-#include <llvm/Analysis/Passes.h>
-
+namespace llvm {
+	class Module;
+}
 
 namespace axtor {
-	/*
-	 * replaces Switch- terminators with a cascade of 2-way branches
-	 */
-	class SimpleUnswitchPass : public llvm::ModulePass
-	{
-		bool runOnFunction(llvm::Function * func);
 
-		void processSwitch(llvm::Function * func, llvm::BasicBlock * switchBlock);
+	void optimizeModule(llvm::Module * module);
 
-	public:
-		static char ID;
-
-		virtual llvm::StringRef getPassName() const;
-
-		virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
-
-		SimpleUnswitchPass() :
-			llvm::ModulePass(ID)
-		{}
-
-		virtual ~SimpleUnswitchPass();
-
-		virtual bool runOnModule(llvm::Module& M);
-	};
 
 }
 
-#endif /* SIMPLEUNSWITCHPASS_HPP_ */
+#endif /* LLVMOPTIMIZATION_HPP_ */

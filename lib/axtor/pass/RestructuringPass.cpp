@@ -70,7 +70,7 @@ namespace axtor {
 	{
 		llvm::LoopInfo & funcLoopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
 		llvm::DominatorTree & funcDomTree = getAnalysis<llvm::DominatorTreeWrapperPass>(func).getDomTree();
-		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTree>(func);
+		llvm::PostDominatorTree & funcPostDomTree = getAnalysis<llvm::PostDominatorTreeWrapperPass>(func).getPostDomTree();
 		llvm::ScalarEvolution & SE = getAnalysis<llvm::ScalarEvolutionWrapperPass>(func).getSE();
 		analysis = AnalysisStruct(*this, func, funcLoopInfo, funcDomTree, funcPostDomTree, SE);
 	}
@@ -241,7 +241,7 @@ namespace axtor {
 				llvm::errs() << "### DomTree ###\n";
 				A.getDomTree().print(llvm::errs());
 				llvm::errs() << "### PostDomTree ###\n";
-				A.getPostDomTree().dump();
+				A.getPostDomTree().print(llvm::errs());
 				// func.viewCFGOnly();
 		}
 
@@ -256,7 +256,7 @@ namespace axtor {
 
 	void  RestructuringPass::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
-		usage.addRequired<llvm::PostDominatorTree>();
+		usage.addRequired<llvm::PostDominatorTreeWrapperPass>();
 		usage.addRequired<llvm::DominatorTreeWrapperPass>();
 		usage.addRequired<llvm::LoopInfoWrapperPass>();
 		usage.addRequired<ScalarEvolutionWrapperPass>();
@@ -268,22 +268,22 @@ namespace axtor {
 		llvm::errs() << "\n\n##### PASS: Restructuring Pass #####\n\n";
 		verifyModule(M);
 #endif
-		for (llvm::Module::iterator func = M.begin(); func != M.end(); ++func)
+		for (Function & func : M)
 		{
-			if (!func->isDeclaration()) {
-				ast::FunctionNode * funcNode = runOnFunction(*func);
+			if (!func.isDeclaration()) {
+				ast::FunctionNode * funcNode = runOnFunction(func);
 				IF_DEBUG {
-					errs() << "Restructured CFG of function " << func->getName() << "\n";
+					errs() << "Restructured CFG of function " << func.getName() << "\n";
 					funcNode->dump();
 				}
-				astMap[(llvm::Function*) func] = funcNode;
+				astMap[&func] = funcNode;
 			}
 		}
 
 		return true;
 	}
 
-	const char *  RestructuringPass::getPassName() const
+        llvm::StringRef  RestructuringPass::getPassName() const
 	{
 		return "axtor - modular AST extraction pass";
 	}

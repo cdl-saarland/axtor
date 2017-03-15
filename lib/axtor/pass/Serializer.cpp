@@ -409,7 +409,7 @@ namespace axtor
 		usage.setPreservesAll();
 	}
 
-	const char * Serializer::getPassName() const
+        llvm::StringRef Serializer::getPassName() const
 	{
 		return "axtor - serializer";
 	}

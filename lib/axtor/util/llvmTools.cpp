@@ -11,7 +11,6 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/FileSystem.h>
 #include <system_error>
-#include <llvm/Bitcode/ReaderWriter.h>
 
 #include <iostream>
 
@@ -41,10 +40,13 @@ namespace axtor {
 	{
 		assert (M);
 		std::error_code EC;
-		std::string errorMessage = "";
-		llvm::raw_fd_ostream file(fileName.c_str(), EC, sys::fs::F_None);
-		llvm::WriteBitcodeToFile(M, file);
-		file.close();
+		llvm::raw_fd_ostream file(fileName.c_str(), EC, sys::fs::OpenFlags::F_RW);
+                M->print(file, nullptr);
+                file.close();
+                if (EC) {
+                  errs() << "ERROR: printing module to file failed: " << EC.message() << "\n";
+                  abort();
+                }
 	}
 
 }

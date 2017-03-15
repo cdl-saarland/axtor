@@ -86,7 +86,7 @@ namespace axtor
 		void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 		bool runOnModule(llvm::Module & M);
 
-		const char * getPassName() const;
+                llvm::StringRef getPassName() const;
 
 		/*
 		 * writes a node using the given backend and writer.

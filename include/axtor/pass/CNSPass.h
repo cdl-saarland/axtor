@@ -63,7 +63,7 @@ public:
 
 	bool runOnModule(llvm::Module & M);
 
-	virtual const char * getPassName() const;
+	virtual llvm::StringRef getPassName() const;
 };
 
 }

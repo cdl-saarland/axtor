@@ -67,7 +67,7 @@ namespace axtor
 		if (entry == barrierBlock)
 			return false;
 
-		llvm::PostDominatorTree & postDomTree = getAnalysis<llvm::PostDominatorTree>(func);
+		llvm::PostDominatorTree & postDomTree = getAnalysis<llvm::PostDominatorTreeWrapperPass>(func).getPostDomTree();
 		//llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfo>(func);
 
 		{ //linear subdivision
@@ -230,7 +230,7 @@ namespace axtor
 	void Normalizer::getAnalysisUsage(llvm::AnalysisUsage & usage) const
 	{
 		usage.addRequired<llvm::LoopInfoWrapperPass>();
-		usage.addRequired<llvm::PostDominatorTree>();
+		usage.addRequired<llvm::PostDominatorTreeWrapperPass>();
 		usage.addRequired<llvm::DominatorTreeWrapperPass>();
 		usage.addRequired<TargetProvider>();
 		//usage.addRequired<Regularizer>();

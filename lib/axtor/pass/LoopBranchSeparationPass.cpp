@@ -123,7 +123,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 		return changed;
 	}
 
-	const char * LoopBranchSeparationPass::getPassName() const
+        llvm::StringRef LoopBranchSeparationPass::getPassName() const
 	{
 		return "axtor - loop branch separation pass";
 	}

@@ -84,7 +84,7 @@ namespace axtor {
 
 		bool runOnModule(llvm::Module & M);
 
-		virtual const char * getPassName() const;
+                llvm::StringRef getPassName() const;
 
 		virtual void releaseMemory();
 

@@ -152,7 +152,7 @@ bool CNSPass::runOnFunction(llvm::Function & func)
 	return true;
 }
 
-const char * CNSPass::getPassName() const
+llvm::StringRef CNSPass::getPassName() const
 {
 	return "Controlled Node Splitting pass";
 }

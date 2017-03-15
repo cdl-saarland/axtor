@@ -13,16 +13,15 @@ namespace axtor {
 
 llvm::LLVMContext * SharedContext::context = NULL;
 
-void SharedContext::init()
+void SharedContext::init(llvm::LLVMContext & axtorContext)
 {
-	if (!context)
-		context = &llvm::getGlobalContext();
+    context = &axtorContext;
 }
 
 llvm::LLVMContext & SharedContext::get()
 {
-	init();
-	return *context;
+  assert(context && "axtor not initialized properly");
+  return *context;
 }
 
 }

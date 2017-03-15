@@ -49,7 +49,7 @@ namespace axtor {
 	{
 	}
 
-	const char * TrivialReturnSplitter::getPassName() const
+        llvm::StringRef TrivialReturnSplitter::getPassName() const
 	{
 		return "axtor - trivial returning block splitter";
 	}

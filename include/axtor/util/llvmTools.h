@@ -28,7 +28,6 @@
 #include <iostream>
 
 #include <llvm/IR/Module.h>
-#include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/Support/MemoryBuffer.h>
 
 #include <axtor/util/SharedContext.h>

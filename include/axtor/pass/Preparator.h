@@ -124,7 +124,7 @@ namespace axtor
 	public:
 		static char ID;
 
-			virtual const char * getPassName() const;
+                llvm::StringRef getPassName() const;
 
 			virtual void getAnalysisUsage(llvm::AnalysisUsage & usage) const;
 
