@@ -2,7 +2,7 @@
                   AST - Extractor for LLVM
                           (axtor)
 --------------------------------------------------------------
-date    : 17.09.12
+date    : 15.03.17
 author  : Simon Moll
 licence : GPL (read file "LICENSE")
 
@@ -16,12 +16,12 @@ Information about the LLVM can be found on http://llvm.org/ .
 
 
 ##### Remarks #####
-Has only been tested on Linux systems (Scientific Linux 6.1, Ubuntu). Although,
+Has only been tested on Arch Linux. Although,
 the OpenCL backend and core library should work out of the box on other OSes
 as well.
 
 ##### Build Prerequisites #####
-LLVM 3.1 (release)
+LLVM 4.0 (release)
 
 
 ##### Build Instructions #####
