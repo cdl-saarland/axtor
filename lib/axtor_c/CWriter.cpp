@@ -112,8 +112,8 @@ std::string CWriter::getScalarType(const llvm::Type * type, bool asVectorElement
 }
 
 std::string CWriter::getLocalVariableName(const std::string &variableFullName) {
-  return variableFullName.substr(variableFullName.find_first_of('.') + 1, 
-                                 variableFullName.length() - 
+  return variableFullName.substr(variableFullName.find_first_of('.') + 1,
+                                 variableFullName.length() -
                                  variableFullName.find_first_of('.'));
 }
 
@@ -891,10 +891,10 @@ std::string CWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals, 
       } else if (llvm::isa<llvm::ConstantFP>(val)) {
          llvm::ConstantFP * constFP = llvm::cast<llvm::ConstantFP>(val);
          llvm::APFloat apFloat = constFP->getValueAPF();
-         if (&apFloat.getSemantics() == &llvm::APFloat::IEEEsingle) {
+         if (constFP->getType()->isFloatTy()) {
         	 float num = apFloat.convertToFloat();
         	 return "(float)(" + str<float>(num) + ")";
-         } else if (&apFloat.getSemantics() == &llvm::APFloat::IEEEdouble) {
+         } else if (constFP->getType()->isDoubleTy()) {
         	 double num = apFloat.convertToDouble();
         	 return "(double)(" + str<double>(num) + ")";
          } else {
