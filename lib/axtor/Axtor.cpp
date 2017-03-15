@@ -144,32 +144,33 @@ namespace axtor {
 		//get rid of switches early on
     	pm.add(simpleUnswitch);
 
-    	if (! getenv("AXTOR_NO_FOR"))
+    	if (! getenv("AXTOR_NO_FOR")) {
     		pm.add(new ReForPass);
+        }
 
-		axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
-		pm.add(restruct);
-		
-		//opaque type renamer
-		//pm.add(renamer);
+        axtor::RestructuringPass * restruct = new axtor::RestructuringPass();
+        pm.add(restruct);
 
-		//backend specific passes
-		backend.addRequiredPasses(pm);
-		
-		// sanitize variable names
-		pm.add(preperator);
+        //opaque type renamer
+        //pm.add(renamer);
 
-		// ## BUILTIN TRANSFORMATION ##
-		//remove optimization artifacts
-		pm.add(new CGIPass());
+        //backend specific passes
+        backend.addRequiredPasses(pm);
 
-		// clear out artifacts
-		pm.add(llvm::createDeadCodeEliminationPass());
+        // sanitize variable names
+        pm.add(preperator);
 
-		//read-only serialization pass
-		pm.add(serializer);
+        // ## BUILTIN TRANSFORMATION ##
+        //remove optimization artifacts
+        pm.add(new CGIPass());
 
-		//axtor passes
+        // clear out artifacts
+        pm.add(llvm::createDeadCodeEliminationPass());
+
+        //read-only serialization pass
+        pm.add(serializer);
+
+        //axtor passes
 
 	}
 
