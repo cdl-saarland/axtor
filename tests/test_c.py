@@ -7,6 +7,8 @@ testfiles = [filenames for (dirpath, dirnames, filenames) in walk("src/")][0]
 
 testTimeout = 1000
 
+axtorPath="./../build/bin/axtor"
+
 def shellCmd(cmdText, logPrefix):
     cmd = shlex.split(cmdText)
     with open(logPrefix + ".out", "w") as fOut:
@@ -21,10 +23,10 @@ def compile_to_LLVM(srcFile, destFile, suffix):
     return shellCmd("clang -S -emit-llvm " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
     
 def compile_to_obj(srcFile, destFile, suffix):
-    return shellCmd("icc -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
+    return shellCmd("clang -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
 
 def axtor_run(srcFile, destFile, backend, suffix):
-    return shellCmd("axtor -i " + srcFile + " -o " + destFile + " -m " + backend, "logs/axtor_" + suffix) == 0
+    return shellCmd(axtorPath + " -i " + srcFile + " -o " + destFile + " -m " + backend, "logs/axtor_" + suffix) == 0
 
 def runTest(file):
     # TODO
