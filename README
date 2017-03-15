@@ -16,12 +16,12 @@ Information about the LLVM can be found on http://llvm.org/ .
 
 
 ##### Remarks #####
-Has only been tested on Linux systems (Scientific Linux 6.1, Ubuntu). Although,
+Has only been tested on Linux systems (Scientific Linux 6.1, Ubuntu, Arch). Although,
 the OpenCL backend and core library should work out of the box on other OSes
 as well.
 
 ##### Build Prerequisites #####
-LLVM 3.1 (release)
+LLVM 3.8 (release)
 
 
 ##### Build Instructions #####
