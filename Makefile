@@ -13,7 +13,7 @@ install::
 
 # LLVM
 LLVM_CXXFLAGS:=`llvm-config --cxxflags`
-LLVM_LDFLAGS:=`llvm-config --ldflags`
+LLVM_LDFLAGS:=`llvm-config --ldflags --system-libs`
 LLVM_LIBS:=`llvm-config --libs`
 
 # compiler customization
