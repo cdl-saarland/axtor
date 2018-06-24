@@ -19,7 +19,7 @@ using namespace llvm;
 
 namespace axtor {
 
-	static AttributeSet CreateAttributeSet(int index, LLVMContext & context, std::initializer_list<llvm::Attribute::AttrKind> attribs) {
+	static AttributeSet CreateAttributeSet(LLVMContext & context, std::initializer_list<llvm::Attribute::AttrKind> attribs) {
 #if 0 // arg attributes
 	  {
 	   AttrBuilder B;
@@ -34,7 +34,7 @@ namespace axtor {
 		for (auto attrib : attribs)	{
 			B.addAttribute(attrib);
 		}
-		return AttributeSet::get(context, index, B);
+		return AttributeSet::get(context, B);
 	}
 
 	static void SetAttributes(llvm::Function * func, std::initializer_list<AttributeSet> attribSets) {

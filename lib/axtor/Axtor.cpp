@@ -21,7 +21,6 @@
 #include <axtor/util/ResourceGuard.h>
 
 
-#include <axtor/pass/CGIPass.h>
 #include <axtor/pass/CNSPass.h>
 #include <axtor/pass/ExitUnificationPass.h>
 #include <axtor/pass/LoopBranchSeparationPass.h>
@@ -90,7 +89,7 @@ namespace axtor {
 	{
 		initialize(false);
 
-		llvm::Pass * loopSimplify = llvm::createLoopSimplifyPass();
+		llvm::Pass * loopSimplify = llvm::createLoopSimplifyCFGPass();
 
 		axtor::SimpleUnswitchPass * simpleUnswitch = new axtor::SimpleUnswitchPass();
 		axtor::Preparator * preperator = new axtor::Preparator();
@@ -112,7 +111,7 @@ namespace axtor {
 		// ## REQUIRED TRANSFORMATIONS ##
 
 		//recover registers
-		pm.add(llvm::createPromoteMemoryToRegisterPass());
+		pm.add(llvm::createSROAPass());
 
 
 		//LLVM transformations
@@ -165,7 +164,7 @@ namespace axtor {
 
         // ## BUILTIN TRANSFORMATION ##
         //remove optimization artifacts
-        pm.add(new CGIPass());
+        // pm.add(new CGIPass());
 
         // clear out artifacts
         pm.add(llvm::createDeadCodeEliminationPass());

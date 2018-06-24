@@ -300,28 +300,23 @@ std::string CWriter::getFunctionHeader(llvm::Function * func, IdentifierScope * 
 	//function name
 	builder << ' ' << func->getName().str();
 
-	//arguments
-	ArgList & argList = func->getArgumentList();
-	ArgList::iterator arg;
-
-
 	//catch empty lists
-	if (argList.empty())
-	{
+	if (func->arg_empty()) {
 		builder << "()";
 		return builder.str();
 	}
 
 	//create generic argument list
-	uint i;
-	for(i = 0, arg = argList.begin();
-		i < type->getNumParams() && arg != argList.end();
-		++i, ++arg)
+        bool firstArg = true;
+        for (auto & arg : func->args())
+	// for(i = 0, arg = argList.begin();
+	// 	i < type->getNumParams() && arg != argList.end();
+	// 	++i, ++arg)
 	{
-		const llvm::Type * argType = type->getParamType(i);
+		const llvm::Type * argType = arg.getType();
 
 		// dereference byVal pointers
-		if (arg->hasByValAttr()) {
+		if (arg.hasByValAttr()) {
 			argType = llvm::cast<llvm::PointerType>(argType)->getElementType();
 		}
 
@@ -329,12 +324,13 @@ std::string CWriter::getFunctionHeader(llvm::Function * func, IdentifierScope * 
 
 		std::string argName;
 		if (locals) {
-			const VariableDesc * desc = locals->lookUp(cast<Argument>(arg));
+			const VariableDesc * desc = locals->lookUp(&arg);
 			argName = desc->name;
 		}
 
-		 if (arg == argList.begin()) {
+		 if (firstArg) {
 			 builder << '(';
+                         firstArg = false;
 		 } else {
 			 builder << ", ";
 		 }
@@ -1278,34 +1274,14 @@ std::string CWriter::getInstructionAsExpression(llvm::Instruction * inst, Identi
 			std::cerr << "intrinsic call " << callee->getName().str() << "\n";
 #endif
 			std::vector<std::string> operands;
-		    const ArgList & argList = callee->getArgumentList();
-		    ArgList::const_iterator argStart = argList.begin();
-		    ArgList::const_iterator itArg = argStart;
 
-		  for(uint argIdx = 0; argIdx < call->getNumArgOperands(); ++argIdx, ++itArg)
-		  {
-			 llvm::Value * op = call->getArgOperand(argIdx);
-
-			 // special handling of the FAKE_GLOBAL_SAMPLER intrinsic
-			 if (llvm::isa<llvm::CallInst>(op)) {
-#if 0
-				 llvm::CallInst * samplerCall = llvm::cast<llvm::CallInst>(op);
-				if (samplerCall->getCalledFunction()->getName() == FAKE_GLOBAL_SAMPLER_NAME) {
-					size_t cfg;
-					llvm::Value * arg = samplerCall->getArgOperand(0);
-
-					if (! evaluateInt(arg, cfg)) {
-						Log::fail(samplerCall, "expected enum value");
-					}
-					operands.push_back("samplerGlobal" + hexstr(cfg));
-					continue;
-				}
-#endif
-			 }
+                        int argIdx = 0;
+		  for(auto & arg : callee->args()) {
+			 llvm::Value * op = call->getArgOperand(argIdx++);
 
 			 const VariableDesc * opDesc = locals.lookUp(op);
 
-			 bool isByValue = itArg->hasByValAttr();
+			 bool isByValue = arg.hasByValAttr();
 
 			 if (opDesc) {
 				 //global variables and allocas are dereferenced by their name
@@ -1606,13 +1582,9 @@ void CWriter::writePostcheckedWhile(llvm::BranchInst * branchInst, IdentifierSco
 
  void CWriter::writeFunctionPrologue(llvm::Function * func, IdentifierScope & locals)
 {
-   typedef llvm::Function::ArgumentListType ArgList;
-   const ArgList & argList = func->getArgumentList();
-
    ConstValueSet arguments;
-   for(ArgList::const_iterator arg = argList.begin(); arg != argList.end(); ++arg)
-   {
-	   arguments.insert(cast<Argument>(arg));
+   for(auto & arg : func->args()) {
+	   arguments.insert(&arg);
    }
 
    for(ConstVariableMap::iterator itVar = locals.identifiers.begin();

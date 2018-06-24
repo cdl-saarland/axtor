@@ -27,14 +27,9 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 	{
 		uint blockIdx = 0;
 
-		typedef llvm::Function::ArgumentListType ArgList;
-
-		ArgList & args = func->getArgumentList();
-
-		for(ArgList::iterator itArg = args.begin(); itArg != args.end(); ++itArg)
-		{
-			if (itArg->getName().str() == "") {
-				itArg->setName("somearg");
+		for(auto & arg : func->args()) {
+			if (arg.getName().str() == "") {
+				arg.setName("somearg");
 			}
 		}
 

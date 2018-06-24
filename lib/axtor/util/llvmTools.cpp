@@ -40,7 +40,7 @@ namespace axtor {
 	{
 		assert (M);
 		std::error_code EC;
-		llvm::raw_fd_ostream file(fileName.c_str(), EC, sys::fs::OpenFlags::F_RW);
+		llvm::raw_fd_ostream file(fileName.c_str(), EC);
                 M->print(file, nullptr);
                 file.close();
                 if (EC) {

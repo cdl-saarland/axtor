@@ -7,15 +7,15 @@
 
 #include <axtor/util/llvmOptimization.h>
 
-#include <llvm/Target/TargetMachine.h>
+#include <llvm/Analysis/Passes.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Instructions.h>
-#include <llvm/LinkAllPasses.h>
 #include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Linker/Linker.h>
-#include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/Analysis/Passes.h>
 #include <llvm/IR/Module.h>
+#include <llvm/LinkAllPasses.h>
+#include <llvm/Linker/Linker.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Transforms/Utils/Cloning.h>
 
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
@@ -34,7 +34,6 @@ namespace axtor {
     Builder.OptLevel = 3;
     Builder.DisableUnitAtATime = true;
     Builder.LoopVectorize = false; // default: false
-    Builder.BBVectorize = false; // default: false
     Builder.SLPVectorize = false; // default: false
     Builder.DisableUnrollLoops = false; // default: false
     Builder.Inliner = nullptr;

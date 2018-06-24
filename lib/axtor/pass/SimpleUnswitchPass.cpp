@@ -47,15 +47,10 @@ namespace axtor {
 		llvm::BasicBlock * exitBlock = defaultDest;
 
 		//create IF-cascade (skip the default case)
-		typedef llvm::SwitchInst::CaseIt CaseIt;
-		CaseIt caseBegin = switchInst->case_begin();
-		CaseIt caseEnd = switchInst->case_end();
-
-		for (CaseIt itCase = caseBegin; itCase != caseEnd; ++itCase)
-		{
-			uint i = itCase.getCaseIndex();
-			llvm::Value * succVal = itCase.getCaseValue();
-			llvm::BasicBlock * succBlock = itCase.getCaseSuccessor();
+		for (auto & caseHandle : switchInst->cases()) {
+			uint i = caseHandle.getCaseIndex();
+			llvm::Value * succVal = caseHandle.getCaseValue();
+			llvm::BasicBlock * succBlock = caseHandle.getCaseSuccessor();
 
 			{
 				llvm::BasicBlock * caseBlock = llvm::BasicBlock::Create(context, "cascade" + str<uint>(i), func,  exitBlock);

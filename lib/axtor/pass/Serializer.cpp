@@ -81,7 +81,7 @@ namespace axtor
 	 */
 	void Serializer::createArgumentDeclarations(llvm::Function * func, ConstVariableMap & declares, std::set<llvm::Value*> & parameters)
 	{
-		for (Argument & arg : func->getArgumentList())
+		for (Argument & arg : func->args())
 		{
 			//const llvm::Type * argType = type->getParamType(i);
 
