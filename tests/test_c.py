@@ -20,7 +20,7 @@ def shellCmd(cmdText, logPrefix):
             return retCode
 
 def compile_to_LLVM(srcFile, destFile, suffix):
-    return shellCmd("clang -S -emit-llvm " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
+    return shellCmd("clang -S -O1 -emit-llvm " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
     
 def compile_to_obj(srcFile, destFile, suffix):
     return shellCmd("clang -c " + srcFile + " -o " + destFile, "logs/gcc_" + suffix) == 0
