@@ -147,7 +147,9 @@ public:
 
   std::string getVectorTruncate(const WrappedOperation & op, StringVector operands);
 
-  std::string getBroadcast(llvm::Value & val, IdentifierScope*);
+  std::string getBroadcast(std::string laneText, llvm::Type & laneTy);
+
+  std::string getVectorCompare(const WrappedOperation &op, StringVector operands);
 
   /*
    * returns the string referer to a value (designator for

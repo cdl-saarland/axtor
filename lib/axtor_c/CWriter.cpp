@@ -465,6 +465,12 @@ CWriter::getVectorTruncate(const WrappedOperation & op, StringVector operands) {
   abort(); // TODO implement
 }
 
+std::string
+CWriter::getVectorCompare(const WrappedOperation &op,
+                          StringVector operands) {
+  abort(); // missing vfmk builtin
+}
+
 std::string CWriter::getOperation(const WrappedOperation &op,
                                   StringVector operands) {
   std::string tmp;
@@ -472,6 +478,10 @@ std::string CWriter::getOperation(const WrappedOperation &op,
   //# binary infix operator
   if (op.isBinaryOp() || op.isCompare()) {
     bool signedOps = true;
+    if (op.isCompare() && op.getValue()->getType()->isVectorTy()) {
+      return getVectorCompare(op, operands);
+    }
+
     std::string token = getOperatorToken(op, signedOps);
 
     if (token == "ord") {
@@ -808,7 +818,12 @@ std::string CWriter::getAllNullLiteral(const llvm::Type *type) {
     const llvm::VectorType *arrType = llvm::cast<llvm::VectorType>(type);
     // uint size = arrType->getNumElements();
     std::string elementStr = getAllNullLiteral(arrType->getElementType());
-    return "(" + getType(type) + ")(" + elementStr + ")";
+    auto * zeroConst = Constant::getNullValue(arrType->getElementType());
+    if (type->isVectorTy()) {
+      return getBroadcast(elementStr, *type->getVectorElementType());
+    } else {
+      return "(" + getType(type) + ")(" + elementStr + ")";
+    }
   }
 
     // case llvm::Type::StructTyID:
@@ -857,15 +872,17 @@ IsUniformVector(llvm::Constant & val) {
 
 
 std::string
-CWriter::getBroadcast(llvm::Value & val, IdentifierScope * scope) {
-  auto suffix = GetVectorSuffix(*val.getType());
+CWriter::getBroadcast(std::string laneText, llvm::Type & laneType) {
+  auto suffix = GetVectorSuffix(laneType);
+#if 0
   std::string token;
   if (isa<Constant>(val)) {
     token = getLiteral(&cast<Constant>(val));
   } else {
     token = getValueToken(&val, *scope);
   }
-  return "__builtin_ve_vbrd" + suffix + "(" + token + ")";
+#endif
+  return "__builtin_ve_vbrd" + suffix + "(" + laneText + ")";
 }
 
 /*
@@ -945,9 +962,12 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
 
     if (IsUniformVector(*val)) {
       auto * elem = vector->getOperand(0);
-      return getBroadcast(*elem, nullptr);
+      ConstVariableMap varMap;
+      IdentifierScope emptyScope(varMap);
+      return getBroadcast(getValueToken(elem, emptyScope), *elem->getType());
     }
 
+    abort(); // not implements (below code does not work for NCC)
     std::string buffer = "";
     for (uint i = 0; i < vectorType->getNumElements(); ++i) {
       llvm::Value *opVal = vector->getOperand(i);
@@ -1056,7 +1076,7 @@ std::string CWriter::getShuffleInstruction(llvm::ShuffleVectorInst *shuffle,
       llvm::Value *elem = insertInst->getOperand(1);
       llvm::Value *idxVal = insertInst->getOperand(2);
       if (isa<UndefValue>(vec)) {
-       return getBroadcast(*elem, &locals);
+       return getBroadcast(getValueToken(elem, locals), *elem->getType());
       }
     }
   } else {
@@ -1272,7 +1292,7 @@ CWriter::getConsecutiveVectorAccess(llvm::Type & dataTy, llvm::Value & ptrVal, I
   auto suffix = GetVectorSuffix(dataTy);
 
   auto ptrText = getPointerTo(&ptrVal, locals);
-  const std::string strideText = "1"; // TODO support strided accesses
+  const std::string strideText = str<>(dataTy.getPrimitiveSizeInBits() / 8); // FIXME use DataLayout store size instead
 
   if (storedValue) {
     auto storedTxt = getValueToken(storedValue, locals);
@@ -1562,7 +1582,7 @@ void CWriter::writeInstruction(const VariableDesc *desc,
 
   //### Store instruction
   if (llvm::isa<llvm::StoreInst>(inst)) {
-    getLoadStore(*inst, locals); // FIXME this writes implicitely
+    putLine(getLoadStore(*inst, locals) + ";");
 
     //### InsertElement Instruction
   } else if (llvm::isa<llvm::InsertElementInst>(inst)) {
