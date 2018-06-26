@@ -150,6 +150,10 @@ std::string CWriter::getType(const llvm::Type *type) {
 
   } else if (llvm::isa<llvm::VectorType>(type)) {
     const llvm::VectorType *vectorType = llvm::cast<llvm::VectorType>(type);
+    if (vectorType->getVectorElementType()->isPointerTy()) {
+      return "vr" + str(vectorType->getNumElements()) + "p";
+    }
+
     return getScalarType(vectorType->getElementType(), true) +
            str<int>(vectorType->getNumElements());
 
@@ -157,16 +161,6 @@ std::string CWriter::getType(const llvm::Type *type) {
     const llvm::PointerType *ptrType = llvm::cast<llvm::PointerType>(type);
     const llvm::Type *elementType = ptrType->getElementType();
     {
-#if 0
-			std::string addSpaceName = getAddressSpaceName(space);
-			if (! addSpaceName.empty()) {
-				if (elementType->isFirstClassType())
-					return addSpaceName + " " + getType(elementType) + "*";
-				else
-					return addSpaceName + " (" + getType(elementType) + ")*";
-
-			} else
-#endif
       return getType(elementType) + "*";
     }
 
@@ -178,13 +172,6 @@ std::string CWriter::getType(const llvm::Type *type) {
       return structName;
     else
       Log::fail(type, "anonymous structs not implemented");
-
-    /*if (getTypeSymbol(modInfo.getTypeSymbolTable(), type, name))
-    {
-            return "struct " + name;
-    } else {
-            Log::fail(type, "anonymous structs not implemented");
-    }*/
   }
 
   return getScalarType(type);
@@ -203,34 +190,17 @@ std::string CWriter::buildDeclaration(std::string root,
 
   } else if (llvm::isa<llvm::VectorType>(type)) {
     const llvm::VectorType *vectorType = llvm::cast<llvm::VectorType>(type);
+    if (vectorType->getVectorElementType()->isPointerTy()) {
+      return "vr" + str(vectorType->getNumElements()) + "p " + root;
+    }
     return getScalarType(vectorType->getElementType(), true) +
            str<int>(vectorType->getNumElements()) + " " + root;
 
   } else if (llvm::isa<llvm::PointerType>(type)) {
     const llvm::PointerType *ptrType = llvm::cast<llvm::PointerType>(type);
     const llvm::Type *elementType = ptrType->getElementType();
-#if 0
-		uint space = ptrType->getAddressSpace();
-		if ( space == SPACE_NOPTR) { //add address space modifier
-			return buildDeclaration(root, elementType);
-
-		} else
-#endif
     {
-#if 0
-		}
-			std::string spaceName = getAddressSpaceName(space);
-
-			if (! spaceName.empty()) {
-				std::string ptrPrefix = getAddressSpaceName(space) + "* ";
-				if (elementType->isFirstClassType())
-					return buildDeclaration(ptrPrefix + root, elementType);
-				else
-					return buildDeclaration(ptrPrefix + "(" + root + ")", elementType);
-
-			} else
-#endif
-      { return buildDeclaration("(*" + root + ")", elementType); }
+      return buildDeclaration("(*" + root + ")", elementType);
     }
 
   } else if (llvm::isa<llvm::StructType>(type)) {
@@ -916,7 +886,7 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
       llvm::ConstantInt *constInt = llvm::cast<llvm::ConstantInt>(val);
       uint64_t data = constInt->getLimitedValue();
       std::string hexStr = convertToHex(data, intType->getBitWidth() / 4);
-      std::string typeStr = getScalarType(intType);
+      std::string typeStr = getType(intType);
 
       return "(" + typeStr + ")(0x" + hexStr + ")";
     } else {
@@ -1293,11 +1263,6 @@ GetStoredValue(llvm::Instruction & inst) {
 }
 
 std::string
-CWriter::getShuffle(llvm::Instruction & inst, IdentifierScope & locals) {
-  abort(); // TODO implement
-}
-
-std::string
 CWriter::getRandomVectorAccess(llvm::Type & dataTy, llvm::Value & ptrVal, IdentifierScope & locals, llvm::Value * storedValue) {
   abort(); // TODO implement
 }
@@ -1328,9 +1293,9 @@ CWriter::getVectorAccess(llvm::Instruction & inst, IdentifierScope & locals) {
   auto * ptrTy = ptr.getType();
   auto * storedVal = GetStoredValue(inst);
   if (ptrTy->isPointerTy()) {
-    return getConsecutiveVectorAccess(*ptrTy->getPointerElementType(), ptr, locals, storedVal);
+    return getConsecutiveVectorAccess(*ptrTy->getPointerElementType()->getVectorElementType(), ptr, locals, storedVal);
   } else {
-    return getRandomVectorAccess(*ptrTy->getVectorElementType()->getPointerElementType(), ptr, locals, storedVal);
+    return getRandomVectorAccess(*ptrTy->getVectorElementType()->getPointerElementType()->getVectorElementType(), ptr, locals, storedVal);
   }
 }
 
@@ -1386,6 +1351,7 @@ CWriter::getLoadStore(llvm::Instruction & inst, IdentifierScope & locals) {
       IF_DEBUG std::cerr << "store to " << name << "\n";
       writeAssignRaw(name, srcString);
     }
+    return "<written>";
   }
 }
 
