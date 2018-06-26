@@ -598,7 +598,10 @@ std::string CWriter::getOperation(const WrappedOperation &op,
       return platform.build(callee->getName().str(), beginParams, endParams);
 
     } else if (calleeName == "rv_any_v256") {
-      return "(0 != __builtin_ve_mpcnt(" + *beginParams  + ")";
+      return "(0 != __builtin_ve_mpcnt(" + *beginParams  + "))";
+
+    } else if (calleeName == "rv_popcount_v256") {
+      return "builtin_ve_mpcnt(" + *beginParams  + ")";
 
     } else {
       tmp = callee->getName().str(); // add function name
