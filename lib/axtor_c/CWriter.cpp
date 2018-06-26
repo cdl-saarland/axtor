@@ -24,21 +24,18 @@ using namespace llvm;
 // return the Aurora-SX mangled suffix for this vector type (to be used in builtins)
 static
 std::string
-GetVectorSuffix(const llvm::Type & dType) {
-  const auto * vecTy = dyn_cast<VectorType>(&dType);
-  assert(vecTy);
-  const auto * elemTy = vecTy->getElementType();
-  if (elemTy->isIntegerTy()) {
-    const int numBits = elemTy->getScalarSizeInBits();
+GetVectorSuffix(const llvm::Type & elemTy) {
+  if (elemTy.isIntegerTy()) {
+    const int numBits = elemTy.getPrimitiveSizeInBits();
     switch (numBits){
       case 1 : return "m";
       case 32: return "si";
       case 64: return "sl";
       default: abort(); // unsupported vector bit width
     }
-  } else if (elemTy->isFloatTy()) {
+  } else if (elemTy.isFloatTy()) {
     return "sf";
-  } else if (elemTy->isDoubleTy()) {
+  } else if (elemTy.isDoubleTy()) {
     return "df";
   }
   abort(); // unepxected type suffix
@@ -488,6 +485,16 @@ void CWriter::writeForLoopBegin(ForLoopInfo &forInfo, IdentifierScope &locals) {
           ivStr + "=" + ivIncrementStr + ")");
 }
 
+std::string
+CWriter::getVectorConvert(const WrappedOperation & op, StringVector operands) {
+  abort(); // TODO implement
+}
+
+std::string
+CWriter::getVectorTruncate(const WrappedOperation & op, StringVector operands) {
+  abort(); // TODO implement
+}
+
 std::string CWriter::getOperation(const WrappedOperation &op,
                                   StringVector operands) {
   std::string tmp;
@@ -496,6 +503,11 @@ std::string CWriter::getOperation(const WrappedOperation &op,
   if (op.isBinaryOp() || op.isCompare()) {
     bool signedOps = true;
     std::string token = getOperatorToken(op, signedOps);
+
+    if (token == "ord") {
+      // NaN test
+      return "(" + operands[0] + " == " + operands[0] + ")";
+    }
 
     if (signedOps) {
       return "(" + operands[0] + token + operands[1] + ")";
@@ -542,9 +554,7 @@ std::string CWriter::getOperation(const WrappedOperation &op,
 
       // truncation: mask out bits and cast to smaller type
     } else if (op.isa(llvm::Instruction::Trunc)) {
-      const llvm::Type *destIntType = llvm::cast<llvm::IntegerType>(targetType);
-      uint destWidth = destIntType->getPrimitiveSizeInBits();
-
+      size_t destWidth = targetType->getScalarSizeInBits();
       uint64_t maskInt = generateTruncMask(destWidth);
 
       std::string fittedStr =
@@ -637,16 +647,6 @@ typedef std::vector<llvm::Value *> ValueVector;
 
 std::string CWriter::getReferer(llvm::Value *value, IdentifierScope &locals) {
   return getValueToken(value, locals);
-#if 0
-	const VariableDesc * desc = locals.lookUp(value);
-
-	if (desc) {
-		return desc->name;
-	}
-
-	//not a instruction -> obtain a referer by other means
-	return getNonInstruction(value, locals);
-#endif
 }
 
 /*
@@ -875,6 +875,29 @@ std::string CWriter::getAllNullLiteral(const llvm::Type *type) {
   }
 }
 
+static bool
+IsUniformVector(llvm::Constant & val) {
+  ResourceGuard<WrappedLiteral> vector(CreateLiteralWrapper(&val));
+  auto * elem = vector->getOperand(0);
+  for (int i = 1; i < vector->getNumOperands(); ++i) {
+    if (elem != vector->getOperand(i)) return false;
+  }
+  return true;
+}
+
+
+std::string
+CWriter::getBroadcast(llvm::Value & val, IdentifierScope * scope) {
+  auto suffix = GetVectorSuffix(*val.getType());
+  std::string token;
+  if (isa<Constant>(val)) {
+    token = getLiteral(&cast<Constant>(val));
+  } else {
+    token = getValueToken(&val, *scope);
+  }
+  return "__builtin_ve_vbrd" + suffix + "(" + token + ")";
+}
+
 /*
  * return the string representation of a constant
  */
@@ -949,6 +972,11 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
 
     const llvm::VectorType *vectorType =
         llvm::cast<llvm::VectorType>(val->getType());
+
+    if (IsUniformVector(*val)) {
+      auto * elem = vector->getOperand(0);
+      return getBroadcast(*elem, nullptr);
+    }
 
     std::string buffer = "";
     for (uint i = 0; i < vectorType->getNumElements(); ++i) {
@@ -1045,6 +1073,24 @@ std::string CWriter::getShuffleInstruction(llvm::ShuffleVectorInst *shuffle,
     secondStr = secondDesc
                     ? secondDesc->name
                     : getLiteral(llvm::cast<llvm::Constant>(secondVector));
+  }
+
+  // broadcast from idiom
+  // vFirst = insert undef, 0, % elem
+  // vBroadcast = shuffle vFirst, undef, <0, .., 0>
+  auto cData = dyn_cast<ConstantData>(indexVector);
+  if (cData && cData->isNullValue()) {
+    auto * insertInst = dyn_cast<InsertElementInst>(firstVector);
+    if (insertInst) {
+      llvm::Value *vec = insertInst->getOperand(0);
+      llvm::Value *elem = insertInst->getOperand(1);
+      llvm::Value *idxVal = insertInst->getOperand(2);
+      if (isa<UndefValue>(vec)) {
+       return getBroadcast(*elem, &locals);
+      }
+    }
+  } else {
+    abort(); // implement shuffle
   }
 
 #ifdef DEBUG
@@ -1742,12 +1788,12 @@ void CWriter::writeFunctionPrologue(llvm::Function *func,
   putLineBreak();
 }
 
-static const char * ModuleHeader =
-" typedef vr256si int256;\n\
-  typedef vr256sl long256;\n\
-  typedef vr256sf float256;\n\
-  typedef vr256df double256;\n\
-  typedef vm256 bool256;\n";
+static const char * ModuleHeader ="\
+typedef vr256si int256;\n\
+typedef vr256sl long256;\n\
+typedef vr256sf float256;\n\
+typedef vr256df double256;\n\
+typedef vm256 bool256;\n";
 
 CWriter::CWriter(ModuleInfo &_modInfo, PlatformInfo &_platform)
     : modInfo(reinterpret_cast<CModuleInfo &>(_modInfo)), platform(_platform) {

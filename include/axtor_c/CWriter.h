@@ -143,6 +143,12 @@ public:
   std::string getOperation(const WrappedOperation &operation,
                            std::vector<std::string> operands);
 
+  std::string getVectorConvert(const WrappedOperation & op, StringVector operands);
+
+  std::string getVectorTruncate(const WrappedOperation & op, StringVector operands);
+
+  std::string getBroadcast(llvm::Value & val, IdentifierScope*);
+
   /*
    * returns the string referer to a value (designator for
    * instructions/serialisation for constants)
