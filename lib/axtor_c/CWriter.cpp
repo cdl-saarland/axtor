@@ -86,7 +86,7 @@ std::string CWriter::getScalarType(const llvm::Type *type,
     int width = intType->getBitWidth();
 
     if (width == 1)
-      return (asVectorElementType ? "int" : "bool");
+      return "bool";
     else if (width <= 8)
       return "char";
     else if (width <= 16)
@@ -617,7 +617,7 @@ std::string CWriter::getOperation(const WrappedOperation &op,
     if (platform.implements(callee)) {
       return platform.build(callee->getName().str(), beginParams, endParams);
 
-    } else if (calleeName == "rv_any") {
+    } else if (calleeName == "rv_any_v256") {
       return "(0 != __builtin_ve_mpcnt(" + *beginParams  + ")";
 
     } else {
@@ -1247,6 +1247,8 @@ void CWriter::writeInsertElementInstruction(llvm::InsertElementInst *insert,
     assert(llvm::isa<llvm::Constant>(vec) &&
            "non constant was not a declared variable");
     vecStr = getLiteral(llvm::cast<llvm::Constant>(vec));
+  } else {
+    vecStr = descStr; // modify undef
   }
 
   const VariableDesc *valueDesc = locals.lookUp(value);
@@ -1259,37 +1261,20 @@ void CWriter::writeInsertElementInstruction(llvm::InsertElementInst *insert,
     valueStr = getLiteral(llvm::cast<llvm::Constant>(value));
   }
 
-  if (!llvm::isa<llvm::UndefValue>(vec)) {
-    putLine(descStr + " = " + vecStr + ";");
-  }
-
   uint64_t index;
   if (!evaluateInt(idxVal, index)) {
     Log::fail(insert, "non-static parameter access");
   }
+  auto suffixText = GetVectorSuffix(*value->getType());
+  putLine(descStr + " = __builtin_ve_lsv" + suffixText + "(" + vecStr + ", " + str(index) + ", " + valueStr + ");");
+
+#if 0
+  if (!llvm::isa<llvm::UndefValue>(vec)) {
+    putLine(descStr + " = " + vecStr + ";");
+  }
 
   putLine(descStr + ".s" + hexstr(index) + " = " + valueStr + ";");
-
-  /*int width = vecType->getNumElements();
-
-  //build the string
-
-  std::string result = "(" + getScalarType(elemType) + str<int>(width) + ")(";
-
-  result += vecStr + ".s";
-  for(int i = 0; i < index; ++i) {
-          result += hexstr(i);
-  }
-
-  result += ", " + valueStr + ", " + vecStr + ".s";
-
-  for(int i = index + 1; i < width; ++i) {
-          result += hexstr(i);
-  }
-
-  result += ")";
-
-  return result;*/
+#endif
 }
 
 Value&
