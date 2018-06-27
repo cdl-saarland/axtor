@@ -888,6 +888,18 @@ CWriter::getBroadcast(std::string laneText, llvm::Type & laneType) {
   return "__builtin_ve_vbrd" + suffix + "(" + laneText + ")";
 }
 
+static
+bool
+IsStringConst(GlobalVariable & gVar) {
+  return cast<ConstantDataArray>(gVar.getInitializer())->isCString();
+}
+
+static
+std::string
+ReadString(GlobalVariable & gVar) {
+  return cast<ConstantDataArray>(gVar.getInitializer())->getAsString().str();
+}
+
 /*
  * return the string representation of a constant
  */
@@ -988,11 +1000,22 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
   } else if (llvm::isa<llvm::UndefValue>(val) || val->isNullValue()) {
     const llvm::Type *type = val->getType();
     return getAllNullLiteral(type);
+
+  // check whether this is a constant string
+  } else if (isa<ConstantExpr>(val)) {
+    auto * constVal = cast<ConstantExpr>(val);
+    if (constVal->isGEPWithNoNotionalOverIndexing()) {
+      auto * basePtr = constVal->getOperand(0);
+      auto * gVar = dyn_cast<GlobalVariable>(basePtr);
+      if (gVar && IsStringConst(*gVar)) {
+        return "\"" + ReadString(*gVar) + "\"";
+      }
+    }
   }
 
   //## unsupported literal
   Log::fail(val, "unsupported literal");
-  assert(false);
+  abort();
 }
 
 /*
