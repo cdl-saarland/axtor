@@ -896,8 +896,17 @@ IsStringConst(GlobalVariable & gVar) {
 
 static
 std::string
-ReadString(GlobalVariable & gVar) {
-  return cast<ConstantDataArray>(gVar.getInitializer())->getAsString().str();
+ReadFormatString(GlobalVariable & gVar) {
+  std::stringstream buff;
+  StringRef ref = cast<ConstantDataArray>(gVar.getInitializer())->getAsString();
+  for (int i = 0; i < ref.size() - 1; ++i) {
+    if (ref[i] == '\n') {
+      buff << "\\n";
+    } else {
+      buff << ref[i];
+    }
+  }
+  return buff.str();
 }
 
 /*
@@ -1008,7 +1017,7 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
       auto * basePtr = constVal->getOperand(0);
       auto * gVar = dyn_cast<GlobalVariable>(basePtr);
       if (gVar && IsStringConst(*gVar)) {
-        return "\"" + ReadString(*gVar) + "\"";
+        return "\"" + ReadFormatString(*gVar) + "\"";
       }
     }
   }
@@ -1421,24 +1430,6 @@ std::string CWriter::getInstructionAsExpression(llvm::Instruction *inst,
     llvm::CallInst *call = llvm::cast<llvm::CallInst>(inst);
     llvm::Function *callee = call->getCalledFunction();
 
-#if 0
-		// OpenCL special treatment of barrier/memfence instructions
-		if (callee->getName() == "barrier" ||
-			callee->getName() == "mem_fence")
-		{
-			std::string calleeName = callee->getName();
-
-			llvm::Value * arg = call->getArgOperand(0);
-			std::string enumStr;
-			if (! evaluateEnum_MemFence(arg, enumStr)) {
-				Log::fail(call, "expected enum value");
-			}
-
-			std::string result = calleeName + "(" + enumStr + ")";
-			return result;
-
-		} else
-#endif
     { // regular intrinsic
 #ifdef DEBUG
       std::cerr << "intrinsic call " << callee->getName().str() << "\n";
@@ -1446,12 +1437,17 @@ std::string CWriter::getInstructionAsExpression(llvm::Instruction *inst,
       std::vector<std::string> operands;
 
       int argIdx = 0;
-      for (auto &arg : callee->args()) {
+      auto itArg = callee->arg_begin();
+      auto itEndArg = callee->arg_end();
+
+      for (int i = 0; i + 1 < call->getNumOperands(); ++i) {
+        const auto & arg = *call->getOperand(i);
+      // for (auto &arg : callee->args()) {
         llvm::Value *op = call->getArgOperand(argIdx++);
 
         const VariableDesc *opDesc = locals.lookUp(op);
 
-        bool isByValue = arg.hasByValAttr();
+        bool isByValue = itArg != itEndArg ? (itArg++)->hasByValAttr() : false;
 
         if (opDesc) {
           // global variables and allocas are dereferenced by their name
