@@ -15,6 +15,7 @@
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Type.h>
+#include <llvm/IR/Intrinsics.h>
 
 // def ForLoopInfo
 #include <axtor/util/llvmLoop.h>
@@ -86,7 +87,7 @@ std::string CWriter::getScalarType(const llvm::Type *type,
     int width = intType->getBitWidth();
 
     if (width == 1)
-      return "bool";
+      return asVectorElementType ? "bool" : "int";
     else if (width <= 8)
       return "char";
     else if (width <= 16)
@@ -603,6 +604,12 @@ std::string CWriter::getOperation(const WrappedOperation &op,
     } else if (calleeName == "rv_popcount_v256") {
       return "builtin_ve_mpcnt(" + *beginParams  + ")";
 
+    } else if (calleeName == "rv_set_vlen") {
+      return "__builtin_ve_set_vlength(" + *beginParams  + ")";
+
+    } else if (calleeName == "rv_get_vlen") {
+      return "__builtin_ve_get_vlength()";
+
     } else {
       tmp = callee->getName().str(); // add function name
     }
@@ -919,9 +926,9 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
         llvm::cast<llvm::IntegerType>(val->getType());
     if (intType->getBitWidth() == 1) {
       if (val->isNullValue()) {
-        return "false";
+        return "0";
       } else {
-        return "true";
+        return "-1";
       }
     } else if (intType->getBitWidth() <= 64) {
       llvm::ConstantInt *constInt = llvm::cast<llvm::ConstantInt>(val);
@@ -1326,7 +1333,8 @@ std::string
 CWriter::getConsecutiveVectorAccess(llvm::Type & dataTy, llvm::Value & ptrVal, IdentifierScope & locals, llvm::Value * storedValue) {
   auto suffix = GetVectorSuffix(dataTy);
 
-  auto ptrText = getPointerTo(&ptrVal, locals);
+  auto castText = "(" + getType(&dataTy) + "*)";
+  auto ptrText = castText + " " + getPointerTo(&ptrVal, locals);
   const std::string strideText = str<>(dataTy.getPrimitiveSizeInBits() / 8); // FIXME use DataLayout store size instead
 
   if (storedValue) {
@@ -1400,13 +1408,12 @@ CWriter::getLoadStore(llvm::Instruction & inst, IdentifierScope & locals) {
     if (store.isVolatile()) {
       std::string ptrText = getVolatilePointerTo(&pointer, locals);
       std::string name = "*(" + ptrText + ")";
-      writeAssignRaw(name, srcString);
+      return name + " = " + srcString;
     } else {
       std::string name = getReferenceTo(&pointer, locals);
       IF_DEBUG std::cerr << "store to " << name << "\n";
-      writeAssignRaw(name, srcString);
+      return name + " = " + srcString;
     }
-    return "<written>";
   }
 }
 
@@ -1624,6 +1631,16 @@ void CWriter::writeInstruction(const VariableDesc *desc,
 
     //### void/discarded result instruction
   } else {
+    // FIXME discard lifetime markers properly
+    auto * call = dyn_cast<CallInst>(inst);
+    Function * callee = call ? call->getCalledFunction() : nullptr;
+    if (callee &&
+        (callee->getIntrinsicID() == Intrinsic::lifetime_start ||
+         callee->getIntrinsicID() == Intrinsic::lifetime_end))
+    {
+      return;
+    }
+
     std::string instStr = getInstructionAsExpression(inst, locals);
     if (instStr.size() > 0) {
       putLine(instStr + ';');
@@ -1643,7 +1660,7 @@ void CWriter::writeIf(const llvm::Value *condition, bool negate,
   } else if (llvm::isa<llvm::ConstantInt>(condition)) {
     const llvm::ConstantInt *constInt =
         llvm::cast<llvm::ConstantInt>(condition);
-    condStr = constInt->isZero() ? "false" : "true";
+    condStr = constInt->isZero() ? "0" : "-1";
 
   } else {
     assert(
@@ -1696,7 +1713,7 @@ void CWriter::writePrecheckedWhile(llvm::BranchInst *branchInst,
   }
 }
 
-void CWriter::writeInfiniteLoopBegin() { putLine("while(true)"); }
+void CWriter::writeInfiniteLoopBegin() { putLine("while(1)"); }
 
 void CWriter::writeInfiniteLoopEnd() { putLine(""); }
 
@@ -1790,11 +1807,11 @@ typedef vm256 bool256;\n";
 
 CWriter::CWriter(ModuleInfo &_modInfo, PlatformInfo &_platform)
     : modInfo(reinterpret_cast<CModuleInfo &>(_modInfo)), platform(_platform) {
-  putLine("#include <cmath>");
+  putLine("#include <math.h>");
 
   put(ModuleHeader);
 
-  putLine("extern \"C\" {");
+  // putLine("extern \"C\" {");
 
   llvm::Module *mod = modInfo.getModule();
 
@@ -1843,11 +1860,18 @@ CWriter::CWriter(ModuleInfo &_modInfo, PlatformInfo &_platform)
 
   //## spill function declarations
   for (Function &func : *mod) {
+    if (func.getName() == "rv_set_vlen") continue; // TODO factor out
+    if (func.getName() == "printf") continue; // TODO factor out
+    if (func.getName() == "rv_get_vlen") continue; // TODO factor out
+    if (func.getName() == "rv_any_v256") continue; // TODO factor out
+    if (func.getIntrinsicID() == Intrinsic::lifetime_start) continue; // TODO factor out
+    if (func.getIntrinsicID() == Intrinsic::lifetime_end) continue;
+
     if (!platform.implements(&func))
       putLine(getFunctionHeader(&func) + ";");
   }
 
-  putLine("}"); /* extern C */
+  // putLine("}"); /* extern C */
 
 #ifdef DEBUG
   std::cerr << "completed CWriter ctor\n";
