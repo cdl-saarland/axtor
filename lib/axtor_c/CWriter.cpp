@@ -478,9 +478,18 @@ std::string CWriter::getOperation(const WrappedOperation &op,
 
   //# binary infix operator
   if (op.isBinaryOp() || op.isCompare()) {
+    auto & inst = *cast<Instruction>(op.getValue());
+
     bool signedOps = true;
-    if (op.isCompare() && op.getValue()->getType()->isVectorTy()) {
-      return getVectorCompare(op, operands);
+    if (op.getValue()->getType()->isVectorTy()) {
+      std::string suffix = GetVectorSuffix(*inst.getType()->getVectorElementType());
+      if (op.isCompare()) {
+        return getVectorCompare(op, operands);
+      } else if (inst.getOpcode() == Instruction::FAdd) {
+        return "__builtin_ve_vadd" + suffix + "(" + operands[0] + ", "+ operands[1] + ")";
+      } else if (inst.getOpcode() == Instruction::FSub) {
+        return "__builtin_ve_vsub" + suffix + "(" + operands[0] + ", "+ operands[1] + ")";
+      }
     }
 
     std::string token = getOperatorToken(op, signedOps);
