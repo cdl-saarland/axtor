@@ -88,6 +88,7 @@ protected:
    * build a C-style declaration for @root of type @type
    */
   std::string buildDeclaration(std::string root, const llvm::Type *type);
+  std::string buildDeclarationRec(std::string root, const llvm::Type *type, bool firstType);
 
 public:
   /*

@@ -183,25 +183,36 @@ std::string CWriter::getType(const llvm::Type *type) {
  */
 std::string CWriter::buildDeclaration(std::string root,
                                       const llvm::Type *type) {
+  return buildDeclarationRec(root, type, true);
+}
+
+// @firstType implies that this is the top-level type of root (and not a nested type)
+std::string CWriter::buildDeclarationRec(std::string root,
+                                      const llvm::Type *type, bool firstType) {
   if (llvm::isa<llvm::ArrayType>(type)) {
     const llvm::ArrayType *arrType = llvm::cast<llvm::ArrayType>(type);
-    return buildDeclaration(root + "[" + str<int>(arrType->getNumElements()) +
+    return buildDeclarationRec(root + "[" + str<int>(arrType->getNumElements()) +
                                 "]",
-                            arrType->getElementType());
+                            arrType->getElementType(), false);
 
   } else if (llvm::isa<llvm::VectorType>(type)) {
     const llvm::VectorType *vectorType = llvm::cast<llvm::VectorType>(type);
+
+    // declare top level vector values as register (or NCC O1 will keep them in memory)
+    std::string prefix = "";
+    if (firstType) prefix = "register ";
+
     if (vectorType->getVectorElementType()->isPointerTy()) {
-      return "vr" + str(vectorType->getNumElements()) + "p " + root;
+      return prefix + "vr" + str(vectorType->getNumElements()) + "p " + root;
     }
-    return getScalarType(vectorType->getElementType(), true) +
+    return prefix + getScalarType(vectorType->getElementType(), true) +
            str<int>(vectorType->getNumElements()) + " " + root;
 
   } else if (llvm::isa<llvm::PointerType>(type)) {
     const llvm::PointerType *ptrType = llvm::cast<llvm::PointerType>(type);
     const llvm::Type *elementType = ptrType->getElementType();
     {
-      return buildDeclaration("(*" + root + ")", elementType);
+      return buildDeclarationRec("(*" + root + ")", elementType, false);
     }
 
   } else if (llvm::isa<llvm::StructType>(type)) {
