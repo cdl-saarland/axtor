@@ -36,7 +36,7 @@ void CModuleInfo::dump()
 
 void CModuleInfo::dumpModule()
 {
-	mod->dump();
+	llvm::errs() << *mod;
 }
 
 IdentifierScope CModuleInfo::createGlobalBindings()
@@ -44,7 +44,7 @@ IdentifierScope CModuleInfo::createGlobalBindings()
 	ConstVariableMap globals;
 
 	for(GlobalVariable & gv : mod->globals()) {
-		std::string name = gv.getName();
+		std::string name = gv.getName().str();
 		globals[&gv] = VariableDesc(&gv, name);
 	}
 

@@ -15,13 +15,13 @@
 
 #include <axtor/CommonTypes.h>
 
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Function.h>
 //#include <llvm/TypeSymbolTable.h>
 
 #include <axtor/util/SharedContext.h>
 #include <axtor/util/ExtractorRegion.h>
-
 
 namespace axtor {
 
@@ -72,7 +72,7 @@ bool doesContainType(const llvm::Type * type, llvm::Type::TypeID id);
 
 //bool getTypeSymbol(llvm::TypeSymbolTable & typeSymbolTable, const llvm::Type * type, std::string & out);
 
-int getSuccessorIndex(llvm::TerminatorInst * termInst, const llvm::BasicBlock * target);
+int getSuccessorIndex(llvm::Instruction * termInst, const llvm::BasicBlock * target);
 
 /*
  * checks whether there is a non-anticipated path from A to B

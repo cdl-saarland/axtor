@@ -85,7 +85,7 @@ namespace axtor {
 		bool foundSwitch = false;
 		for (llvm::Function::iterator block = func->begin(); block != func->end(); ++block)
 		{
-			llvm::TerminatorInst * termInst = block->getTerminator();
+			llvm::Instruction * termInst = block->getTerminator();
 			if (llvm::isa<llvm::SwitchInst>(termInst)) {
 				processSwitch(func, &*block);
 				foundSwitch = true;

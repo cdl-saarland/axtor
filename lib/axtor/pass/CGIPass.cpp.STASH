@@ -39,13 +39,13 @@ namespace axtor {
 
 		IF_DEBUG {
 			llvm::errs() << " ### module before Pass : \"" << getPassName() << "\"\n";
-			M.dump();
+			llvm::errs() << M;
 			llvm::errs() << "[EOF]\n";
 		}
 		bool retVal = session.run();
 		IF_DEBUG {
 			llvm::errs() << " ### module after Pass : \"" << getPassName() << "\"\n";
-			M.dump();
+			llvm::errs() << M;
 			llvm::errs() << "[EOF]\n";
 		}
 		return retVal;

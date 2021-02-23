@@ -49,7 +49,7 @@ char ExitUnificationPass::ID = 0;
 
 		llvm::Loop * parent = loop->getParentLoop();
 
-		loop->dump();
+		llvm::errs() << *loop;
 
 		if (loop->getLoopDepth() <= 1) {
 			std::cerr << "LEE: outer-most multi exit loop\n";
@@ -85,7 +85,7 @@ char ExitUnificationPass::ID = 0;
 			//only enumerate exits to the parent loop
 			if (parent->contains(to))
 			{
-				llvm::TerminatorInst * term = from->getTerminator();
+				auto term = from->getTerminator();
 
 				for(uint succIdx = 0; succIdx < term->getNumSuccessors(); ++succIdx)
 				{
@@ -122,7 +122,7 @@ char ExitUnificationPass::ID = 0;
 	{
 #ifdef DEBUG_LEU
 		std::cerr << "### Function " << func.getName().str() << " before LEU ###\n";
-		func.dump();
+		llvm::errs() << func;
 #endif
 		llvm::LoopInfo & loopInfo = getAnalysis<llvm::LoopInfoWrapperPass>(func).getLoopInfo();
 
@@ -154,7 +154,7 @@ char ExitUnificationPass::ID = 0;
 #ifdef DEBUG
 		std::cerr << "\n\n### Module after LEE #####\n\n";
 		writeModuleToFile(&M, "Lee_dump.bc");
-		M.dump();
+		llvm::errs() << M;
 		verifyModule(M);
 #endif
 

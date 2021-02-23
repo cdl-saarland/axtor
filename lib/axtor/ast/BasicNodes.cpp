@@ -41,7 +41,7 @@ namespace axtor
 		{
 			std::cerr << "Function " << func->getName().str() << " :\n";
 			std::cerr << "{\n";
-				getEntry()->dump();
+			getEntry()->dump();
 			std::cerr << "}\n";
 		}
 
@@ -55,7 +55,7 @@ namespace axtor
 
 		llvm::Value * ConditionalNode::getCondition() const
 		{
-			llvm::TerminatorInst * term = getBlock()->getTerminator();
+			llvm::Instruction * term = getBlock()->getTerminator();
 			return term->getOperand(0);
 		}
 

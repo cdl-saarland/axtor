@@ -109,7 +109,7 @@ std::vector<int> GLSLModuleInfo::determineFragmentInputModifiers(llvm::Function 
 
 		if (llvm::isa<llvm::CallInst>(operand)) {
 #ifdef DEBUG
-			std::cerr << "is a call:"; operand->dump();
+			std::cerr << "is a call:"; llvm::errs() << *operand;
 #endif
 			llvm::CallInst * operandCall = llvm::cast<llvm::CallInst>(operand);
 			llvm::Function * calledFunc = operandCall->getCalledFunction();
@@ -124,7 +124,7 @@ std::vector<int> GLSLModuleInfo::determineFragmentInputModifiers(llvm::Function 
 			}
 		} else {
 #ifdef DEBUG
-			std::cerr << "not a call : "; operand->dump();
+			std::cerr << "not a call : "; llvm::errs() << *operand;
 #endif
 		}
 
@@ -176,7 +176,7 @@ void GLSLModuleInfo::dump()
 
 void GLSLModuleInfo::dumpModule()
 {
-	mod->dump();
+	llvm::errs() << *mod;
 }
 
 

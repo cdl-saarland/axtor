@@ -35,7 +35,7 @@ namespace axtor
 		}
 
 		if (llvm::isa<const llvm::StructType>(type)) {
-			std::string structName = type->getStructName();
+			std::string structName = type->getStructName().str();
 
 			if (! structName.empty())
 				return structName;
@@ -61,6 +61,6 @@ namespace axtor
 		if (it != stringToType.end())
 			return it->second;
 
-		return M.getTypeByName(name);
+		return llvm::StructType::getTypeByName(M.getContext(), name);
 	}
 }

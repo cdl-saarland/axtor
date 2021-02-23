@@ -103,7 +103,7 @@ namespace axtor {
 		/*
 		 * check special blocks (with payload)
 		 */
-		llvm::TerminatorInst * termInst = bb->getTerminator();
+		llvm::Instruction * termInst = bb->getTerminator();
 		if (termInst->getNumSuccessors() == 0) {
 			if (llvm::isa<llvm::ReturnInst>(termInst)) {
 				IF_DEBUG llvm::errs() << "\t\t(return)" << "\n";
@@ -234,7 +234,7 @@ namespace axtor {
 
 		IF_DEBUG {
 				llvm::errs() << "Restruct: begin dump \n";
-				func.dump();
+				llvm::errs() << func;
 				llvm::errs() << "Restruct: end dump\n";
 				llvm::errs() << "### LoopInfo ###\n";
 				A.getLoopInfo().print(llvm::errs());

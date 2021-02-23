@@ -78,7 +78,7 @@ bool axtor::evaluateString(llvm::Value * val, std::string & out)
 #else
 	llvm::ConstantDataArray * strArray = llvm::cast<llvm::ConstantDataArray>(strConst);
 #endif
-	std::string tmp = strArray->getAsString();
+	std::string tmp = strArray->getAsString().str();
 	out = tmp.substr(0, tmp.length() - 1);
 	return true;
 }

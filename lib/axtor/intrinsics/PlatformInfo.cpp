@@ -84,7 +84,7 @@ bool PlatformInfo::implements(const llvm::Type * type, std::string typeName)
  */
 bool PlatformInfo::implements(llvm::GlobalValue * gv)
 {
-	return intrinsics.find(gv->getName()) != intrinsics.end();
+	return intrinsics.find(gv->getName().str()) != intrinsics.end();
 }
 
 /*

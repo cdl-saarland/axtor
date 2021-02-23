@@ -33,7 +33,7 @@ namespace axtor {
 	void AddressIterator::dump(int idx)
 	{
 		std::cerr << "ADDRESS(" << idx << ")\n";
-		std::cerr << "IndexVal="; val->dump();
+		std::cerr << "IndexVal="; llvm::errs() << *val;
 		std::cerr << "cumulative=" << cumulativeValue << "\n";
 
 		if (next) {
@@ -174,7 +174,7 @@ namespace axtor {
 
 #ifdef DEBUG
 				std::cerr << "&&&&& tossFirst=" << tossFirstOffset << " ; cumulative=" << cumulativeOffset << "\n";
-				firstOffsetValue->dump();
+				llvm::errs() << *firstOffsetValue;
 #endif
 
 				uint stopIndex = tossFirstOffset ? 1 : 0;
@@ -182,7 +182,7 @@ namespace axtor {
 				{
 #ifdef DEBUG
 					std::cerr << "!!! pushing " << idx << " of ";
-					gep->dump();
+					llvm::errs() << *gep;
 #endif
 					llvm::Value * operandVal = gep->getOperand(idx);
 					next = new AddressIterator(next, operandVal, cumulativeOffset);
@@ -216,7 +216,7 @@ namespace axtor {
 
 #ifdef DEBUG
 		std::cerr << "root value:\n";
-		rootValue->dump();
+		llvm::errs() << *rootValue;
 #endif
 
 		//add a dummy

@@ -23,7 +23,7 @@ namespace axtor {
 	{
 		//get successors (these might have changed after solving)
 		llvm::BasicBlock * entry = getEntryBlock();
-		llvm::TerminatorInst * termInst = entry->getTerminator();
+		llvm::Instruction * termInst = entry->getTerminator();
 		llvm::BasicBlock * onTrueBlock = termInst->getSuccessor(0);
 		llvm::BasicBlock * onFalseBlock = termInst->getSuccessor(1);
 
@@ -45,7 +45,7 @@ namespace axtor {
 	void IfParser::IfBuilderSession::dump()
 	{
 		llvm::BasicBlock * entry = getEntryBlock();
-		llvm::TerminatorInst * termInst = entry->getTerminator();
+		llvm::Instruction * termInst = entry->getTerminator();
 		llvm::BasicBlock * onTrueBlock = termInst->getSuccessor(0);
 		llvm::BasicBlock * onFalseBlock = termInst->getSuccessor(1);
 
@@ -72,7 +72,7 @@ namespace axtor {
 		//get successors (these might have changed after solving)
 
 		llvm::BasicBlock * entry = getEntryBlock();
-		llvm::TerminatorInst * termInst = entry->getTerminator();
+		llvm::Instruction * termInst = entry->getTerminator();
 		llvm::BasicBlock * onTrueBlock = termInst->getSuccessor(0);
 		llvm::BasicBlock * onFalseBlock = termInst->getSuccessor(1);
 
@@ -125,14 +125,14 @@ namespace axtor {
 #ifdef DEBUG
 			std::cerr << "is leaving the loop! ignore..\n parent context:";
 			context.dump();
-			std::cerr << "this loop: " << (loop? "" : "none"); if (loop) loop->dump();
+			std::cerr << "this loop: " << (loop? "" : "none"); if (loop) llvm::errs() << *loop;
 #endif
 			return NULL;
 		}
 
 		BlockSet regularExits = context.getRegularExits();
 
-		llvm::TerminatorInst * termInst = entry->getTerminator();
+		llvm::Instruction * termInst = entry->getTerminator();
 		llvm::BranchInst * branchInst = llvm::cast<llvm::BranchInst>(termInst);
 		llvm::BasicBlock * consBlock  = branchInst->getSuccessor(0);
 		llvm::BasicBlock * altBlock  = branchInst->getSuccessor(1);

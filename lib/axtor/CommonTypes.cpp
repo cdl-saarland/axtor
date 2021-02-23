@@ -70,7 +70,7 @@ namespace axtor {
 				  << prefix << "\tcontinueBlock = " << (continueBlock ? continueBlock->getName().str() : "null") << "\n"
 				  << prefix << "\tbreakBlock    = " << (breakBlock ? breakBlock->getName().str() : "null") << "\n"
 				  << prefix << "\texitBlock     = " << (exitBlock ? exitBlock->getName().str() : "null") << "\n"
-			      << prefix << "\tparentLoop    = " << (!parentLoop ? "none\n" : ""); if (parentLoop) parentLoop->dump();
+			      << prefix << "\tparentLoop    = " << (!parentLoop ? "none\n" : ""); if (parentLoop) llvm::errs() << *parentLoop;
 		std::cerr << prefix << "}\n";
 	}
 

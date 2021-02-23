@@ -98,7 +98,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 		llvm::Instruction * assignInst = createAssignment(inst, bridgeBlock);
 
 		//redirect all branches from the source block to the bridge block
-		llvm::TerminatorInst * termInst = branchBlock->getTerminator();
+		llvm::Instruction * termInst = branchBlock->getTerminator();
 		for(uint i = 0; i < termInst->getNumSuccessors(); ++i)
 		{
 			if (termInst->getSuccessor(i) == branchTarget)
@@ -235,7 +235,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 
 			// only remove the class. / struct. prefix from opaque types, if existent
 			if (structType->getStructNumElements() == 0) {
-				std::string opaqueName = structType->getStructName();
+				std::string opaqueName = structType->getStructName().str();
 				if (opaqueName.substr(0, 6) == "class.") {
 					opaqueName = opaqueName.substr(6, std::string::npos);
 				} else if (opaqueName.substr(0, 7) == "struct.") {
@@ -310,7 +310,7 @@ llvm::RegisterPass<Preparator> __regPreparator("preparator", "axtor - preparator
 			#ifdef DEBUG
 				verifyModule(M);
 				std::cerr << "\n##### module after preparations #####\n";
-				M.dump();
+				llvm::errs() << M;
 			#endif
 
 			return true;

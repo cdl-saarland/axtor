@@ -61,7 +61,7 @@ std::string CWriter::getScalarType(const llvm::Type *type,
                                    bool asVectorElementType) {
 #ifdef DEBUG
   std::cerr << "getScalarType(";
-  type->dump();
+  llvm::errs() << *type;
   std::cerr << ")\n";
 #endif
 
@@ -110,7 +110,7 @@ std::string CWriter::getScalarType(const llvm::Type *type,
     Log::fail(type, "OpenCL does not support nested pointers");
   }
 
-  case llvm::Type::VectorTyID: {
+  case llvm::Type::FixedVectorTyID: {
     const llvm::VectorType *vectorType = llvm::cast<llvm::VectorType>(type);
     int size = vectorType->getNumElements();
     if (vectorType->getElementType()->isPointerTy()) {
@@ -141,7 +141,7 @@ std::string CWriter::getLocalVariableName(const std::string &variableFullName) {
 std::string CWriter::getType(const llvm::Type *type) {
 #ifdef DEBUG
   std::cerr << "getType(";
-  type->dump();
+  llvm::errs() << *type;
   std::cerr << ")\n";
 #endif
   if (llvm::isa<llvm::ArrayType>(type)) {
@@ -151,7 +151,7 @@ std::string CWriter::getType(const llvm::Type *type) {
 
   } else if (llvm::isa<llvm::VectorType>(type)) {
     const llvm::VectorType *vectorType = llvm::cast<llvm::VectorType>(type);
-    if (vectorType->getVectorElementType()->isPointerTy()) {
+    if (vectorType->getElementType()->isPointerTy()) {
       return "vr" + str(vectorType->getNumElements()) + "p";
     }
 
@@ -202,7 +202,7 @@ std::string CWriter::buildDeclarationRec(std::string root,
     std::string prefix = "";
     if (firstType) prefix = "register ";
 
-    if (vectorType->getVectorElementType()->isPointerTy()) {
+    if (vectorType->getElementType()->isPointerTy()) {
       return prefix + "vr" + str(vectorType->getNumElements()) + "p " + root;
     }
     return prefix + getScalarType(vectorType->getElementType(), true) +
@@ -247,7 +247,7 @@ inline bool checkImageAccess(llvm::Value *imageVal, bool &oReadOnly) {
   for (UseIt it = itStart; it != itEnd; ++it) {
     llvm::CallInst *callInst = llvm::dyn_cast<llvm::CallInst>(*it);
     if (callInst) {
-      std::string calledName = callInst->getCalledFunction()->getName();
+      std::string calledName = callInst->getCalledFunction()->getName().str();
       hasWrite |= calledName.substr(0, 11) == "write_image";
       hasRead |= calledName.substr(0, 10) == "read_image";
 
@@ -493,7 +493,7 @@ std::string CWriter::getOperation(const WrappedOperation &op,
 
     bool signedOps = true;
     if (op.getValue()->getType()->isVectorTy()) {
-      std::string suffix = GetVectorSuffix(*inst.getType()->getVectorElementType());
+      std::string suffix = GetVectorSuffix(*cast<VectorType>(inst.getType())->getElementType());
       if (op.isCompare()) {
         return getVectorCompare(op, operands);
       } else if (inst.getOpcode() == Instruction::FAdd) {
@@ -748,14 +748,14 @@ std::string CWriter::unwindPointer(llvm::Value *val, IdentifierScope &locals,
 
 #ifdef DEBUG
   std::cerr << "dereferencing value:\n";
-  val->dump();
+  llvm::errs() << *val;
   std::cerr << "root value:\n";
-  rootValue->dump();
+  llvm::errs() << *rootValue-;
   std::cerr << "root type:\n";
-  rootType->dump();
+  llvm::errs() << *rootType;
   std::cerr << "address:\n";
   if (address)
-    address->dump();
+    llvm::errs() << *address;
   else
     std::cerr << "NONE\n";
 #endif
@@ -825,7 +825,7 @@ std::string CWriter::unwindPointer(llvm::Value *val, IdentifierScope &locals,
 #ifdef DEBUG
     std::cerr << "deref : " << tmp << "\n";
     assert(rootType && "was not set");
-    rootType->dump();
+    llvm::errs() << *rootType;
 #endif
     const llvm::Type *elementType = 0;
     tmp = dereferenceContainer(tmp, rootType, address, locals, elementType,
@@ -844,13 +844,13 @@ std::string CWriter::unwindPointer(llvm::Value *val, IdentifierScope &locals,
 
 std::string CWriter::getAllNullLiteral(const llvm::Type *type) {
   switch (type->getTypeID()) {
-  case llvm::Type::VectorTyID: {
+  case llvm::Type::FixedVectorTyID: {
     const llvm::VectorType *arrType = llvm::cast<llvm::VectorType>(type);
     // uint size = arrType->getNumElements();
     std::string elementStr = getAllNullLiteral(arrType->getElementType());
     auto * zeroConst = Constant::getNullValue(arrType->getElementType());
     if (type->isVectorTy()) {
-      return getBroadcast(elementStr, *type->getVectorElementType());
+      return getBroadcast(elementStr, *cast<VectorType>(type)->getElementType());
     } else {
       return "(" + getType(type) + ")(" + elementStr + ")";
     }
@@ -978,7 +978,7 @@ std::string CWriter::getLiteral(llvm::Constant *val) {
 
     //## Function
   } else if (llvm::isa<llvm::Function>(val)) {
-    return val->getName();
+    return val->getName().str();
 
     //## Constant Array
   } else if (llvm::isa<llvm::ConstantArray>(val) ||
@@ -1376,9 +1376,9 @@ CWriter::getVectorAccess(llvm::Instruction & inst, IdentifierScope & locals) {
   auto * ptrTy = ptr.getType();
   auto * storedVal = GetStoredValue(inst);
   if (ptrTy->isPointerTy()) {
-    return getConsecutiveVectorAccess(*ptrTy->getPointerElementType()->getVectorElementType(), ptr, locals, storedVal);
+    return getConsecutiveVectorAccess(*cast<VectorType>(ptrTy->getPointerElementType())->getElementType(), ptr, locals, storedVal);
   } else {
-    return getRandomVectorAccess(*ptrTy->getVectorElementType()->getPointerElementType()->getVectorElementType(), ptr, locals, storedVal);
+    return getRandomVectorAccess(*cast<VectorType>(cast<VectorType>(ptrTy)->getElementType()->getPointerElementType())->getElementType(), ptr, locals, storedVal);
   }
 }
 
@@ -1615,7 +1615,7 @@ void CWriter::writeInstruction(const VariableDesc *desc,
   std::cerr << "writeInstruction:: var=" << (desc ? desc->name : "NULL")
             << std::endl;
   std::cerr << '\t';
-  inst->dump();
+  llvm::errs() << *inst;
 #endif
   // dont write instructions consumed by their value users
   if (llvm::isa<llvm::GetElementPtrInst>(inst) ||

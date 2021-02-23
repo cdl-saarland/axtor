@@ -120,7 +120,7 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 					localPredecessorSet.insert(predBlock);
 					predecessorSet.insert(predBlock);
 
-					llvm::TerminatorInst * termInst = predBlock->getTerminator();
+					llvm::Instruction * termInst = predBlock->getTerminator();
 					int succIdx = getSuccessorIndex(termInst, exitBlock);
 
 					assert(succIdx > -1 && "block unused by predecessor?!");
@@ -158,7 +158,7 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 
 #ifdef DEBUG
 				llvm::errs() << "&&&&& re-routing oldPHI:\n";
-				oldPHI->dump();
+				llvm::errs() << *oldPHI;
 #endif
 
 
@@ -189,8 +189,8 @@ bool PredicateRestruct::resolve(RegionVector & regions, llvm::BasicBlock * requi
 
 #ifdef DEBUG
 				llvm::errs() << "&&&&& mapped PHIs:\n";
-				oldPHI->dump();
-				newPHI->dump();
+				llvm::errs() << *oldPHI;
+				llvm::errs() << *newPHI;
 #endif
 
 			}

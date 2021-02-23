@@ -59,7 +59,7 @@ namespace axtor
 			void setNode(int idx, ControlNode * node);
 			NodeType getType() const;
 
-			llvm::TerminatorInst * getTerminator() const;
+			llvm::Instruction* getTerminator() const;
 
 			NodeVector::const_iterator begin() const;
 			NodeVector::const_iterator end() const;

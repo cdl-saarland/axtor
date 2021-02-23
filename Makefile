@@ -21,11 +21,12 @@ WARNLEVEL=-Wall -Wno-non-virtual-dtor
 OPTLEVEL=-O0 -g
 
 BUILDFLAGS=-D_DEBUG
+BUILDFLAGS=
 
 # compiler
 CXX=g++ -std=c++11
 CXXFLAGS=-fno-rtti -c -fPIC -Iinclude $(LLVM_CXXFLAGS) $(WARNLEVEL) $(OPTLEVEL) $(BUILDFLAGS)
-LDFLAGS=-fPIC -Iinclude $(LLVM_LDFLAGS) $(LLVM_LIBS)
+LDFLAGS=-fPIC -Iinclude $(LLVM_LDFLAGS) $(LLVM_LIBS) -lpthread -lcurses
 
 
 # Feature support

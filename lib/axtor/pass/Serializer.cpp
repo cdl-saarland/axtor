@@ -39,7 +39,7 @@ namespace axtor
 
 		assert(it != bb->end() && "encountered empty bb");
 
-		for(;! llvm::isa<llvm::TerminatorInst>(it);++it)
+		for(; &*it != bb->getTerminator();++it)
 		{
 			llvm::Instruction & inst = *it;
 
@@ -85,7 +85,7 @@ namespace axtor
 		{
 			//const llvm::Type * argType = type->getParamType(i);
 
-			std::string argName = arg.getName();
+			std::string argName = arg.getName().str();
 
 			declares[&arg] = VariableDesc(&arg, argName);
 			parameters.insert(&arg);
@@ -314,7 +314,7 @@ namespace axtor
 		for(BasicBlock & block : *func) {
 			for(Instruction & inst : block)
 			{
-				VariableDesc desc(&inst, inst.getName());
+				VariableDesc desc(&inst, inst.getName().str());
 
 				if (! isType(inst, llvm::Type::VoidTyID) &&
 						! llvm::isa<llvm::GetElementPtrInst>(&inst)) //no pointer support: only indirectly required by value useds
@@ -388,7 +388,7 @@ namespace axtor
 				ast::FunctionNode * funcNode = ASTs.at(&func);
 #ifdef DEBUG
 				funcNode->dump();
-				func.dump();
+				llvm::errs() << func << "\n";
 #endif
 				runOnFunction(backend, modWriter, globalScope, funcNode);
 			}
