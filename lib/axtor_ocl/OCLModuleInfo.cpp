@@ -115,7 +115,7 @@ FunctionVector OCLModuleInfo::getKernelFunctions()
 	  if(!openCLMetadata)
 	    return kernels;
 
-	  openCLMetadata->dump();
+	  llvm::errs() << *openCLMetadata;
 	  if (openCLMetadata->getNumOperands() < 1)
 		  return kernels;
 
@@ -141,7 +141,7 @@ void OCLModuleInfo::dump()
 
 void OCLModuleInfo::dumpModule()
 {
-	mod->dump();
+	llvm::errs() << *mod;
 }
 
 IdentifierScope OCLModuleInfo::createGlobalBindings()

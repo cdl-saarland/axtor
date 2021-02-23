@@ -75,7 +75,7 @@ BlockGraph BlockGraph::CreateFromFunction(llvm::Function & func, BlockGraph::Sub
 
 			CFG::ChildIteratorType childBegin = CFG::child_begin(block);
 			CFG::ChildIteratorType childEnd = CFG::child_end(block);
-			bb->getTerminator()->dump();
+			llvm::errs() << *bb->getTerminator();
 
 			for(CFG::ChildIteratorType succ = childBegin; succ != childEnd; ++succ)	{
 				llvm::BasicBlock * dest = *succ;

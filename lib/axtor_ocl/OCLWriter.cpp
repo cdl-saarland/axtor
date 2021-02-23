@@ -40,7 +40,7 @@ void OCLWriter::print(std::ostream & out)
 std::string OCLWriter::getScalarType(const llvm::Type * type, bool asVectorElementType)
 {
 #ifdef DEBUG
-	std::cerr << "getScalarType("; type->dump(); std::cerr << ")\n";
+	std::cerr << "getScalarType("; llvm::errs() << *type; std::cerr << ")\n";
 #endif
 
 	//### native platform type ###
@@ -143,7 +143,7 @@ std::string OCLWriter::getLocalVariableName(const std::string &variableFullName)
 std::string OCLWriter::getType(const llvm::Type * type)
 {
 #ifdef DEBUG
-	std::cerr << "getType("; type->dump(); std::cerr << ")\n";
+	std::cerr << "getType("; llvm::errs() << *type; std::cerr << ")\n";
 #endif
 	if (llvm::isa<llvm::ArrayType>(type)) {
 		const llvm::ArrayType * arrType = llvm::cast<llvm::ArrayType>(type);
@@ -634,13 +634,13 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 
 #ifdef DEBUG
 	std::cerr << "dereferencing value:\n";
-	val->dump();
+	llvm::errs() << *val;
 	std::cerr << "root value:\n";
-	rootValue->dump();
+	llvm::errs() << *rootValue;
 	std::cerr << "root type:\n";
-	rootType->dump();
+	llvm::errs() << *rootType;
 	std::cerr << "address:\n";
-	if (address)address->dump();
+	if (address) llvm::errs() << *address;
 	else std::cerr << "NONE\n";
 #endif
 
@@ -714,7 +714,7 @@ std::string OCLWriter::unwindPointer(llvm::Value * val, IdentifierScope & locals
 #ifdef DEBUG
 		std::cerr << "deref : " << tmp << "\n";
 		assert(rootType && "was not set");
-		rootType->dump();
+		llvm::errs() << *rootType;
 #endif
 		const llvm::Type * elementType = 0;
 		tmp = dereferenceContainer(tmp, rootType, address, locals, elementType, addressSpace);
@@ -1354,7 +1354,7 @@ if (llvm::isa<llvm::Instruction>(root) &&
 #ifdef DEBUG
 		std::cerr << "writeInstruction:: var=" << (desc ? desc->name : "NULL") << std::endl;
 		std::cerr << '\t';
-		inst->dump();
+		llvm::errs() << *inst;
 #endif
 	//dont write instructions consumed by their value users
 	if (llvm::isa<llvm::GetElementPtrInst>(inst) ||

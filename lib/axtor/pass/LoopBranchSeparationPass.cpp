@@ -33,7 +33,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 #ifdef DEBUG_PASSRUN
 		std::cerr << "\n\n##### PASS: Loop Branch Separation #####\n\n";
 		std::cerr << "### BEFORE loop branch separation: \n";
-		mod.dump();
+		llvm::errs() << mod;
 #endif
 		bool changed = false;
 
@@ -43,7 +43,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 
 #ifdef DEBUG
 	std::cerr << "### AFTER loop branch separation: \n";
-	mod.dump();
+	llvm::errs() << mod;
 	verifyModule(mod);
 #endif
 
@@ -86,7 +86,7 @@ llvm::RegisterPass<LoopBranchSeparationPass> __regLBSep("loopbranchseparator", "
 			}
 
 			// check all branches of n-way terminators (n > 1)
-			llvm::TerminatorInst * termInst = block->getTerminator();
+			llvm::Instruction * termInst = block->getTerminator();
 			llvm::Loop * loop = loopInfo.getLoopFor(&*block);
 
 			if (loop && termInst->getNumSuccessors() > 1)

@@ -20,6 +20,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/IR/InstrTypes.h>
 
 #include <axtor/CommonTypes.h>
 #include <axtor/writer/SyntaxWriter.h>
@@ -41,7 +42,9 @@
 #include "CModuleInfo.h"
 
 #define INDENTATION_STRING "   "
-
+namespace llvm {
+  class TerminatorInst;
+};
 namespace axtor {
 
 class CBlockWriter;

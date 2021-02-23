@@ -58,9 +58,9 @@ void MultiValue::func_removeConstantUsers(llvm::Value * val)
 			{
 				llvm::ConstantExpr * expr = llvm::cast<llvm::ConstantExpr>(val);
 
-				if (expr->getNumUses() == 0) {
-					delete expr;
-				}
+				//if (expr->getNumUses() == 0) {
+				//	delete expr;
+				//}
 			}
 		}
 	}
@@ -68,7 +68,7 @@ void MultiValue::func_removeConstantUsers(llvm::Value * val)
 
 void MultiValue::func_dump(llvm::Value * val)
 {
-	val->dump();
+	llvm::errs() << *val << "\n";
 }
 
 void MultiValue::apply(ValueSet & values, ValueOperation op)

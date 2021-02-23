@@ -85,13 +85,13 @@ llvm::DomTreeNode * findImmediateDominator(llvm::DominatorTree & domTree, const 
 {
 	llvm::DomTreeNode * node = domTree.getRootNode();
 
-	for (DomTreeNodeVector::const_iterator itChildNode = node->getChildren().begin(); itChildNode != node->getChildren().end();)
+	for (auto itChildNode = node->begin(); itChildNode != node->end();)
 	{
 		llvm::DomTreeNode * childNode = *itChildNode;
 		//descent
 		if (dominatesAll(domTree, childNode, blocks)) {
 			node = childNode;
-			itChildNode = node->getChildren().begin();
+			itChildNode = node->begin();
 
 		// try next
 		} else {

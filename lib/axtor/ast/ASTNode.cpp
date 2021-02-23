@@ -45,7 +45,7 @@ namespace ast {
 		return type;
 	}
 
-	llvm::TerminatorInst * ControlNode::getTerminator() const
+	llvm::Instruction * ControlNode::getTerminator() const
 	{
 		return block->getTerminator();
 	}
@@ -85,7 +85,7 @@ namespace ast {
 	{
 #define PREFIXED std::cerr << prefix
 
-		std::string name = block ? block->getName() : "none";
+		std::string name = block ? block->getName().str() : "none";
 
 		std::cerr << getTypeStr() << " (" << name << ")\n";
 

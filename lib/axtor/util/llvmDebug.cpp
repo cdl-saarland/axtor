@@ -24,7 +24,7 @@ void axtor::dumpTypeSet(const TypeSet & types)
 	for(TypeSet::const_iterator itType = types.begin(); itType != types.end(); ++itType)
 	{
 		const llvm::Type * type = *itType;
-		std::cerr << "\t"; type->dump();
+		std::cerr << "\t"; llvm::errs() << *type;
 	}
 	std::cerr << "}\n";
 }
@@ -46,7 +46,7 @@ void axtor::verifyModule(llvm::Module & mod)
 {
 	if (llvm::verifyModule(mod, &llvm::errs())) {
         llvm::errs() << "\n\n\n##### BROKEN MODULE #####\n";
-	    mod.dump();
+	    llvm::errs() << mod;
 	    llvm::errs() << "##### END OF DUMP ##### \n\n\n";
 	    abort();
        }
@@ -54,7 +54,7 @@ void axtor::verifyModule(llvm::Module & mod)
 
 void axtor::dumpUses(llvm::Value * val)
 {
-	std::cerr << "dumping value uses for "; val->dump();
+	std::cerr << "dumping value uses for "; llvm::errs() << *val;
 	std::cerr << "----- begin of user list ----\n";
 	for(llvm::Value::use_iterator use = val->use_begin(); use != val->use_end(); ++use)
 	{

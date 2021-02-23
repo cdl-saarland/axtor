@@ -105,7 +105,7 @@ namespace axtor {
 		// there is an unique induction variable
 		I.phi = FindInductionVariable(l);
 		if (!I.phi) {
-			IF_DEBUG l->getHeader()->dump();
+			IF_DEBUG llvm::errs() << *l->getHeader();
 			IF_DEBUG Log::warn("Could not find canonical induction variable");
 			return false;
 		}
@@ -184,7 +184,7 @@ namespace axtor {
 		}
 
 		// Check if this loop is annotated as induction-variable-parallel
-		IF_DEBUG I.phi->dump();
+		IF_DEBUG llvm::errs() << *I.phi;
 
 		return true;
 	}

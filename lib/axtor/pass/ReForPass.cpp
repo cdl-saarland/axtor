@@ -192,7 +192,7 @@ ReForPass::recoverForLoop(Loop * l) {
 	exitingBranch->removeFromParent();
 	exitingBranch->setSuccessor(exitOnFalse ? 0 : 1, loopBody); // jump to body to continue
 
-	TerminatorInst * bodyBranch = loopHeader->getTerminator();
+	Instruction * bodyBranch = loopHeader->getTerminator();
 	exitingBranch->insertBefore(bodyBranch);
 	bodyBranch->eraseFromParent();
 
@@ -232,7 +232,7 @@ ReForPass::visit(Loop * l) {
 	}
 
 	if (recoverForLoop(l)) {
-		func->dump();
+		llvm::errs() << *func;
 	}
 
 	/*
@@ -254,7 +254,7 @@ ReForPass::runOnFunction(Function & F) {
 		visit(l);
 	}
 
-	F.dump();
+	llvm::errs() << F;
 	// abort();
 
 	return true;

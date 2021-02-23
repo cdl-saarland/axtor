@@ -138,12 +138,12 @@ bool reaches (llvm::BasicBlock * A, llvm::BasicBlock * B, BlockSet regularExits)
 	BlockSet explored;
 	explored.insert(A);
 
-	std::stack<llvm::TerminatorInst*> termStack;
+	std::stack<llvm::Instruction*> termStack;
 	termStack.push(A->getTerminator());
 
 	while (! termStack.empty())
 	{
-		llvm::TerminatorInst * termInst = termStack.top();
+		llvm::Instruction * termInst = termStack.top();
 		termStack.pop();
 
 		for (uint i = 0; i < termInst->getNumSuccessors() ; ++i)
@@ -215,10 +215,10 @@ BlockSetPair computeDominanceFrontierExt(llvm::BasicBlock * start, llvm::Dominat
     	std::cerr << "checking block : " << current->getNameStr() << "\n";
 #endif
 
-    	llvm::TerminatorInst * termInst = current->getTerminator();
+    	llvm::Instruction * termInst = current->getTerminator();
 #ifdef DEBUG_DOMFRONT
     	std::cerr << "Terminator:\n";
-    	termInst->dump();
+    	llvm::errs() << *termInst;
 #endif
 
     	for(uint i = 0; i < termInst->getNumSuccessors(); ++i)
@@ -313,7 +313,7 @@ bool doesContainType(const llvm::Type * type, llvm::Type::TypeID id)
 }*/
 
 
-int getSuccessorIndex(llvm::TerminatorInst * termInst, const llvm::BasicBlock * target)
+int getSuccessorIndex(llvm::Instruction * termInst, const llvm::BasicBlock * target)
 {
 	for(uint i = 0; i < termInst->getNumSuccessors(); ++i)
 	{
@@ -457,7 +457,7 @@ bool usedInFunction(llvm::Function * func, llvm::Value * val)
 
 		} else if (llvm::isa<llvm::Value>(user)) {
 #ifdef DEBUG
-			user->dump();
+			llvm::errs() << *user;
 #endif
 			return usedInFunction(func, llvm::cast<llvm::Value>(user));
 		}

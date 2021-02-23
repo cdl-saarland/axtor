@@ -32,7 +32,7 @@ namespace axtor {
 
     PassManagerBuilder Builder;
     Builder.OptLevel = 3;
-    Builder.DisableUnitAtATime = true;
+    //Builder.DisableUnitAtATime = true;
     Builder.LoopVectorize = false; // default: false
     Builder.SLPVectorize = false; // default: false
     Builder.DisableUnrollLoops = false; // default: false

@@ -94,7 +94,7 @@ namespace axtor {
 		assertStream();
 
 		(*msgStream) << "\n----\n";
-		if (func) func->dump();
+		if (func) llvm::errs() << *func;
 		(*msgStream) << "\n\terror: " << msg << '\n';
 		terminate();
 	}

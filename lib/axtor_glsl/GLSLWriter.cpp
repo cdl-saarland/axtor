@@ -51,7 +51,7 @@ std::string GLSLWriter::getStructTypeDeclaration(const std::string & structName,
 std::string GLSLWriter::getScalarType(const llvm::Type * type, bool signedInt)
 {
 #ifdef DEBUG
-	std::cerr << "getScalarType("; type->dump(); std::cerr << ")\n";
+	std::cerr << "getScalarType("; llvm::errs() << *type; std::cerr << ")\n";
 #endif
 
 	//### native platform type ###
@@ -139,7 +139,7 @@ std::string GLSLWriter::getScalarType(const llvm::Type * type, bool signedInt)
 std::string GLSLWriter::getType(const llvm::Type * type)
 {
 #ifdef DEBUG
-	std::cerr << "getType("; type->dump(); std::cerr << ")\n";
+	std::cerr << "getType("; llvm::errs() << *type; std::cerr << ")\n";
 #endif
 	if (llvm::isa<llvm::ArrayType>(type)) {
 		const llvm::ArrayType * arrType = llvm::cast<llvm::ArrayType>(type);
@@ -597,10 +597,11 @@ std::string GLSLWriter::unwindPointer(llvm::Value * val, IdentifierScope & local
 	const llvm::Type * rootType = rootValue->getType();
 
 #ifdef DEBUG
-	val->dump();
-	rootValue->dump();
-	rootType->dump();
-	if (address) address->dump();
+	llvm::errs() << *val << "\n";
+	llvm::errs() << *rootValue << "\n";
+	llvm::errs() << *rootType << "\n";
+	if (address)
+	llvm::errs() << *address << "\n";
 #endif
 
 	//allocas are syntactically dereferenced by their name string
@@ -621,7 +622,7 @@ std::string GLSLWriter::unwindPointer(llvm::Value * val, IdentifierScope & local
 #ifdef DEBUG
 		std::cerr << "deref : " << tmp << "\n";
 		assert(rootType && "was not set");
-		rootType->dump();
+		llvm::errs() << *rootType << "\n";
 #endif
 		const llvm::Type * elementType = NULL;
 		tmp = dereferenceContainer(tmp, rootType, address, locals, elementType);
@@ -1203,7 +1204,7 @@ void GLSLWriter::writeInstruction(const VariableDesc * desc, llvm::Instruction *
 #ifdef DEBUG
 		std::cerr << "writeInstruction:: var=" << (desc ? desc->name : "NULL") << std::endl;
 		std::cerr << '\t';
-		inst->dump();
+		llvm::errs() << *inst << "\n";
 #endif
 	//dont write instructions consumed their value users
 	if (llvm::isa<llvm::GetElementPtrInst>(inst) ||
@@ -1469,7 +1470,7 @@ GLSLWriter::GLSLWriter(ModuleInfo & _modInfo, const IdentifierScope & globals, P
 #ifdef DEBUG
 				std::cerr << "global variable :" << varName << "\n";
 				std::cerr << "space : " << space << "\n";
-				std::cerr << "content type : "; contentType->dump(); std::cerr << '\n';
+				std::cerr << "content type : "; llvm::errs() << *contentType << "\n"; std::cerr << '\n';
 #endif
 				std::string declarePart = buildDeclaration(varName, contentType);
 

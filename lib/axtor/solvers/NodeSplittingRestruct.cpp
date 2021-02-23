@@ -159,7 +159,7 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 
 		llvm::BasicBlock * top = *stack.begin();
 		stack.erase(stack.begin());
-		llvm::TerminatorInst * termInst = top->getTerminator();
+		llvm::Instruction * termInst = top->getTerminator();
 
 		stack.reserve(stack.size() + termInst->getNumSuccessors());
 #ifdef DEBUG
@@ -251,7 +251,7 @@ NodeSplittingRestruct NodeSplittingRestruct::instance;
 
 		llvm::BasicBlock * top = *stack.begin();
 		stack.erase(stack.begin());
-		llvm::TerminatorInst * termInst = top->getTerminator();
+		llvm::Instruction * termInst = top->getTerminator();
 
 		stack.reserve(stack.size() + termInst->getNumSuccessors());
 #ifdef DEBUG

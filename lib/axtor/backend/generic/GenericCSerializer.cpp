@@ -40,6 +40,7 @@ namespace axtor {
 			}
 		}
 
+		/*
 		while (!undeclaredStructTypes.empty()) {
 			for (Type * type : finder) {
 				// print type declaration, if all prerequesites are made
@@ -51,6 +52,7 @@ namespace axtor {
 				}
 			}
 		}
+		*/
 	}
 
 	std::string GenericCSerializer::getStructTypeDeclaration(const std::string & structName, const llvm::StructType * structType)
